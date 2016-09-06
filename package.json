@@ -1,0 +1,29 @@
+{
+  "name": "jore-graphql",
+  "version": "0.0.1",
+  "description": "GraphQL server interface and data importer for Jore",
+  "main": "scripts/importPostgis.js",
+  "scripts": {
+    "import": "node --max_old_space_size=4096 scripts/importPostgis.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HSLdevcom/jore-graphql.git"
+  },
+  "keywords": [],
+  "author": "Hannes Junnila <hannes.junnila@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HSLdevcom/hsl-map-generator-server/issues"
+  },
+  "homepage": "https://github.com/HSLdevcom/hsl-map-generator-server",
+  "dependencies": {
+    "eslint": "^3.17.0",
+    "iconv-lite": "^0.4.13",
+    "knex": "^0.12.7",
+    "knex-postgis": "^0.2.0",
+    "lodash": "^4.17.4",
+    "pg": "^6.1.2",
+    "postgraphql": "^3.0.1"
+  }
+}
