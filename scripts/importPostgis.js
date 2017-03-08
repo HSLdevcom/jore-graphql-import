@@ -46,18 +46,20 @@ const tables = {
       { length: 8 },
       { length: 8 },
       { length: 1 },
-      { length: 16, name: "heading", type: "string" },
+      { length: 15, name: "heading", type: "string" },
+      { length: 1 },
       { length: 3 },
       {
         length: 7,
         name: "terminalId",
-        type: "string"
+        type: "string",
+        foreign: "terminals.terminalId"
       },
       {
         length: 7,
         name: "stopAreaId",
         type: "string",
-        references: "stopAreas.stopAreaId"
+        foreign: "stopareas.stopAreaId"
       }
     ]
   },
@@ -79,7 +81,7 @@ const tables = {
       { length: 8, name: "lon", type: "decimal" }
     ]
   },
-  stopAreas: {
+  stopareas: {
     filename: "pysakkialue.dat",
     fields: [
       {
@@ -128,21 +130,22 @@ const tables = {
       { length: 8, name: "dateBegin", type: "date" },
       { length: 8, name: "dateEnd", type: "date" },
       { length: 1, name: "direction", type: "string" },
-      { length: 60 },
-      { length: 60 },
+      { length: 60, name: "name_fi", type: "string" },
+      { length: 60, name: "name_se", type: "string"  },
       { length: 2, name: "type", type: "string" },
-      { length: 20 },
-      { length: 20 },
-      { length: 7 },
-      { length: 5 },
+      { length: 20, name: "origin_fi", type: "string" },
+      { length: 20, name: "origin_se", type: "string" },
+      { length: 7, name: "originStopId", type: "string", foreign: "stops.stopId" },
+      { length: 5, name: "routeLength", type: "integer" },
       { length: 20, name: "destination_fi", type: "string" },
-      { length: 20, name: "destination_se", type: "string" }
+      { length: 20, name: "destination_se", type: "string" },
+      { length: 7, name: "destinationStopId", type: "string", foreign: "stops.stopId" }
     ]
   },
-  routeSegments: {
+  routesegments: {
     filename: "reitti.dat",
     fields: [
-      { length: 7, name: "stopId", type: "string", references: "stops.stopId" },
+      { length: 7, name: "stopId", type: "string", foreign: "stops.stopId" },
       { length: 7 },
       {
         length: 6,
@@ -174,7 +177,7 @@ const tables = {
       { length: 8, name: "endDate", type: "date" },
       { length: 7 },
       { length: 1 },
-      { length: 4 },
+      { length: 4, name: "index", type: "integer" },
       { length: 7, name: "y", type: "integer" },
       { length: 7, name: "x", type: "integer" }
     ]
@@ -186,7 +189,7 @@ const tables = {
         length: 7,
         name: "stopId",
         type: "string",
-        references: "stops.stopId",
+        foreign: "stops.stopId",
         index: true
       },
       {
@@ -203,7 +206,10 @@ const tables = {
       { length: 2, name: "minutes", type: "integer" },
       { length: 1, name: "isAccessible", type: "integer" },
       { length: 8, name: "dateBegin", type: "date" },
-      { length: 8, name: "dateEnd", type: "date" }
+      { length: 8, name: "dateEnd", type: "date" },
+      { length: 1, name: "stopRole", type: "integer" },
+      { length: 4, name: "note", type: "string" },
+      { length: 3, name: "vehicle", type: "string" }
     ]
   }
 };
@@ -211,10 +217,10 @@ const tables = {
 function dropTables(schema) {
   schema = schema
     .dropTableIfExists("timetables")
-    .dropTableIfExists("routeSegments")
+    .dropTableIfExists("routesegments")
     .dropTableIfExists("stops")
     .dropTableIfExists("terminals")
-    .dropTableIfExists("stopAreas");
+    .dropTableIfExists("stopareas");
 
   Object.keys(tables).forEach(function(tableName) {
     schema = schema.dropTableIfExists(tableName);
@@ -233,7 +239,7 @@ function createTables(schema) {
         unique,
         primary,
         index,
-        references
+        foreign
       }) {
         if (name && type) {
           let column;
@@ -274,9 +280,9 @@ function createTables(schema) {
 function createForeignKeys(schema) {
   Object.entries(tables).forEach(function([tableName, { fields }]) {
     schema = schema.table(tableName, function(table) {
-      fields.forEach(function({ name, type, references }) {
-        if (name && type && references) {
-          table.foreign(name).references(references);
+      fields.forEach(function({ name, type, foreign }) {
+        if (name && type && foreign) {
+          table.foreign(name).references(foreign.split('.')[1]).inTable("jore." + foreign.split('.')[0]);
         }
       });
     });
@@ -290,26 +296,26 @@ knex.transaction(function(trx) {
     return parseDat(
       sourcePath(tables[tableName].filename),
       tables[tableName].fields,
-      knex, tableName, trx
+      knex, tableName, trx, st
     );
   }
 
   function loadData() {
     return loadTable("terminals")
-      .then(() => loadTable("stopAreas"))
+      .then(() => loadTable("stopareas"))
       .then(() => loadTable("stops"))
       .then(() => Promise.all([
         loadTable("lines"),
         loadTable("routes"),
-        loadTable("routeSegments"),
+        loadTable("routesegments"),
         loadTable("geometries"),
         loadTable("timetables")
       ]))
   }
 
-  createForeignKeys(createTables(dropTables(trx.schema)))
+  createForeignKeys(createTables(dropTables(trx.schema.withSchema('jore'))))
     .then(loadData)
     .then(trx.commit)
-    .then(res => console.log(res), trx.rollback)
-    .then(() => knex.destroy());
+    .then(res => console.log(res), (err) => {console.log(err); return trx.rollback()})
+    .then(knex.destroy);
 });

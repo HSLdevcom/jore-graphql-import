@@ -5,13 +5,15 @@ var iconv = require("iconv-lite");
 
 const whitespaceTest = /^\s+$/;
 
-function parseLine(line, fields) {
+function parseLine(line, fields, knex, st) {
   const stop = {};
   let index = 1;
   fields.forEach(({ length, name, type }) => {
     if (name) {
       const value = line.substring(index, index + length).trim();
-      if (type === "decimal") {
+      if (value.length === 0 ) {
+        stop[name] = null
+      } else if (type === "decimal") {
         stop[name] = parseFloat(value);
       } else if (type === "date") {
         if (value.length !== 8) {
@@ -26,10 +28,16 @@ function parseLine(line, fields) {
     }
     index = index + length;
   });
+  if (stop.lat && stop.lon) {
+    stop.point = st.geomFromText(`Point(${stop.lon} ${stop.lat})`, 4326)
+  }
+  if (stop.x && stop.y) {
+    stop.point = knex.raw(`ST_Transform(ST_GeomFromText('Point(${stop.x} ${stop.y})',2392),4326)`)
+  }
   return stop;
 }
 
-function parseDat(filename, fields, knex, tableName, trx) {
+function parseDat(filename, fields, knex, tableName, trx, st) {
   let i = 0;
   const promises = []
   let results = []
@@ -43,9 +51,9 @@ function parseDat(filename, fields, knex, tableName, trx) {
 
     lineReader.on("line", line => {
       if (!whitespaceTest.test(line)) {
-        results.push(parseLine(line, fields))
+        results.push(parseLine(line, fields, knex, st))
         if (++i % 2000 === 0) {
-          promises.push(knex(tableName).transacting(trx).insert(results));
+          promises.push(knex.withSchema('jore').transacting(trx).insert(results).into(tableName));
           results = []
           console.log(`${filename} ${i}`);
         }
@@ -53,9 +61,9 @@ function parseDat(filename, fields, knex, tableName, trx) {
     });
 
     lineReader.on("close", line => {
-      promises.push(knex(tableName).transacting(trx).insert(results));
+      promises.push(knex.withSchema('jore').transacting(trx).insert(results).into(tableName));
       console.log(`${filename} ${i}`);
-      resolve(Promise.all(promises));
+      resolve(Promise.all(promises).then(() => console.log("loaded " + tableName)));
     });
   });
 }
