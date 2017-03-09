@@ -17,12 +17,12 @@ const SRC_PATH = "../data/src";
 const sourcePath = filename => path.join(__dirname, SRC_PATH, filename);
 
 const tables = {
-  stops: {
+  stop: {
     filename: "pysakki.dat",
     fields: [
       {
         length: 7,
-        name: "stopId",
+        name: "stop_id",
         type: "string",
         unique: true,
         primary: true,
@@ -42,7 +42,7 @@ const tables = {
       { length: 20 },
       { length: 20 },
       { length: 2 },
-      { length: 6, name: "shortId", type: "string" },
+      { length: 6, name: "short_id", type: "string" },
       { length: 8 },
       { length: 8 },
       { length: 1 },
@@ -51,24 +51,24 @@ const tables = {
       { length: 3 },
       {
         length: 7,
-        name: "terminalId",
+        name: "terminal_id",
         type: "string",
-        foreign: "terminals.terminalId"
+        foreign: "terminal.terminal_id"
       },
       {
         length: 7,
-        name: "stopAreaId",
+        name: "stop_area_id",
         type: "string",
-        foreign: "stopareas.stopAreaId"
+        foreign: "stop_area.stop_area_id"
       }
     ]
   },
-  terminals: {
+  terminal: {
     filename: "terminaali.dat",
     fields: [
       {
         length: 7,
-        name: "terminalId",
+        name: "terminal_id",
         type: "string",
         unique: true,
         primary: true,
@@ -81,12 +81,12 @@ const tables = {
       { length: 8, name: "lon", type: "decimal" }
     ]
   },
-  stopareas: {
+  stop_area: {
     filename: "pysakkialue.dat",
     fields: [
       {
         length: 6,
-        name: "stopAreaId",
+        name: "stop_area_id",
         type: "string",
         unique: true,
         primary: true,
@@ -99,12 +99,12 @@ const tables = {
       { length: 8, name: "lon", type: "decimal" }
     ]
   },
-  lines: {
+  line: {
     filename: "linjannimet2.dat",
     fields: [
       {
         length: 6,
-        name: "lineId",
+        name: "line_id",
         type: "string",
         unique: true,
         primary: true,
@@ -118,63 +118,73 @@ const tables = {
       { length: 30, name: "destination_se", type: "string" }
     ]
   },
-  routes: {
+  route: {
     filename: "linja3.dat",
     fields: [
       {
         length: 6,
-        name: "routeId",
+        name: "route_id",
         type: "string",
         index: true
       },
-      { length: 8, name: "dateBegin", type: "date" },
-      { length: 8, name: "dateEnd", type: "date" },
+      { length: 8, name: "date_begin", type: "date" },
+      { length: 8, name: "date_end", type: "date" },
       { length: 1, name: "direction", type: "string" },
       { length: 60, name: "name_fi", type: "string" },
-      { length: 60, name: "name_se", type: "string"  },
+      { length: 60, name: "name_se", type: "string" },
       { length: 2, name: "type", type: "string" },
       { length: 20, name: "origin_fi", type: "string" },
       { length: 20, name: "origin_se", type: "string" },
-      { length: 7, name: "originStopId", type: "string", foreign: "stops.stopId" },
-      { length: 5, name: "routeLength", type: "integer" },
+      {
+        length: 7,
+        name: "originstop_id",
+        type: "string",
+        foreign: "stop.stop_id"
+      },
+      { length: 5, name: "route_length", type: "integer" },
       { length: 20, name: "destination_fi", type: "string" },
       { length: 20, name: "destination_se", type: "string" },
-      { length: 7, name: "destinationStopId", type: "string", foreign: "stops.stopId" }
+      {
+        length: 7,
+        name: "destinationstop_id",
+        type: "string",
+        foreign: "stop.stop_id"
+      }
     ]
   },
-  routesegments: {
+  route_segment: {
     filename: "reitti.dat",
     fields: [
-      { length: 7, name: "stopId", type: "string", foreign: "stops.stopId" },
+      { length: 7, name: "stop_id", type: "string", foreign: "stop.stop_id" },
       { length: 7 },
       {
         length: 6,
-        name: "routeId",
+        name: "route_id",
         type: "string",
         index: true
       },
       { length: 1, name: "direction", type: "string" },
-      { length: 8, name: "dateBegin", type: "date" },
-      { length: 8, name: "dateEnd", type: "date" },
+      { length: 8, name: "date_begin", type: "date" },
+      { length: 8, name: "date_end", type: "date" },
       { length: 20 },
       { length: 3, name: "duration", type: "integer" },
-      { length: 3, name: "stopNumber", type: "integer" },
+      { length: 3, name: "stop_number", type: "integer" },
       { length: 94 },
-      { length: 1, name: "timingStopType", type: "integer" }
+      { length: 1, name: "timing_stop_type", type: "integer" }
     ]
   },
-  geometries: {
+  geometry: {
     filename: "reittimuoto.dat",
     fields: [
       {
         length: 6,
-        name: "routeId",
+        name: "route_id",
         type: "string",
         index: true
       },
       { length: 1, name: "direction", type: "string" },
-      { length: 8, name: "beginDate", type: "date" },
-      { length: 8, name: "endDate", type: "date" },
+      { length: 8, name: "date_begin", type: "date" },
+      { length: 8, name: "date_end", type: "date" },
       { length: 7 },
       { length: 1 },
       { length: 4, name: "index", type: "integer" },
@@ -182,45 +192,144 @@ const tables = {
       { length: 7, name: "x", type: "integer" }
     ]
   },
-  timetables: {
+  departure: {
     filename: "aikat.dat",
     fields: [
       {
         length: 7,
-        name: "stopId",
+        name: "stop_id",
         type: "string",
-        foreign: "stops.stopId",
+        foreign: "stop.stop_id",
         index: true
       },
       {
         length: 6,
-        name: "routeId",
+        name: "route_id",
         type: "string",
         index: true
       },
       { length: 1, name: "direction", type: "string" },
-      { length: 2, name: "dayType", type: "string" },
+      { length: 2, name: "day_type", type: "string" },
       { length: 4, name: null },
       { length: 1, name: null },
       { length: 2, name: "hours", type: "integer" },
       { length: 2, name: "minutes", type: "integer" },
-      { length: 1, name: "isAccessible", type: "integer" },
-      { length: 8, name: "dateBegin", type: "date" },
-      { length: 8, name: "dateEnd", type: "date" },
-      { length: 1, name: "stopRole", type: "integer" },
+      { length: 1, name: "is_accessible", type: "integer" },
+      { length: 8, name: "date_begin", type: "date" },
+      { length: 8, name: "date_end", type: "date" },
+      { length: 1, name: "stop_role", type: "integer" },
       { length: 4, name: "note", type: "string" },
       { length: 3, name: "vehicle", type: "string" }
+    ]
+  },
+  note: {
+    filename: "linteks.dat",
+    fields: [
+      { length: 6, name: "line_id", type: "string", foreign: "line.line_id" },
+      { length: 8 },
+      { length: 8 },
+      { length: 4, name: "note_id", type: "integer" },
+      { length: 6, name: "note_tpe", type: "string" },
+      { length: 200, name: "note_text", type: "string" },
+      { length: 8, name: "date_begin", type: "date" },
+      { length: 8, name: "date_end", type: "date" }
     ]
   }
 };
 
+const functions = [
+  `
+    create function jore.stop_departures_for_date(stop jore.stop, date date) returns setof jore.departure as $$
+      select *
+      from jore.departure departure
+      where departure.stop_id = stop.stop_id
+        and date between date_begin and date_end;
+    $$ language sql stable;
+  `,
+  `
+    create function jore.route_line(route jore.route) returns setof jore.line as $$
+      select *
+      from jore.line line
+      where route.route_id like (line.line_id || '%')
+      order by line.line_id desc
+      limit 1;
+    $$ language sql stable;
+  `, // TODO: investigate why we have to return a setof here
+  `
+    create function jore.route_segment_line(route_segment jore.route_segment) returns setof jore.line as $$
+      select *
+      from jore.line line
+      where route_segment.route_id like (line.line_id || '%')
+      order by line.line_id desc
+      limit 1;
+    $$ language sql stable;
+  `, // TODO: investigate why we have to return a setof here
+  `
+    create function jore.line_routes(line jore.line) returns setof jore.route as $$
+      select *
+      from jore.route route
+      where route.route_id like (line.line_id || '%')
+    $$ language sql stable;
+  `,
+  `
+    create function jore.route_route_segments(route jore.route) returns setof jore.route_segment as $$
+      select *
+      from jore.route_segment route_segment
+      where route.route_id = route_segment.route_id
+        and route.direction = route_segment.direction
+        and route.date_begin <= route_segment.date_end
+        and route.date_end >= route_segment.date_begin
+    $$ language sql stable;
+  `,
+  `
+    create function jore.stops_by_bbox(
+      min_lat decimal(9, 6),
+      min_lon decimal(9, 6),
+      max_lat decimal(9, 6),
+      max_lon decimal(9, 6)
+    ) returns setof jore.stop as $$
+      select *
+      from jore.stop stop
+      where stop.lat between min_lat and max_lat
+        and stop.lon between min_lon and max_lon
+    $$ language sql stable;
+  `,
+  `
+    create function jore.stop_areas_by_bbox(
+    min_lat decimal(9, 6),
+    min_lon decimal(9, 6),
+    max_lat decimal(9, 6),
+    max_lon decimal(9, 6)
+  ) returns setof jore.stop_area as $$
+    select *
+    from jore.stop_area stop_area
+    where stop_area.lat between min_lat and max_lat
+      and stop_area.lon between min_lon and max_lon
+  $$ language sql stable;
+  `,
+  `
+    create function jore.terminals_by_bbox(
+    min_lat decimal(9, 6),
+    min_lon decimal(9, 6),
+    max_lat decimal(9, 6),
+    max_lon decimal(9, 6)
+  ) returns setof jore.terminal as $$
+    select *
+    from jore.terminal terminal
+    where terminal.lat between min_lat and max_lat
+      and terminal.lon between min_lon and max_lon
+  $$ language sql stable;
+  `
+];
+
 function dropTables(schema) {
   schema = schema
-    .dropTableIfExists("timetables")
-    .dropTableIfExists("routesegments")
-    .dropTableIfExists("stops")
-    .dropTableIfExists("terminals")
-    .dropTableIfExists("stopareas");
+    .dropTableIfExists("departure")
+    .dropTableIfExists("route_segment")
+    .dropTableIfExists("stop")
+    .dropTableIfExists("terminal")
+    .dropTableIfExists("stop_area")
+    .dropTableIfExists("line");
 
   Object.keys(tables).forEach(function(tableName) {
     schema = schema.dropTableIfExists(tableName);
@@ -282,7 +391,10 @@ function createForeignKeys(schema) {
     schema = schema.table(tableName, function(table) {
       fields.forEach(function({ name, type, foreign }) {
         if (name && type && foreign) {
-          table.foreign(name).references(foreign.split('.')[1]).inTable("jore." + foreign.split('.')[0]);
+          table
+            .foreign(name)
+            .references(foreign.split(".")[1])
+            .inTable("jore." + foreign.split(".")[0]);
         }
       });
     });
@@ -291,31 +403,47 @@ function createForeignKeys(schema) {
   return schema;
 }
 
+function createFunctions(knex) {
+  return Promise.all(functions.map(f => knex.raw(f)));
+}
+
 knex.transaction(function(trx) {
   function loadTable(tableName) {
     return parseDat(
       sourcePath(tables[tableName].filename),
       tables[tableName].fields,
-      knex, tableName, trx, st
+      knex,
+      tableName,
+      trx,
+      st
     );
   }
 
   function loadData() {
-    return loadTable("terminals")
-      .then(() => loadTable("stopareas"))
-      .then(() => loadTable("stops"))
-      .then(() => Promise.all([
-        loadTable("lines"),
-        loadTable("routes"),
-        loadTable("routesegments"),
-        loadTable("geometries"),
-        loadTable("timetables")
-      ]))
+    return loadTable("terminal")
+      .then(() => loadTable("stop_area"))
+      .then(() => loadTable("stop"))
+      .then(() =>
+        Promise.all([
+          loadTable("line"),
+          loadTable("route"),
+          loadTable("route_segment"),
+          loadTable("geometry"),
+          loadTable("departure"),
+          loadTable("note")
+        ]));
   }
 
-  createForeignKeys(createTables(dropTables(trx.schema.withSchema('jore'))))
+  createForeignKeys(createTables(dropTables(trx.schema.withSchema("jore"))))
+    .then(() => createFunctions(trx))
     .then(loadData)
     .then(trx.commit)
-    .then(res => console.log(res), (err) => {console.log(err); return trx.rollback()})
+    .then(
+      res => console.log(res),
+      err => {
+        console.log(err);
+        return trx.rollback();
+      }
+    )
     .then(knex.destroy);
 });
