@@ -268,7 +268,14 @@ const functions = [
     create function jore.line_routes(line jore.line) returns setof jore.route as $$
       select *
       from jore.route route
-      where route.route_id like (line.line_id || '%')
+      where route.route_id like (line.line_id || '%')
+        and not exists (
+          select true
+          from jore.line inner_line
+          where inner_line.line_id like (line.line_id || '_%')
+            and route.route_id like (inner_line.line_id || '%')
+          limit 1
+        );
     $$ language sql stable;
   `,
   `
@@ -279,6 +286,78 @@ const functions = [
         and route.direction = route_segment.direction
         and route.date_begin <= route_segment.date_end
         and route.date_end >= route_segment.date_begin
+    $$ language sql stable;
+  `,
+  `
+    create function jore.route_departures(route jore.route) returns setof jore.departure as $$
+      select *
+      from jore.departure departure
+      where route.route_id = departure.route_id
+        and route.direction = departure.direction
+        and route.date_begin <= departure.date_end
+        and route.date_end >= departure.date_begin
+    $$ language sql stable;
+  `,
+  `
+    create type jore.departure_group as (
+      stop_id       character varying(7),
+      route_id      character varying(6),
+      direction     character varying(1),
+      day_type      character varying(2)[],
+      hours         integer,
+      minutes       integer,
+      is_accessible integer,
+      date_begin    date,
+      date_end      date,
+      stop_role     integer,
+      note          character varying(4),
+      vehicle       character varying(3)[]
+    );
+  `,
+  `
+    create function jore.route_departures_gropuped(route jore.route, date date) returns setof jore.departure_group as $$
+      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type),
+        departure.hours, departure.minutes, departure.is_accessible, departure.date_begin, departure.date_end,
+        departure.stop_role, departure.note, array_agg(departure.vehicle)
+      from jore.departure departure
+      where route.route_id = departure.route_id
+        and route.direction = departure.direction
+        and route.date_begin <= departure.date_end
+        and route.date_end >= departure.date_begin
+        and case when date is null then true else date between departure.date_begin and departure.date_end end
+      group by (departure.stop_id, departure.route_id, departure.direction, departure.hours, departure.minutes,
+        departure.is_accessible, departure.date_begin, departure.date_end, departure.stop_role, departure.note);
+    $$ language sql stable;
+  `,
+  `
+    create function jore.stop_departures_gropuped(stop jore.stop, date date) returns setof jore.departure_group as $$
+      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type),
+        departure.hours, departure.minutes, departure.is_accessible, departure.date_begin, departure.date_end,
+        departure.stop_role, departure.note, array_agg(departure.vehicle)
+      from jore.departure departure
+      where stop.stop_id = departure.stop_id
+        and case when date is null then true else date between departure.date_begin and departure.date_end end
+      group by (departure.stop_id, departure.route_id, departure.direction, departure.hours, departure.minutes,
+        departure.is_accessible, departure.date_begin, departure.date_end, departure.stop_role, departure.note);
+    $$ language sql stable;
+  `,
+  `
+    create type jore.geometry_with_date as (
+      geometry jsonb,
+      date_begin date,
+      date_end date
+    );
+  `,
+  `
+    create function jore.route_geometries(route jore.route, date date) returns setof jore.geometry_with_date as $$
+      select ST_AsGeoJSON(ST_MakeLine(point order by index asc))::jsonb, date_begin, date_end
+      from jore.geometry geometry
+      where route.route_id = geometry.route_id
+        and route.direction = geometry.direction
+        and route.date_begin <= geometry.date_end
+        and route.date_end >= geometry.date_begin
+        and case when date is null then true else date between geometry.date_begin and geometry.date_end end
+      group by (date_begin, date_end);
     $$ language sql stable;
   `,
   `
