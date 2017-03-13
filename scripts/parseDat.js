@@ -15,6 +15,12 @@ function parseLine(line, fields, knex, st) {
         stop[name] = null
       } else if (type === "decimal") {
         stop[name] = parseFloat(value);
+      } else if (type === "integer") {
+        stop[name] = parseInt(value, 10);
+        if (Number.isNaN(stop[name])) {
+          console.log(name)
+          console.log(line);
+        }
       } else if (type === "date") {
         if (value.length !== 8) {
           console.log(line);

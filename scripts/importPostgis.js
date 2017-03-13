@@ -106,8 +106,6 @@ const tables = {
         length: 6,
         name: "line_id",
         type: "string",
-        unique: true,
-        primary: true,
         index: true
       },
       { length: 60, name: "name_fi", type: "string" },
@@ -115,8 +113,11 @@ const tables = {
       { length: 30, name: "origin_fi", type: "string" },
       { length: 30, name: "origin_se", type: "string" },
       { length: 30, name: "destination_fi", type: "string" },
-      { length: 30, name: "destination_se", type: "string" }
-    ]
+      { length: 30, name: "destination_se", type: "string" },
+      { length: 8, name: "date_begin", type: "date" },
+      { length: 8, name: "date_end", type: "date" },
+    ],
+    primary: ["line_id", "date_begin", "date_end"]
   },
   route: {
     filename: "linja3.dat",
@@ -150,7 +151,8 @@ const tables = {
         type: "string",
         foreign: "stop.stop_id"
       }
-    ]
+    ],
+    primary: ["route_id", "direction", "date_begin", "date_end"]
   },
   route_segment: {
     filename: "reitti.dat",
@@ -171,7 +173,8 @@ const tables = {
       { length: 3, name: "stop_number", type: "integer" },
       { length: 94 },
       { length: 1, name: "timing_stop_type", type: "integer" }
-    ]
+    ],
+    primary: ["route_id", "direction", "date_begin", "date_end", "stop_number"]
   },
   geometry: {
     filename: "reittimuoto.dat",
@@ -190,7 +193,8 @@ const tables = {
       { length: 4, name: "index", type: "integer" },
       { length: 7, name: "y", type: "integer" },
       { length: 7, name: "x", type: "integer" }
-    ]
+    ],
+    //primary: ["route_id", "direction", "date_begin", "date_end", "index"]
   },
   departure: {
     filename: "aikat.dat",
@@ -225,7 +229,7 @@ const tables = {
   note: {
     filename: "linteks.dat",
     fields: [
-      { length: 6, name: "line_id", type: "string", foreign: "line.line_id" },
+      { length: 6, name: "line_id", type: "string"},
       { length: 8 },
       { length: 8 },
       { length: 4, name: "note_id", type: "integer" },
@@ -265,17 +269,14 @@ const functions = [
     $$ language sql stable;
   `, // TODO: investigate why we have to return a setof here
   `
-    create function jore.line_routes(line jore.line) returns setof jore.route as $$
+    create function jore.route_segment_next_stops(route_segment jore.route_segment) returns setof jore.route_segment as $$
       select *
-      from jore.route route
-      where route.route_id like (line.line_id || '%')
-        and not exists (
-          select true
-          from jore.line inner_line
-          where inner_line.line_id like (line.line_id || '_%')
-            and route.route_id like (inner_line.line_id || '%')
-          limit 1
-        );
+      from jore.route_segment inner_route_segment
+      where route_segment.route_id = inner_route_segment.route_id
+        and route_segment.direction = inner_route_segment.direction
+        and route_segment.date_begin = inner_route_segment.date_begin
+        and route_segment.date_end = inner_route_segment.date_end
+        and route_segment.stop_number < inner_route_segment.stop_number
     $$ language sql stable;
   `,
   `
@@ -330,6 +331,21 @@ const functions = [
     $$ language sql stable;
   `,
   `
+    create function jore.route_segment_departures_gropuped(route_segment jore.route_segment, date date) returns setof jore.departure_group as $$
+      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type),
+        departure.hours, departure.minutes, departure.is_accessible, departure.date_begin, departure.date_end,
+        departure.stop_role, departure.note, array_agg(departure.vehicle)
+      from jore.departure departure
+      where route_segment.route_id = departure.route_id
+        and route_segment.direction = departure.direction
+        and route_segment.date_begin <= departure.date_end
+        and route_segment.date_end >= departure.date_begin
+        and case when date is null then true else date between departure.date_begin and departure.date_end end
+      group by (departure.stop_id, departure.route_id, departure.direction, departure.hours, departure.minutes,
+        departure.is_accessible, departure.date_begin, departure.date_end, departure.stop_role, departure.note);
+    $$ language sql stable;
+  `,
+  `
     create function jore.stop_departures_gropuped(stop jore.stop, date date) returns setof jore.departure_group as $$
       select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type),
         departure.hours, departure.minutes, departure.is_accessible, departure.date_begin, departure.date_end,
@@ -339,6 +355,20 @@ const functions = [
         and case when date is null then true else date between departure.date_begin and departure.date_end end
       group by (departure.stop_id, departure.route_id, departure.direction, departure.hours, departure.minutes,
         departure.is_accessible, departure.date_begin, departure.date_end, departure.stop_role, departure.note);
+    $$ language sql stable;
+  `,
+  `
+    create function jore.line_routes(line jore.line) returns setof jore.route as $$
+      select *
+      from jore.route route
+      where route.route_id like (line.line_id || '%')
+        and not exists (
+          select true
+          from jore.line inner_line
+          where inner_line.line_id like (line.line_id || '_%')
+            and route.route_id like (inner_line.line_id || '%')
+          limit 1
+        );
     $$ language sql stable;
   `,
   `
@@ -466,8 +496,11 @@ function createTables(schema) {
 }
 
 function createForeignKeys(schema) {
-  Object.entries(tables).forEach(function([tableName, { fields }]) {
+  Object.entries(tables).forEach(function([tableName, { fields, primary }]) {
     schema = schema.table(tableName, function(table) {
+      if (primary) {
+        table.unique(primary).primary(primary)
+      }
       fields.forEach(function({ name, type, foreign }) {
         if (name && type && foreign) {
           table
