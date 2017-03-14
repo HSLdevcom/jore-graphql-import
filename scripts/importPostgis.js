@@ -546,7 +546,10 @@ knex.transaction(function(trx) {
         ]));
   }
 
-  createForeignKeys(createTables(dropTables(trx.schema.withSchema("jore"))))
+  trx.raw("drop schema jore cascade")
+    .then(() => trx.raw("create schema jore"))
+    .then(() => createTables(trx.schema.withSchema("jore")))
+    .then(() => createForeignKeys(trx.schema.withSchema("jore")))
     .then(() => createFunctions(trx))
     .then(loadData)
     .then(trx.commit)
