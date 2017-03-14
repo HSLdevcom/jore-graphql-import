@@ -12,14 +12,13 @@ WORKDIR ${WORK}
 COPY package.json ${WORK}
 RUN npm install
 
-# Bundle app source
+# Copy app source
 COPY . ${WORK}
-
-# Fetch and import data
-RUN curl http://dev.hsl.fi/infopoiminta/latest/all.zip > all.zip && \
-  unzip all.zip -d ${WORK}/data/src && \
-  node --max_old_space_size=4096 scripts/importPostgis.js
 
 EXPOSE 5000
 
-CMD node_modules/.bin/postgraphql -c $PG_CONNECTION_STRING --schema jore --disable-default-mutations --dynamic-json --cors
+# Fetch and import data
+CMD curl http://dev.hsl.fi/infopoiminta/latest/all.zip > all.zip && \
+  unzip all.zip -d ${WORK}/data/src && \
+  node --max_old_space_size=4096 scripts/importPostgis.js && \
+  node_modules/.bin/postgraphql -c $PG_CONNECTION_STRING --schema jore --disable-default-mutations --dynamic-json --cors
