@@ -104,7 +104,7 @@ function createForeignKeys(schema) {
 }
 
 function createFunctions(knex) {
-  return Promise.all(functions.map(f => knex.raw(f)));
+  return functions.reduce((promise, f) => promise.then(() => knex.raw(f)), Promise.resolve());
 }
 
 knex.transaction(function(trx) {
