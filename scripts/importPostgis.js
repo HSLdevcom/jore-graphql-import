@@ -134,7 +134,7 @@ knex.transaction(function(trx) {
         ]));
   }
 
-  trx.raw("drop schema jore cascade")
+  trx.raw("drop schema if exists jore cascade")
     .then(() => trx.raw("create schema jore"))
     .then(() => createTables(trx.schema.withSchema("jore")))
     .then(() => createForeignKeys(trx.schema.withSchema("jore")))
