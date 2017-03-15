@@ -66,7 +66,7 @@ function parseDat(filename, fields, knex, tableName, trx, st) {
             .into(tableName)
             .then(() => lineReader.resume());
           results = []
-          console.log(`${filename} ${i}`);
+          if (i % 10000 === 0) console.log(`${filename} ${i}`);
         }
       }
     });
