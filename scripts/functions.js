@@ -114,20 +114,20 @@ module.exports = [
         departure.is_accessible, departure.date_begin, departure.date_end, departure.stop_role, departure.note);
     $$ language sql stable;
   `,
-  // `
-  //   create function jore.line_routes(line jore.line) returns setof jore.route as $$
-  //     select *
-  //     from jore.route route
-  //     where route.route_id like (line.line_id || '%')
-  //       and not exists (
-  //         select true
-  //         from jore.line inner_line
-  //         where inner_line.line_id like (line.line_id || '_%')
-  //           and route.route_id like (inner_line.line_id || '%')
-  //         limit 1
-  //       );
-  //   $$ language sql stable;
-  // `,
+  `
+    create function jore.line_routes(line jore.line) returns setof jore.route as $$
+      select *
+      from jore.route route
+      where route.route_id like (line.line_id || '%')
+        and not exists (
+          select true
+          from jore.line inner_line
+          where inner_line.line_id like (line.line_id || '_%')
+            and route.route_id like (inner_line.line_id || '%')
+          limit 1
+        );
+    $$ language sql stable;
+  `,
   `
     create type jore.geometry_with_date as (
       geometry jsonb,
