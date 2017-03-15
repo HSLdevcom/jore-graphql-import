@@ -12,9 +12,7 @@ const path = require("path");
 
 const parseDat = require("./parseDat");
 
-const SRC_PATH = "../data/src";
-
-const sourcePath = filename => path.join(__dirname, SRC_PATH, filename);
+const sourcePath = filename => path.join(__dirname, "data", filename);
 
 const tables = require('./schema');
 const functions = require('./functions');
