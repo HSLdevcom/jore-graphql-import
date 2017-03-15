@@ -45,7 +45,6 @@ function parseLine(line, fields, knex, st) {
 
 function parseDat(filename, fields, knex, tableName, trx, st) {
   let i = 0;
-  const promises = []
   let results = []
 
   return new Promise(resolve => {
@@ -59,17 +58,23 @@ function parseDat(filename, fields, knex, tableName, trx, st) {
       if (!whitespaceTest.test(line)) {
         results.push(parseLine(line, fields, knex, st))
         if (++i % 2000 === 0) {
-          promises.push(knex.withSchema('jore').transacting(trx).insert(results).into(tableName));
+          lineReader.pause()
+          knex
+            .withSchema('jore')
+            .transacting(trx)
+            .insert(results)
+            .into(tableName)
+            .then(() => lineReader.resume());
           results = []
-          console.log(`${filename} ${i}`);
+          if (i % 10000 === 0) console.log(`${filename} ${i}`);
         }
       }
     });
 
     lineReader.on("close", line => {
-      promises.push(knex.withSchema('jore').transacting(trx).insert(results).into(tableName));
       console.log(`${filename} ${i}`);
-      resolve(Promise.all(promises).then(() => console.log("loaded " + tableName)));
+      console.log("loaded " + tableName);
+      resolve(knex.withSchema('jore').transacting(trx).insert(results).into(tableName));
     });
   });
 }
