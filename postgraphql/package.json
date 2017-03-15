@@ -1,0 +1,13 @@
+{
+  "name": "jore-postgraphql",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Hannes Junnila",
+  "license": "MIT",
+  "scripts": {
+    "start": "node_modules/.bin/postgraphql -c $PG_CONNECTION_STRING --schema jore --disable-default-mutations --watch --dynamic-json --cors --graphql /jore/graphql --graphiql /jore/graphiql"
+  },
+  "dependencies": {
+    "postgraphql": "^3.0.1"
+  }
+}
