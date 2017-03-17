@@ -94,6 +94,7 @@ module.exports = [
         departure.stop_role, departure.note, array_agg(departure.vehicle)
       from jore.departure departure
       where route_segment.route_id = departure.route_id
+        and route_segment.stop_id = departure.stop_id
         and route_segment.direction = departure.direction
         and route_segment.date_begin <= departure.date_end
         and route_segment.date_end >= departure.date_begin
