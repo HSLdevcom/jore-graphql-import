@@ -24,5 +24,5 @@ docker run --link jore-postgis -e "PG_CONNECTION_STRING=postgres://postgres:myse
 
 Start the server:
 ```
-docker run --link jore-postgis -e "PG_CONNECTION_STRING=postgres://postgres:mysecretpassword@jore-postgis:5432/postgres" -P hsldevcom/jore-postgraphql
+docker run --link jore-postgis -e "PG_CONNECTION_STRING=postgres://postgres:mysecretpassword@jore-postgis:5432/postgres" -d -p 0.0.0.0:5000:5000 hsldevcom/jore-postgraphql
 ```
