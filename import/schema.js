@@ -200,7 +200,7 @@ module.exports = {
       { length: 1, name: "next_day", type: "boolean" },
       { length: 2, name: "hours", type: "integer" },
       { length: 2, name: "minutes", type: "integer" },
-      { length: 1, name: "is_accessible", type: "integer" },
+      { length: 1, name: "is_accessible", type: "boolean" },
       { length: 8, name: "date_begin", type: "date" },
       { length: 8, name: "date_end", type: "date" },
       { length: 1, name: "stop_role", type: "integer" },
