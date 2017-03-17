@@ -197,7 +197,7 @@ module.exports = {
       { length: 1, name: "direction", type: "string" },
       { length: 2, name: "day_type", type: "string" },
       { length: 4, name: null },
-      { length: 1, name: null },
+      { length: 1, name: "next_day", type: "boolean" },
       { length: 2, name: "hours", type: "integer" },
       { length: 2, name: "minutes", type: "integer" },
       { length: 1, name: "is_accessible", type: "integer" },
