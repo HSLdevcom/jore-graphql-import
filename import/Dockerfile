@@ -1,4 +1,4 @@
-FROM node:6
+FROM node:7
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y unzip
 
@@ -19,6 +19,5 @@ EXPOSE 5000
 
 # Fetch and import data
 CMD curl http://dev.hsl.fi/infopoiminta/latest/all.zip > all.zip && \
-  unzip all.zip -d ${WORK}/data/src && \
-  node --max_old_space_size=4096 scripts/importPostgis.js && \
-  node_modules/.bin/postgraphql -c $PG_CONNECTION_STRING --schema jore --disable-default-mutations --dynamic-json --cors
+  unzip all.zip -d ${WORK}/data && \
+  npm run import
