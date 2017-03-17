@@ -82,9 +82,10 @@ module.exports = [
       route_id      character varying(6),
       direction     character varying(1),
       day_type      character varying(2)[],
+      next_day      boolean,
       hours         integer,
       minutes       integer,
-      is_accessible integer,
+      is_accessible boolean,
       date_begin    date,
       date_end      date,
       stop_role     integer,
@@ -94,7 +95,7 @@ module.exports = [
   `,
   `
     create function jore.route_departures_gropuped(route jore.route, date date) returns setof jore.departure_group as $$
-      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type),
+      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type), next_day,
         departure.hours, departure.minutes, departure.is_accessible, departure.date_begin, departure.date_end,
         departure.stop_role, departure.note, array_agg(departure.vehicle)
       from jore.departure departure
@@ -103,13 +104,13 @@ module.exports = [
         and route.date_begin <= departure.date_end
         and route.date_end >= departure.date_begin
         and case when date is null then true else date between departure.date_begin and departure.date_end end
-      group by (departure.stop_id, departure.route_id, departure.direction, departure.hours, departure.minutes,
+      group by (departure.stop_id, departure.route_id, departure.direction, departure.next_day, departure.hours, departure.minutes,
         departure.is_accessible, departure.date_begin, departure.date_end, departure.stop_role, departure.note);
     $$ language sql stable;
   `,
   `
     create function jore.route_segment_departures_gropuped(route_segment jore.route_segment, date date) returns setof jore.departure_group as $$
-      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type),
+      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type), next_day,
         departure.hours, departure.minutes, departure.is_accessible, departure.date_begin, departure.date_end,
         departure.stop_role, departure.note, array_agg(departure.vehicle)
       from jore.departure departure
@@ -119,19 +120,19 @@ module.exports = [
         and route_segment.date_begin <= departure.date_end
         and route_segment.date_end >= departure.date_begin
         and case when date is null then true else date between departure.date_begin and departure.date_end end
-      group by (departure.stop_id, departure.route_id, departure.direction, departure.hours, departure.minutes,
+      group by (departure.stop_id, departure.route_id, departure.direction, departure.next_day, departure.hours, departure.minutes,
         departure.is_accessible, departure.date_begin, departure.date_end, departure.stop_role, departure.note);
     $$ language sql stable;
   `,
   `
     create function jore.stop_departures_gropuped(stop jore.stop, date date) returns setof jore.departure_group as $$
-      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type),
+      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type), next_day,
         departure.hours, departure.minutes, departure.is_accessible, departure.date_begin, departure.date_end,
         departure.stop_role, departure.note, array_agg(departure.vehicle)
       from jore.departure departure
       where stop.stop_id = departure.stop_id
         and case when date is null then true else date between departure.date_begin and departure.date_end end
-      group by (departure.stop_id, departure.route_id, departure.direction, departure.hours, departure.minutes,
+      group by (departure.stop_id, departure.route_id, departure.direction, departure.next_day, departure.hours, departure.minutes,
         departure.is_accessible, departure.date_begin, departure.date_end, departure.stop_role, departure.note);
     $$ language sql stable;
   `,
