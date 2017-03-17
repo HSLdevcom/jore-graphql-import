@@ -8,6 +8,26 @@ module.exports = [
     $$ language sql stable;
   `,
   `
+    create function jore.stop_route_segments_for_date(stop jore.stop, date date) returns setof jore.route_segment as $$
+      select *
+      from jore.route_segment route_segment
+      where route_segment.stop_id = stop.stop_id
+        and date between route_segment.date_begin and route_segment.date_end;
+    $$ language sql stable;
+  `,
+  `
+    create function jore.route_has_regular_day_departures(route jore.route, date date) returns boolean as $$
+      select *
+      from jore.departure departure
+      where route.route_id = departure.route_id
+        and route.direction = departure.direction
+        and route.date_begin <= departure.date_end
+        and route.date_end >= departure.date_begin
+        and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
+        and case when date is null then true else date between departure.date_begin and departure.date_end end
+    $$ language sql stable;
+  `,
+  `
     create function jore.route_line(route jore.route) returns setof jore.line as $$
       select *
       from jore.line line
