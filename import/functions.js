@@ -17,14 +17,16 @@ module.exports = [
   `,
   `
     create function jore.route_has_regular_day_departures(route jore.route, date date) returns boolean as $$
-      select *
-      from jore.departure departure
-      where route.route_id = departure.route_id
-        and route.direction = departure.direction
-        and route.date_begin <= departure.date_end
-        and route.date_end >= departure.date_begin
-        and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
-        and case when date is null then true else date between departure.date_begin and departure.date_end end
+      select exists (
+          select true
+          from jore.departure departure
+          where route.route_id = departure.route_id
+            and route.direction = departure.direction
+            and route.date_begin <= departure.date_end
+            and route.date_end >= departure.date_begin
+            and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
+            and case when date is null then true else date between departure.date_begin and departure.date_end end
+        )
     $$ language sql stable;
   `,
   `
