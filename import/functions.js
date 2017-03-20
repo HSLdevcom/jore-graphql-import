@@ -173,6 +173,24 @@ module.exports = [
     $$ language sql stable;
   `,
   `
+    create function jore.stop_calculated_heading(stop jore.stop) returns double precision as $$
+      -- https://en.wikipedia.org/wiki/Mean_of_circular_quantities
+      select degrees(atan(avg(sin(heading)) / avg(cos(heading))))
+        from (
+          select st_azimuth(outer_geometry.point, inner_geometry.point) as heading
+            from jore.geometry as outer_geometry
+            join jore.geometry as inner_geometry
+              on inner_geometry.index = (outer_geometry.index + 1)
+                and inner_geometry.route_id = outer_geometry.route_id
+                and inner_geometry.direction = outer_geometry.direction
+                and inner_geometry.date_begin = outer_geometry.date_begin
+                and inner_geometry.date_end = outer_geometry.date_end
+            where outer_geometry.node_id = stop.stop_id
+              and outer_geometry.node_type = 'P'
+        ) as headings;
+    $$ language sql stable;
+  `,
+  `
     create function jore.route_segment_notes(route_segment jore.route_segment, date date) returns setof jore.note as $$
       select note
       from jore.note note
