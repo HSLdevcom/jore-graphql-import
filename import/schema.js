@@ -215,7 +215,7 @@ module.exports = {
       { length: 8 },
       { length: 8 },
       { length: 4, name: "note_id", type: "integer" },
-      { length: 6, name: "note_tpe", type: "string" },
+      { length: 6, name: "note_type", type: "string" },
       { length: 200, name: "note_text", type: "string" },
       { length: 8, name: "date_begin", type: "date" },
       { length: 8, name: "date_end", type: "date" }
