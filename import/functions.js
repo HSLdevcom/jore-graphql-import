@@ -75,7 +75,7 @@ module.exports = [
         and route_segment.direction = inner_route_segment.direction
         and route_segment.date_begin = inner_route_segment.date_begin
         and route_segment.date_end = inner_route_segment.date_end
-        and route_segment.stop_number < inner_route_segment.stop_number
+        and route_segment.stop_index < inner_route_segment.stop_index
     $$ language sql stable;
   `,
   `

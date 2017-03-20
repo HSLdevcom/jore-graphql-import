@@ -152,11 +152,11 @@ module.exports = {
       { length: 8, name: "date_end", type: "date" },
       { length: 20 },
       { length: 3, name: "duration", type: "integer" },
-      { length: 3, name: "stop_number", type: "integer" },
+      { length: 3, name: "stop_index", type: "integer" },
       { length: 94 },
       { length: 1, name: "timing_stop_type", type: "integer" }
     ],
-    primary: ["route_id", "direction", "date_begin", "date_end", "stop_number"]
+    primary: ["route_id", "direction", "date_begin", "date_end", "stop_index"]
   },
   geometry: {
     filename: "reittimuoto.dat",
