@@ -173,6 +173,16 @@ module.exports = [
     $$ language sql stable;
   `,
   `
+    create function jore.route_segment_notes(route_segment jore.route_segment, date date) returns setof jore.note as $$
+      select note
+      from jore.note note
+      where note.line_id = (select line_id from jore.route_segment_line(route_segment))
+        and note.date_begin <= route_segment.date_end
+        and (note.date_end is null or note.date_end >= route_segment.date_begin)
+        and case when date is null then true else date between note.date_begin and note.date_end end
+    $$ language sql stable;
+  `,
+  `
     create type jore.geometry_with_date as (
       geometry jsonb,
       date_begin date,
