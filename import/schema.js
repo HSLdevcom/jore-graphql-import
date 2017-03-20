@@ -140,7 +140,7 @@ module.exports = {
     filename: "reitti.dat",
     fields: [
       { length: 7, name: "stop_id", type: "string", foreign: "stop.stop_id", index: true },
-      { length: 7, name: "next_stop_id", type: "string", foreign: "stop.stop_id"},
+      { length: 7, name: "next_stop_id", type: "string"},
       {
         length: 6,
         name: "route_id",
