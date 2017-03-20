@@ -30,6 +30,20 @@ module.exports = [
     $$ language sql stable;
   `,
   `
+    create function jore.route_segment_has_regular_day_departures(route_segment jore.route_segment, date date) returns boolean as $$
+      select exists (
+          select true
+          from jore.departure departure
+          where route_segment.route_id = departure.route_id
+            and route_segment.direction = departure.direction
+            and route_segment.date_begin <= departure.date_end
+            and route_segment.date_end >= departure.date_begin
+            and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
+            and case when date is null then true else date between departure.date_begin and departure.date_end end
+        )
+    $$ language sql stable;
+  `,
+  `
     create function jore.route_line(route jore.route) returns setof jore.line as $$
       select *
       from jore.line line
