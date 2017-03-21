@@ -8,6 +8,42 @@ module.exports = [
     $$ language sql stable;
   `,
   `
+    create function jore.stop_route_segments_for_date(stop jore.stop, date date) returns setof jore.route_segment as $$
+      select *
+      from jore.route_segment route_segment
+      where route_segment.stop_id = stop.stop_id
+        and date between route_segment.date_begin and route_segment.date_end;
+    $$ language sql stable;
+  `,
+  `
+    create function jore.route_has_regular_day_departures(route jore.route, date date) returns boolean as $$
+      select exists (
+          select true
+          from jore.departure departure
+          where route.route_id = departure.route_id
+            and route.direction = departure.direction
+            and route.date_begin <= departure.date_end
+            and route.date_end >= departure.date_begin
+            and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
+            and case when date is null then true else date between departure.date_begin and departure.date_end end
+        )
+    $$ language sql stable;
+  `,
+  `
+    create function jore.route_segment_has_regular_day_departures(route_segment jore.route_segment, date date) returns boolean as $$
+      select exists (
+          select true
+          from jore.departure departure
+          where route_segment.route_id = departure.route_id
+            and route_segment.direction = departure.direction
+            and route_segment.date_begin <= departure.date_end
+            and route_segment.date_end >= departure.date_begin
+            and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
+            and case when date is null then true else date between departure.date_begin and departure.date_end end
+        )
+    $$ language sql stable;
+  `,
+  `
     create function jore.route_line(route jore.route) returns setof jore.line as $$
       select *
       from jore.line line
@@ -26,6 +62,26 @@ module.exports = [
     $$ language sql stable;
   `, // TODO: investigate why we have to return a setof here
   `
+    create function jore.route_departure_notes(route jore.route, date date) returns jore.note as $$
+      select *
+      from jore.note note
+      where note.line_id in (select line_id from jore.route_line(route))
+        and route.date_begin <= note.date_end
+        and route.date_end >= note.date_begin
+        and case when date is null then true else date between note.date_begin and note.date_end end
+    $$ language sql stable;
+  `,
+  `
+    create function jore.route_segment_departure_notes(route_segment jore.route_segment, date date) returns jore.note as $$
+      select *
+      from jore.note note
+      where note.line_id in (select line_id from jore.route_segment_line(route_segment))
+        and route_segment.date_begin <= note.date_end
+        and route_segment.date_end >= note.date_begin
+        and case when date is null then true else date between note.date_begin and note.date_end end
+    $$ language sql stable;
+  `,
+  `
     create function jore.route_segment_next_stops(route_segment jore.route_segment) returns setof jore.route_segment as $$
       select *
       from jore.route_segment inner_route_segment
@@ -33,7 +89,7 @@ module.exports = [
         and route_segment.direction = inner_route_segment.direction
         and route_segment.date_begin = inner_route_segment.date_begin
         and route_segment.date_end = inner_route_segment.date_end
-        and route_segment.stop_number < inner_route_segment.stop_number
+        and route_segment.stop_index < inner_route_segment.stop_index
     $$ language sql stable;
   `,
   `
@@ -62,9 +118,10 @@ module.exports = [
       route_id      character varying(6),
       direction     character varying(1),
       day_type      character varying(2)[],
+      is_next_day   boolean,
       hours         integer,
       minutes       integer,
-      is_accessible integer,
+      is_accessible boolean,
       date_begin    date,
       date_end      date,
       stop_role     integer,
@@ -74,7 +131,7 @@ module.exports = [
   `,
   `
     create function jore.route_departures_gropuped(route jore.route, date date) returns setof jore.departure_group as $$
-      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type),
+      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type), is_next_day,
         departure.hours, departure.minutes, departure.is_accessible, departure.date_begin, departure.date_end,
         departure.stop_role, departure.note, array_agg(departure.vehicle)
       from jore.departure departure
@@ -83,34 +140,35 @@ module.exports = [
         and route.date_begin <= departure.date_end
         and route.date_end >= departure.date_begin
         and case when date is null then true else date between departure.date_begin and departure.date_end end
-      group by (departure.stop_id, departure.route_id, departure.direction, departure.hours, departure.minutes,
+      group by (departure.stop_id, departure.route_id, departure.direction, departure.is_next_day, departure.hours, departure.minutes,
         departure.is_accessible, departure.date_begin, departure.date_end, departure.stop_role, departure.note);
     $$ language sql stable;
   `,
   `
     create function jore.route_segment_departures_gropuped(route_segment jore.route_segment, date date) returns setof jore.departure_group as $$
-      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type),
+      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type), is_next_day,
         departure.hours, departure.minutes, departure.is_accessible, departure.date_begin, departure.date_end,
         departure.stop_role, departure.note, array_agg(departure.vehicle)
       from jore.departure departure
       where route_segment.route_id = departure.route_id
+        and route_segment.stop_id = departure.stop_id
         and route_segment.direction = departure.direction
         and route_segment.date_begin <= departure.date_end
         and route_segment.date_end >= departure.date_begin
         and case when date is null then true else date between departure.date_begin and departure.date_end end
-      group by (departure.stop_id, departure.route_id, departure.direction, departure.hours, departure.minutes,
+      group by (departure.stop_id, departure.route_id, departure.direction, departure.is_next_day, departure.hours, departure.minutes,
         departure.is_accessible, departure.date_begin, departure.date_end, departure.stop_role, departure.note);
     $$ language sql stable;
   `,
   `
     create function jore.stop_departures_gropuped(stop jore.stop, date date) returns setof jore.departure_group as $$
-      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type),
+      select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type), is_next_day,
         departure.hours, departure.minutes, departure.is_accessible, departure.date_begin, departure.date_end,
         departure.stop_role, departure.note, array_agg(departure.vehicle)
       from jore.departure departure
       where stop.stop_id = departure.stop_id
         and case when date is null then true else date between departure.date_begin and departure.date_end end
-      group by (departure.stop_id, departure.route_id, departure.direction, departure.hours, departure.minutes,
+      group by (departure.stop_id, departure.route_id, departure.direction, departure.is_next_day, departure.hours, departure.minutes,
         departure.is_accessible, departure.date_begin, departure.date_end, departure.stop_role, departure.note);
     $$ language sql stable;
   `,
@@ -126,6 +184,34 @@ module.exports = [
             and route.route_id like (inner_line.line_id || '%')
           limit 1
         );
+    $$ language sql stable;
+  `,
+  `
+    create function jore.stop_calculated_heading(stop jore.stop) returns double precision as $$
+      -- https://en.wikipedia.org/wiki/Mean_of_circular_quantities
+      select degrees(atan(avg(sin(heading)) / avg(cos(heading))))
+        from (
+          select st_azimuth(outer_geometry.point, inner_geometry.point) as heading
+            from jore.geometry as outer_geometry
+            join jore.geometry as inner_geometry
+              on inner_geometry.index = (outer_geometry.index + 1)
+                and inner_geometry.route_id = outer_geometry.route_id
+                and inner_geometry.direction = outer_geometry.direction
+                and inner_geometry.date_begin = outer_geometry.date_begin
+                and inner_geometry.date_end = outer_geometry.date_end
+            where outer_geometry.node_id = stop.stop_id
+              and outer_geometry.node_type = 'P'
+        ) as headings;
+    $$ language sql stable;
+  `,
+  `
+    create function jore.route_segment_notes(route_segment jore.route_segment, date date) returns setof jore.note as $$
+      select note
+      from jore.note note
+      where note.line_id = (select line_id from jore.route_segment_line(route_segment))
+        and note.date_begin <= route_segment.date_end
+        and (note.date_end is null or note.date_end >= route_segment.date_begin)
+        and case when date is null then true else date between note.date_begin and note.date_end end
     $$ language sql stable;
   `,
   `
