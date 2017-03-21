@@ -62,6 +62,18 @@ module.exports = [
     $$ language sql stable;
   `, // TODO: investigate why we have to return a setof here
   `
+    create function jore.route_segment_route(route_segment jore.route_segment, date date) returns setof jore.route as $$
+      select *
+      from jore.route route
+      where route_segment.route_id = route.route_id
+        and route_segment.direction = route.direction
+        and route.date_begin <= route_segment.date_end
+        and route.date_end >= route_segment.date_begin
+        and case when date is null then true else date between route.date_begin and route.date_end end
+      limit 1;
+    $$ language sql stable;
+  `, // TODO: investigate why we have to return a setof here
+  `
     create function jore.route_departure_notes(route jore.route, date date) returns jore.note as $$
       select *
       from jore.note note
