@@ -51,7 +51,7 @@ function parseDat(filename, fields, knex, tableName, trx, st) {
     const lineReader = readline.createInterface({
       input: fs
         .createReadStream(filename)
-        .pipe(iconv.decodeStream("ISO-8859-15"))
+        .pipe(iconv.decodeStream("ISO-8859-1"))
     });
 
     lineReader.on("line", line => {
