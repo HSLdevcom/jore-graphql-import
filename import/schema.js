@@ -153,7 +153,14 @@ module.exports = {
       { length: 20 },
       { length: 3, name: "duration", type: "integer" },
       { length: 3, name: "stop_index", type: "integer" },
-      { length: 94 },
+      { length: 6, name: "distance_from_previous", type: "integer" },
+      { length: 6, name: "distance_from_start", type: "integer" },
+      { length: 1, name: "pickup_dropoff_type", type: "integer" },
+      { length: 1 },
+      { length: 20, name: "destination_fi", type: "string" },
+      { length: 20, name: "destination_se", type: "string" },
+      { length: 20, name: "via_fi", type: "string" },
+      { length: 20, name: "via_se", type: "string" },
       { length: 1, name: "timing_stop_type", type: "integer" }
     ],
     primary: ["route_id", "direction", "date_begin", "date_end", "stop_index"]
