@@ -199,9 +199,9 @@ module.exports = [
     $$ language sql stable;
   `,
   `
-    create function jore.stop_calculated_heading(stop jore.stop) returns double precision as $$
+    create function jore.stop_calculated_heading(stop jore.stop) returns numeric as $$
       -- https://en.wikipedia.org/wiki/Mean_of_circular_quantities
-      select degrees(atan(avg(sin(heading)) / avg(cos(heading))))
+      select mod(cast(degrees(atan2(avg(sin(heading)), avg(cos(heading)))) + 360 as numeric), 360)
         from (
           select st_azimuth(outer_geometry.point, inner_geometry.point) as heading
             from jore.geometry as outer_geometry
