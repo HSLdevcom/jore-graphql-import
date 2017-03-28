@@ -199,9 +199,9 @@ module.exports = [
     $$ language sql stable;
   `,
   `
-    create function jore.stop_calculated_heading(stop jore.stop) returns double precision as $$
+    create function jore.stop_calculated_heading(stop jore.stop) returns numeric as $$
       -- https://en.wikipedia.org/wiki/Mean_of_circular_quantities
-      select degrees(atan(avg(sin(heading)) / avg(cos(heading))))
+      select mod(cast(degrees(atan2(avg(sin(heading)), avg(cos(heading)))) + 360 as numeric), 360)
         from (
           select st_azimuth(outer_geometry.point, inner_geometry.point) as heading
             from jore.geometry as outer_geometry
@@ -247,41 +247,38 @@ module.exports = [
   `,
   `
     create function jore.stops_by_bbox(
-      min_lat decimal(9, 6),
-      min_lon decimal(9, 6),
-      max_lat decimal(9, 6),
-      max_lon decimal(9, 6)
+      min_lat double precision,
+      min_lon double precision,
+      max_lat double precision,
+      max_lon double precision
     ) returns setof jore.stop as $$
       select *
       from jore.stop stop
-      where stop.lat between min_lat and max_lat
-        and stop.lon between min_lon and max_lon
+      where stop.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
     $$ language sql stable;
   `,
   `
     create function jore.stop_areas_by_bbox(
-    min_lat decimal(9, 6),
-    min_lon decimal(9, 6),
-    max_lat decimal(9, 6),
-    max_lon decimal(9, 6)
-  ) returns setof jore.stop_area as $$
-    select *
-    from jore.stop_area stop_area
-    where stop_area.lat between min_lat and max_lat
-      and stop_area.lon between min_lon and max_lon
-  $$ language sql stable;
+      min_lat double precision,
+      min_lon double precision,
+      max_lat double precision,
+      max_lon double precision
+    ) returns setof jore.stop_area as $$
+      select *
+      from jore.stop_area stop_area
+      where stop_area.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
+    $$ language sql stable;
   `,
   `
     create function jore.terminals_by_bbox(
-    min_lat decimal(9, 6),
-    min_lon decimal(9, 6),
-    max_lat decimal(9, 6),
-    max_lon decimal(9, 6)
-  ) returns setof jore.terminal as $$
-    select *
-    from jore.terminal terminal
-    where terminal.lat between min_lat and max_lat
-      and terminal.lon between min_lon and max_lon
-  $$ language sql stable;
+      min_lat double precision,
+      min_lon double precision,
+      max_lat double precision,
+      max_lon double precision
+    ) returns setof jore.terminal as $$
+      select *
+      from jore.terminal terminal
+      where terminal.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
+    $$ language sql stable;
   `
 ];

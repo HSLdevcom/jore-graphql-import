@@ -74,6 +74,7 @@ function createTables(schema) {
         (_.find(fields, { name: "x" }) && _.find(fields, { name: "y" }))
       ) {
         table.specificType("point", "geometry(point, 4326)");
+        table.index("point", `${tableName}_points_gix`, "GIST")
       }
     });
   });

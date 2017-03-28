@@ -177,7 +177,7 @@ module.exports = {
       { length: 1, name: "direction", type: "string" },
       { length: 8, name: "date_begin", type: "date" },
       { length: 8, name: "date_end", type: "date" },
-      { length: 7, name: "node_id", type: "string" },
+      { length: 7, name: "node_id", type: "string", index: true },
       { length: 1, name: "node_type", type: "string"},
       { length: 4, name: "index", type: "integer" },
       { length: 7, name: "y", type: "integer" },
