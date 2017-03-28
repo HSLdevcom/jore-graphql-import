@@ -258,6 +258,36 @@ module.exports = [
     $$ language sql stable;
   `,
   `
+    create type jore.stop_grouped as (
+      short_id     character varying(6),
+      name_fi      character varying(20),
+      name_se      character varying(20),
+      lat          numeric(9,6),
+      lon          numeric(9,6),
+      stop_ids     character varying(7)[]
+    );
+  `,
+  `
+    create function jore.stop_grouped_by_short_id_by_bbox(
+      min_lat double precision,
+      min_lon double precision,
+      max_lat double precision,
+      max_lon double precision
+    ) returns setof jore.stop_grouped as $$
+      select stop.short_id, stop.name_fi, stop.name_se, stop.lat, stop.lon, array_agg(stop.stop_id)
+      from jore.stop stop
+      where stop.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
+      group by stop.short_id, stop.name_fi, stop.name_se, stop.lat, stop.lon;
+    $$ language sql stable;
+  `,
+  `
+    create function jore.stop_grouped_stops(stop_grouped jore.stop_grouped) returns setof jore.stop as $$
+      select stop
+      from jore.stop
+      where stop.stop_id = any(stop_grouped.stop_ids);
+    $$ language sql stable;
+  `,
+  `
     create function jore.stop_areas_by_bbox(
       min_lat double precision,
       min_lon double precision,
