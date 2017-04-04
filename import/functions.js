@@ -288,6 +288,17 @@ module.exports = [
     $$ language sql stable;
   `,
   `
+    create function jore.stop_siblings(stop jore.stop) returns setof jore.stop as $$
+      select *
+      from jore.stop original_stop
+      where original_stop.short_id = stop.short_id
+        and original_stop.name_fi = stop.name_fi
+        and original_stop.name_se = stop.name_se
+        and original_stop.lat = stop.lat
+        and original_stop.lon = stop.lon
+    $$ language sql stable;
+  `,
+  `
     create function jore.stop_areas_by_bbox(
       min_lat double precision,
       min_lon double precision,
