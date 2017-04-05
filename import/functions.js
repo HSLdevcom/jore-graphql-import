@@ -321,5 +321,48 @@ module.exports = [
       from jore.terminal terminal
       where terminal.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
     $$ language sql stable;
+  `,
+  `
+    create function jore.network_by_date_as_geojson(
+      date date,
+      min_lat double precision,
+      min_lon double precision,
+      max_lat double precision,
+      max_lon double precision
+    ) returns json as $$
+      select row_to_json(fc)
+      from (
+        select 'FeatureCollection' as type, array_to_json(array_agg(f)) as features
+          from (
+            select
+              'Feature' as type,
+              geometry.geometry as geometry,
+              json_build_object('route_id', route_id, 'direction', direction, 'date_begin', date_begin, 'date_end', date_end) as properties
+            from (
+              select
+                ST_AsGeoJSON(ST_MakeLine(point order by index asc))::jsonb as geometry,
+                route_id, direction, date_begin, date_end
+              from jore.geometry
+              where date between date_begin and date_end
+                and
+                  case when
+                    min_lat is null or
+                    max_lat is null or
+                    min_lon is null or
+                    max_lon is null
+                  then true else point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326) end
+              group by route_id, direction, date_begin, date_end
+            ) as geometry
+            where exists (
+              select 1
+              from jore.departure departure
+              where departure.route_id = geometry.route_id
+                and departure.direction = geometry.direction
+                and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
+                and date between departure.date_begin and departure.date_end
+            )
+          ) as f
+        ) as fc
+    $$ language sql stable;
   `
 ];
