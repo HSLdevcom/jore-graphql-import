@@ -125,6 +125,22 @@ module.exports = [
     $$ language sql stable;
   `,
   `
+    create type jore.mode as ENUM ('BUS', 'TRAM', 'RAIL', 'SUBWAY', 'FERRY');
+  `,
+  `
+    create function jore.route_mode(route jore.route) returns jore.mode as $$
+      select
+        case route.type
+          when '02' then 'TRAM'::jore.mode
+          when '06' then 'SUBWAY'::jore.mode
+          when '07' then 'FERRY'::jore.mode
+          when '12' then 'RAIL'::jore.mode
+          when '13' then 'RAIL'::jore.mode
+          else 'BUS'::jore.mode
+        end
+    $$ language sql immutable;
+  `,
+  `
     create type jore.departure_group as (
       stop_id       character varying(7),
       route_id      character varying(6),
@@ -337,7 +353,19 @@ module.exports = [
             select
               'Feature' as type,
               geometry.geometry as geometry,
-              json_build_object('route_id', route_id, 'direction', direction, 'date_begin', date_begin, 'date_end', date_end) as properties
+              json_build_object(
+                'route_id', route_id,
+                'direction', direction,
+                'date_begin', date_begin,
+                'date_end', date_end,
+                'mode', jore.route_mode((
+                  select route
+                  from jore.route route
+                  where geometry.route_id = route.route_id
+                    and geometry.direction = route.direction
+                    and date between route.date_begin and route.date_end
+                ))
+              ) as properties
             from (
               select
                 ST_AsGeoJSON(ST_MakeLine(point order by index asc))::jsonb as geometry,
