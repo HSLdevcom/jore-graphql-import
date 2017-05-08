@@ -63,6 +63,25 @@ module.exports = {
       { length: 8, name: "lon", type: "decimal" }
     ]
   },
+  terminal_group: {
+    filename: "terminaaliryhma.dat",
+    fields: [
+      {
+        length: 7,
+        name: "terminal_id_from",
+        type: "string",
+        index: true,
+        foreign: "terminal.terminal_id"
+      },
+      {
+        length: 7,
+        name: "terminal_id_to",
+        type: "string",
+        index: true,
+        foreign: "terminal.terminal_id"
+      },
+    ]
+  },
   stop_area: {
     filename: "pysakkialue.dat",
     fields: [

@@ -124,6 +124,7 @@ knex.transaction(function(trx) {
       .then(() => loadTable("stop"))
       .then(() =>
         Promise.all([
+          loadTable("terminal_group"),
           loadTable("line"),
           loadTable("route"),
           loadTable("route_segment"),
