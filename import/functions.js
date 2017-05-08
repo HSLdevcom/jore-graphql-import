@@ -315,6 +315,14 @@ module.exports = [
     $$ language sql stable;
   `,
   `
+    create function jore.terminal_siblings(terminal jore.terminal) returns setof jore.terminal as $$
+      select terminal_to.*
+      from jore.terminal_group terminal_group
+      join jore.terminal terminal_to on terminal_to.terminal_id = terminal_group.terminal_id_to
+      where terminal_group.terminal_id_from = terminal.terminal_id
+    $$ language sql stable;
+  `,
+  `
     create function jore.stop_areas_by_bbox(
       min_lat double precision,
       min_lon double precision,
