@@ -377,7 +377,7 @@ module.exports = [
           from (
             select
               'Feature' as type,
-              geometry.geometry as geometry,
+              ST_AsGeoJSON(geometry.geometry)::jsonb as geometry,
               json_build_object(
                 'route_id', route_id,
                 'direction', direction,
@@ -393,20 +393,23 @@ module.exports = [
               ) as properties
             from (
               select
-                ST_AsGeoJSON(ST_MakeLine(point order by index asc))::jsonb as geometry,
+                case when
+                  min_lat is null or
+                  max_lat is null or
+                  min_lon is null or
+                  max_lon is null
+                then
+                  ST_MakeLine(point order by index asc)
+                else ST_Intersection(
+                  ST_MakeLine(point order by index asc),
+                  ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
+                ) end as geometry,
                 route_id, direction, date_begin, date_end
               from jore.geometry
               where date between date_begin and date_end
-                and
-                  case when
-                    min_lat is null or
-                    max_lat is null or
-                    min_lon is null or
-                    max_lon is null
-                  then true else point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326) end
               group by route_id, direction, date_begin, date_end
             ) as geometry
-            where exists (
+            where not ST_IsEmpty(geometry) and exists (
               select 1
               from jore.departure departure
               where departure.route_id = geometry.route_id
