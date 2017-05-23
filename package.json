@@ -4,7 +4,7 @@
   "description": "GraphQL server interface and data importer for Jore",
   "main": "importPostgis.js",
   "scripts": {
-    "import": "node --max_old_space_size=4096 importPostgis.js"
+    "import": "node --max_old_space_size=4096 src/importPostgis.js"
   },
   "repository": {
     "type": "git",
