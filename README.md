@@ -1,4 +1,6 @@
-# Jore GraphQL importer and server
+# Jore GraphQL importer
+
+Data importer for [jore-graphql](https://github.com/HSLdevcom/jore-graphql)
 
 ### Prerequisites
 
@@ -9,20 +11,14 @@ docker run --name jore-postgis -e POSTGRES_PASSWORD=mysecretpassword -d mdillon/
 
 ### Install
 
-Build the two containers:
+Build the container:
 ```
-docker build -t hsldevcom/jore-import import/
-docker build -t hsldevcom/jore-postgraphql postgraphql/
+docker build -t hsldevcom/jore-graphql-import .
 ```
 
 ### Run
 
 Start the importer:
 ```
-docker run --link jore-postgis -e "PG_CONNECTION_STRING=postgres://postgres:mysecretpassword@jore-postgis:5432/postgres" hsldevcom/jore-import
-```
-
-Start the server:
-```
-docker run --link jore-postgis -e "PG_CONNECTION_STRING=postgres://postgres:mysecretpassword@jore-postgis:5432/postgres" -d -p 0.0.0.0:5000:5000 hsldevcom/jore-postgraphql
+docker run --link jore-postgis -e "PG_CONNECTION_STRING=postgres://postgres:mysecretpassword@jore-postgis:5432/postgres" hsldevcom/jore-graphql-import
 ```

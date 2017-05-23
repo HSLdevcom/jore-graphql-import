@@ -12,7 +12,7 @@ const path = require("path");
 
 const parseDat = require("./parseDat");
 
-const sourcePath = filename => path.join(__dirname, "data", filename);
+const sourcePath = filename => path.join(__dirname, "..", "data", filename);
 
 const tables = require('./schema');
 const functions = require('./functions');

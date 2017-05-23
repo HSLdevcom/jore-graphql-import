@@ -10,12 +10,11 @@ WORKDIR ${WORK}
 
 # Install app dependencies
 COPY package.json ${WORK}
-RUN npm install
+COPY yarn.lock ${WORK}
+RUN yarn install
 
 # Copy app source
 COPY . ${WORK}
-
-EXPOSE 5000
 
 # Fetch and import data
 CMD curl http://dev.hsl.fi/infopoiminta/latest/all.zip > all.zip && \
