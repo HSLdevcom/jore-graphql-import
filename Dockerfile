@@ -16,8 +16,6 @@ RUN yarn install
 # Copy app source
 COPY . ${WORK}
 
-EXPOSE 5000
-
 # Fetch and import data
 CMD curl http://dev.hsl.fi/infopoiminta/latest/all.zip > all.zip && \
   unzip all.zip -d ${WORK}/data && \
