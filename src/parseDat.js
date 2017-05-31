@@ -11,7 +11,7 @@ function parseLine(line, fields, knex, st) {
   fields.forEach(({ length, name, type }) => {
     if (name) {
       const value = line.substring(index, index + length).trim();
-      if (value.length === 0 ) {
+      if (value.length === 0) {
         stop[name] = null
       } else if (type === "decimal") {
         stop[name] = parseFloat(value);
@@ -25,9 +25,7 @@ function parseLine(line, fields, knex, st) {
         if (value.length !== 8) {
           console.log(line);
         }
-        stop[
-          name
-        ] = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
+        stop[name] = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
       } else {
         stop[name] = value;
       }
@@ -43,11 +41,12 @@ function parseLine(line, fields, knex, st) {
   return stop;
 }
 
+
 function parseDat(filename, fields, knex, tableName, trx, st) {
   let i = 0;
-  let results = []
+  let results = [];
 
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const lineReader = readline.createInterface({
       input: fs
         .createReadStream(filename)
@@ -57,24 +56,39 @@ function parseDat(filename, fields, knex, tableName, trx, st) {
     lineReader.on("line", line => {
       if (!whitespaceTest.test(line)) {
         results.push(parseLine(line, fields, knex, st))
+
         if (++i % 2000 === 0) {
-          lineReader.pause()
+          lineReader.pause();
+          console.log(`Inserting ${results.length} lines from ${filename} to ${tableName}`);
           knex
             .withSchema('jore')
             .transacting(trx)
             .insert(results)
             .into(tableName)
-            .then(() => lineReader.resume());
-          results = []
-          if (i % 10000 === 0) console.log(`${filename} ${i}`);
+            .then(() => {
+              lineReader.resume();
+            })
+            .catch((error) => {
+              reject(error);
+            })
+          results = [];
         }
       }
     });
 
-    lineReader.on("close", line => {
-      console.log(`${filename} ${i}`);
-      console.log("loaded " + tableName);
-      resolve(knex.withSchema('jore').transacting(trx).insert(results).into(tableName));
+    lineReader.on("close", () => {
+      console.log(`Inserting ${results.length} lines from ${filename} to ${tableName}`);
+      knex
+        .withSchema('jore')
+        .transacting(trx)
+        .insert(results)
+        .into(tableName)
+        .then((result) => {
+          resolve(result);
+        })
+        .catch((error) => {
+          reject(error);
+        });
     });
   });
 }
