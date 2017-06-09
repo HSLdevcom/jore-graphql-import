@@ -122,7 +122,7 @@ knex.transaction(function(trx) {
     return loadTable("terminal")
       .then(() => loadTable("stop_area"))
       .then(() => loadTable("stop"))
-      .then(() =>
+      .then(() => (
         Promise.all([
           loadTable("terminal_group"),
           loadTable("line"),
@@ -131,7 +131,8 @@ knex.transaction(function(trx) {
           loadTable("geometry"),
           loadTable("departure"),
           loadTable("note")
-        ]));
+        ]))
+      );
   }
 
   trx.raw("drop schema if exists jore cascade")
@@ -141,12 +142,12 @@ knex.transaction(function(trx) {
     .then(() => createFunctions(trx))
     .then(loadData)
     .then(trx.commit)
-    .then(
-      res => console.log(res),
-      err => {
-        console.log(err);
-        return trx.rollback();
-      }
-    )
-    .then(knex.destroy);
+    .catch((err) => {
+      console.error(err);
+      return trx.rollback();
+    })
+    .then(knex.destroy)
+    .catch((err) => {
+      console.error(err);
+    });
 });
