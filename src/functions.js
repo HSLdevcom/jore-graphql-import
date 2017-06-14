@@ -237,9 +237,12 @@ module.exports = [
       select note
       from jore.note note
       where note.line_id = (select line_id from jore.route_segment_line(route_segment))
-        and note.date_begin <= route_segment.date_end
+        and (note.date_begin is null or note.date_begin <= route_segment.date_end)
         and (note.date_end is null or note.date_end >= route_segment.date_begin)
-        and case when date is null then true else date between note.date_begin and note.date_end end
+        and case when date is null then true else (
+          (note.date_begin is null or note.date_begin <= date)
+          and (note.date_end is null or note.date_end >= date)
+       ) end
     $$ language sql stable;
   `,
   `
