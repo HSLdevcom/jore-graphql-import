@@ -238,8 +238,8 @@ module.exports = {
     filename: "linteks.dat",
     fields: [
       { length: 6, name: "line_id", type: "string"},
-      { length: 8 },
-      { length: 8 },
+      { length: 8, name: "line_date_begin", type: "date" },
+      { length: 8, name: "line_date_begin", type: "date" },
       { length: 4, name: "note_id", type: "integer" },
       { length: 6, name: "note_type", type: "string" },
       { length: 200, name: "note_text", type: "string" },
