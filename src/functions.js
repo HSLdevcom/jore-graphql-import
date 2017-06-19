@@ -130,13 +130,15 @@ module.exports = [
   `
     create function jore.route_mode(route jore.route) returns jore.mode as $$
       select
-        case route.type
-          when '02' then 'TRAM'::jore.mode
-          when '06' then 'SUBWAY'::jore.mode
-          when '07' then 'FERRY'::jore.mode
-          when '12' then 'RAIL'::jore.mode
-          when '13' then 'RAIL'::jore.mode
-          else 'BUS'::jore.mode
+        case when route is null then null else 
+          case route.type
+            when '02' then 'TRAM'::jore.mode
+            when '06' then 'SUBWAY'::jore.mode
+            when '07' then 'FERRY'::jore.mode
+            when '12' then 'RAIL'::jore.mode
+            when '13' then 'RAIL'::jore.mode
+            else 'BUS'::jore.mode
+          end
         end
     $$ language sql immutable;
   `,
