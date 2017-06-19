@@ -130,13 +130,15 @@ module.exports = [
   `
     create function jore.route_mode(route jore.route) returns jore.mode as $$
       select
-        case route.type
-          when '02' then 'TRAM'::jore.mode
-          when '06' then 'SUBWAY'::jore.mode
-          when '07' then 'FERRY'::jore.mode
-          when '12' then 'RAIL'::jore.mode
-          when '13' then 'RAIL'::jore.mode
-          else 'BUS'::jore.mode
+        case when route is null then null else 
+          case route.type
+            when '02' then 'TRAM'::jore.mode
+            when '06' then 'SUBWAY'::jore.mode
+            when '07' then 'FERRY'::jore.mode
+            when '12' then 'RAIL'::jore.mode
+            when '13' then 'RAIL'::jore.mode
+            else 'BUS'::jore.mode
+          end
         end
     $$ language sql immutable;
   `,
@@ -237,9 +239,12 @@ module.exports = [
       select note
       from jore.note note
       where note.line_id = (select line_id from jore.route_segment_line(route_segment))
-        and note.date_begin <= route_segment.date_end
+        and (note.date_begin is null or note.date_begin <= route_segment.date_end)
         and (note.date_end is null or note.date_end >= route_segment.date_begin)
-        and case when date is null then true else date between note.date_begin and note.date_end end
+        and case when date is null then true else (
+          (note.date_begin is null or note.date_begin <= date)
+          and (note.date_end is null or note.date_end >= date)
+       ) end
     $$ language sql stable;
   `,
   `
