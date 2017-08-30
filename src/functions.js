@@ -130,7 +130,7 @@ module.exports = [
   `
     create function jore.route_mode(route jore.route) returns jore.mode as $$
       select
-        case when route is null then null else 
+        case when route is null then null else
           case route.type
             when '02' then 'TRAM'::jore.mode
             when '06' then 'SUBWAY'::jore.mode
@@ -422,6 +422,40 @@ module.exports = [
                 and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
                 and date between departure.date_begin and departure.date_end
             )
+          ) as f
+        ) as fc
+    $$ language sql stable;
+  `,
+  `
+    create function jore.point_network_as_geojson() returns json as $$
+      select row_to_json(fc)
+      from (
+        select 'FeatureCollection' as type, array_to_json(array_agg(f)) as features
+          from (
+            select
+              'Feature' as type,
+              ST_AsGeoJSON(geometry.geometry)::jsonb as geometry,
+              json_build_object(
+                'route_id', route_id,
+                'direction', direction,
+                'date_begin', date_begin,
+                'date_end', date_end,
+                'mode', jore.route_mode((
+                  select route
+                  from jore.route route
+                  where geometry.route_id = route.route_id
+                    and geometry.direction = route.direction
+                    and route.date_begin <= geometry.date_end
+                    and route.date_end >= geometry.date_begin
+                ))
+              ) as properties
+            from (
+              select
+                ST_MakeLine(point order by index asc) as geometry,
+                route_id, direction, date_begin, date_end
+              from jore.geometry
+              group by route_id, direction, date_begin, date_end
+            ) as geometry
           ) as f
         ) as fc
     $$ language sql stable;
