@@ -222,8 +222,8 @@ module.exports = [
       select mod(cast(degrees(atan2(avg(sin(heading)), avg(cos(heading)))) + 360 as numeric), 360)
         from (
           select st_azimuth(outer_geometry.point, inner_geometry.point) as heading
-            from jore.geometry as outer_geometry
-            join jore.geometry as inner_geometry
+            from jore.point_geometry as outer_geometry
+            join jore.point_geometry as inner_geometry
               on inner_geometry.index = (outer_geometry.index + 1)
                 and inner_geometry.route_id = outer_geometry.route_id
                 and inner_geometry.direction = outer_geometry.direction
@@ -257,7 +257,7 @@ module.exports = [
   `
     create function jore.route_geometries(route jore.route, date date) returns setof jore.geometry_with_date as $$
       select ST_AsGeoJSON(ST_MakeLine(point order by index asc))::jsonb, date_begin, date_end
-      from jore.geometry geometry
+      from jore.point_geometry geometry
       where route.route_id = geometry.route_id
         and route.direction = geometry.direction
         and route.date_begin <= geometry.date_end
@@ -410,7 +410,7 @@ module.exports = [
                   ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
                 ) end as geometry,
                 route_id, direction, date_begin, date_end
-              from jore.geometry
+              from jore.point_geometry
               where date between date_begin and date_end
               group by route_id, direction, date_begin, date_end
             ) as geometry
@@ -453,7 +453,7 @@ module.exports = [
               select
                 ST_MakeLine(point order by index asc) as geometry,
                 route_id, direction, date_begin, date_end
-              from jore.geometry
+              from jore.point_geometry
               group by route_id, direction, date_begin, date_end
             ) as geometry
           ) as f
