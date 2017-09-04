@@ -184,7 +184,7 @@ module.exports = {
     ],
     primary: ["route_id", "direction", "date_begin", "date_end", "stop_index"]
   },
-  geometry: {
+  point_geometry: {
     filename: "reittimuoto.dat",
     fields: [
       {
