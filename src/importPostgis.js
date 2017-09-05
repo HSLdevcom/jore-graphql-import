@@ -168,6 +168,7 @@ knex.transaction(function(trx) {
     .then(() => createFunctions(trx))
     .then(loadData)
     .then(() => loadGeometry(trx))
+    .then(() => trx.raw("CREATE INDEX ON jore.geometry USING GIST (geom)"))
     .then(trx.commit)
     .catch((err) => {
       console.error(err);
