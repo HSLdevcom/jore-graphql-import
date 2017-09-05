@@ -107,6 +107,30 @@ function createFunctions(knex) {
   return functions.reduce((promise, f) => promise.then(() => knex.raw(f)), Promise.resolve());
 }
 
+function loadGeometry(trx) {
+  return trx.raw(`
+    INSERT INTO jore.geometry
+    SELECT
+      route_id,
+      direction,
+      date_begin,
+      date_end,
+      jore.route_mode((
+        select route
+        from jore.route route
+        where geometry.route_id = route.route_id
+          and geometry.direction = route.direction
+          and route.date_begin <= geometry.date_end
+          and route.date_end >= geometry.date_begin
+      )) as mode,
+      ST_MakeLine(point order by index asc) as geom,
+      0 as outliers,
+      0 as min_likelihood,
+    FROM jore.point_geometry geometry
+    GROUP BY route_id, direction, date_begin, date_end
+  `)
+}
+
 knex.transaction(function(trx) {
   function loadTable(tableName) {
     return parseDat(
@@ -143,6 +167,7 @@ knex.transaction(function(trx) {
     .then(() => createForeignKeys(trx.schema.withSchema("jore")))
     .then(() => createFunctions(trx))
     .then(loadData)
+    .then(() => loadGeometry(trx))
     .then(trx.commit)
     .catch((err) => {
       console.error(err);
