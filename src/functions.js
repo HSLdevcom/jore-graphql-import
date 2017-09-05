@@ -378,45 +378,34 @@ module.exports = [
           from (
             select
               'Feature' as type,
-              ST_AsGeoJSON(geometry.geometry)::jsonb as geometry,
+              ST_AsGeoJSON(geom)::jsonb as geometry,
               json_build_object(
                 'route_id', route_id,
                 'direction', direction,
                 'date_begin', date_begin,
                 'date_end', date_end,
-                'mode', jore.route_mode((
-                  select route
-                  from jore.route route
-                  where geometry.route_id = route.route_id
-                    and geometry.direction = route.direction
-                    and date between route.date_begin and route.date_end
-                ))
+                'mode', mode
               ) as properties
-            from (
-              select
-                case when
-                  min_lat is null or
-                  max_lat is null or
-                  min_lon is null or
-                  max_lon is null
-                then
-                  geom
-                else
-                  geom &&
-                  ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
-                end as geometry,
-                route_id, direction, date_begin, date_end
-              from jore.geometry
-              where date between date_begin and date_end
-            ) as geometry
-            where not ST_IsEmpty(geometry) and exists (
+            from jore.geometry geometry
+            where date between geometry.date_begin and geometry.date_end
+            and case when
+              min_lat is null or
+              max_lat is null or
+              min_lon is null or
+              max_lon is null
+            then
+              true
+            else
+              geometry.geom &&
+              ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
+            end and exists (
               select 1
               from jore.departure departure
               where departure.route_id = geometry.route_id
                 and departure.direction = geometry.direction
                 and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
                 and date between departure.date_begin and departure.date_end
-            )
+              )
           ) as f
         ) as fc
     $$ language sql stable;
