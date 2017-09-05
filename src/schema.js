@@ -246,5 +246,22 @@ module.exports = {
       { length: 8, name: "date_begin", type: "date" },
       { length: 8, name: "date_end", type: "date" }
     ]
+  },
+  geometry: {
+    fields: [
+      {
+        length: 6,
+        name: "route_id",
+        type: "string",
+        index: true
+      },
+      { length: 1, name: "direction", type: "string" },
+      { length: 8, name: "date_begin", type: "date" },
+      { length: 8, name: "date_end", type: "date" },
+      { name: "mode", type: "specificType", typeOptions: "jore.mode"},
+      { name: "geom", type: "specificType", typeOptions: "geometry(LineString,4326)"},
+      { name: "outliers", type: "integer" },
+      { name: "min_likelihood", type: "real"}
+    ]
   }
 };
