@@ -125,9 +125,6 @@ module.exports = [
     $$ language sql stable;
   `,
   `
-    create type jore.mode as ENUM ('BUS', 'TRAM', 'RAIL', 'SUBWAY', 'FERRY');
-  `,
-  `
     create function jore.route_mode(route jore.route) returns jore.mode as $$
       select
         case when route is null then null else

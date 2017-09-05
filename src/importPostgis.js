@@ -137,6 +137,7 @@ knex.transaction(function(trx) {
 
   trx.raw("drop schema if exists jore cascade")
     .then(() => trx.raw("create schema jore"))
+    .then(() => trx.raw("create type jore.mode as ENUM ('BUS', 'TRAM', 'RAIL', 'SUBWAY', 'FERRY')"))
     .then(() => createTables(trx.schema.withSchema("jore")))
     .then(() => createForeignKeys(trx.schema.withSchema("jore")))
     .then(() => createFunctions(trx))
