@@ -261,7 +261,7 @@ module.exports = {
       { name: "mode", type: "specificType", typeOptions: "jore.mode"},
       { name: "geom", type: "specificType", typeOptions: "geometry(LineString,4326)"},
       { name: "outliers", type: "integer" },
-      { name: "min_likelihood", type: "real"}
+      { name: "min_likelihood", type: "float"}
     ]
   }
 };
