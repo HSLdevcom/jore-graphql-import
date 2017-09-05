@@ -43,7 +43,8 @@ function createTables(schema) {
         unique,
         primary,
         index,
-        foreign
+        foreign,
+        typeOptions
       }) {
         if (name && type) {
           let column;
@@ -52,7 +53,7 @@ function createTables(schema) {
           } else if (type === "decimal") {
             column = table.decimal(name, 9, 6);
           } else {
-            column = table[type](name);
+            column = table[type](name, typeOptions);
           }
           if (primary) {
             if (Array.isArray(primary)) {
