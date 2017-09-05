@@ -401,10 +401,10 @@ module.exports = [
                   max_lon is null
                 then
                   geom
-                else ST_Intersection(
-                  geom,
+                else
+                  geom &&
                   ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
-                ) end as geometry,
+                end as geometry,
                 route_id, direction, date_begin, date_end
               from jore.geometry
               where date between date_begin and date_end
