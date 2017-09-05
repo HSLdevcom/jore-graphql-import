@@ -253,14 +253,13 @@ module.exports = [
   `,
   `
     create function jore.route_geometries(route jore.route, date date) returns setof jore.geometry_with_date as $$
-      select ST_AsGeoJSON(ST_MakeLine(point order by index asc))::jsonb, date_begin, date_end
-      from jore.point_geometry geometry
+      select ST_AsGeoJSON(geometry.geom)::jsonb, date_begin, date_end
+      from jore.geometry geometry
       where route.route_id = geometry.route_id
         and route.direction = geometry.direction
         and route.date_begin <= geometry.date_end
         and route.date_end >= geometry.date_begin
         and case when date is null then true else date between geometry.date_begin and geometry.date_end end
-      group by (date_begin, date_end);
     $$ language sql stable;
   `,
   `
@@ -401,15 +400,14 @@ module.exports = [
                   min_lon is null or
                   max_lon is null
                 then
-                  ST_MakeLine(point order by index asc)
+                  geom
                 else ST_Intersection(
-                  ST_MakeLine(point order by index asc),
+                  geom,
                   ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
                 ) end as geometry,
                 route_id, direction, date_begin, date_end
-              from jore.point_geometry
+              from jore.geometry
               where date between date_begin and date_end
-              group by route_id, direction, date_begin, date_end
             ) as geometry
             where not ST_IsEmpty(geometry) and exists (
               select 1
