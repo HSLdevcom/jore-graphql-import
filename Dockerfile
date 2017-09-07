@@ -17,9 +17,6 @@ RUN yarn install
 COPY . ${WORK}
 
 # Fetch and import data
-CMD curl http://dev.hsl.fi/hse/netti_kesa.zip > all.zip && \
+CMD curl http://dev.hsl.fi/hse/netti_talvi.zip > all.zip && \
   unzip all.zip -d ${WORK}/data && \
-  sed -i '/^\r$/d' ${WORK}/data/linja3.dat && \
-  sed -i 's|Kultareuna                            66|  Kultareuna                              66|g' ${WORK}/data/pysakkialue.dat && \
-  sed -i 's|Ala-Malmin tori                       66|  Ala-Malmin tori                         66|g' ${WORK}/data/pysakkialue.dat && \
   npm run import
