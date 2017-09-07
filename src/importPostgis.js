@@ -128,7 +128,7 @@ knex.transaction(function(trx) {
           loadTable("line"),
           loadTable("route"),
           loadTable("route_segment"),
-          loadTable("geometry"),
+          loadTable("point_geometry"),
           loadTable("departure"),
           loadTable("note")
         ]))
