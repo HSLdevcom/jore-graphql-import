@@ -175,7 +175,7 @@ module.exports = {
       { length: 6, name: "distance_from_previous", type: "integer" },
       { length: 6, name: "distance_from_start", type: "integer" },
       { length: 1, name: "pickup_dropoff_type", type: "integer" },
-      { length: 1 },
+      { length: 2 },
       { length: 20, name: "destination_fi", type: "string" },
       { length: 20, name: "destination_se", type: "string" },
       { length: 20, name: "via_fi", type: "string" },
