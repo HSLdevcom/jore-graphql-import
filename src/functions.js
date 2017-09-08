@@ -324,13 +324,9 @@ module.exports = [
     $$ language sql stable;
   `,
   `
-    create function jore.stop_modes(stop jore.stop, date date) returns setof jore.mode as $$
-      select distinct jore.route_mode(route)
-      from jore.route route
-      where route in (
-        select jore.route_segment_route(route_segment, date)
-        from jore.stop_route_segments_for_date(stop, date) route_segment
-      )
+    create or replace function jore.stop_modes(stop jore.stop, date date) returns setof jore.mode as $$
+      select distinct jore.route_mode(jore.route_segment_route(route_segment, date))
+      from jore.stop_route_segments_for_date(stop, date) route_segment
     $$ language sql stable;
   `,
   `
