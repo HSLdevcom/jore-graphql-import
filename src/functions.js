@@ -1,5 +1,11 @@
 module.exports = [
   `
+    create index on jore.departure (route_id, direction) where stop_role = 1 and day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su');
+  `,
+  `
+    create index on jore.departure (route_id, direction, stop_id) where day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su');
+  `,
+  `
     create function jore.stop_departures_for_date(stop jore.stop, date date) returns setof jore.departure as $$
       select *
       from jore.departure departure
@@ -22,6 +28,7 @@ module.exports = [
           from jore.departure departure
           where route.route_id = departure.route_id
             and route.direction = departure.direction
+            and departure.stop_role = 1
             and route.date_begin <= departure.date_end
             and route.date_end >= departure.date_begin
             and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
@@ -36,6 +43,7 @@ module.exports = [
           from jore.departure departure
           where route_segment.route_id = departure.route_id
             and route_segment.direction = departure.direction
+            and route_segment.stop_id = departure.stop_id
             and route_segment.date_begin <= departure.date_end
             and route_segment.date_end >= departure.date_begin
             and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
