@@ -17,6 +17,6 @@ RUN yarn install
 COPY . ${WORK}
 
 # Fetch and import data
-CMD curl http://dev.hsl.fi/infopoiminta/latest/all.zip > all.zip && \
+CMD curl http://dev.hsl.fi/hse/netti_talvi.zip > all.zip && \
   unzip all.zip -d ${WORK}/data && \
   npm run import
