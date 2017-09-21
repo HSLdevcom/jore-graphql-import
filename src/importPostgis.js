@@ -43,7 +43,8 @@ function createTables(schema) {
         unique,
         primary,
         index,
-        foreign
+        foreign,
+        typeOptions
       }) {
         if (name && type) {
           let column;
@@ -52,7 +53,7 @@ function createTables(schema) {
           } else if (type === "decimal") {
             column = table.decimal(name, 9, 6);
           } else {
-            column = table[type](name);
+            column = table[type](name, typeOptions);
           }
           if (primary) {
             if (Array.isArray(primary)) {
@@ -106,6 +107,30 @@ function createFunctions(knex) {
   return functions.reduce((promise, f) => promise.then(() => knex.raw(f)), Promise.resolve());
 }
 
+function loadGeometry(trx) {
+  return trx.raw(`
+    INSERT INTO jore.geometry
+    SELECT
+      route_id,
+      direction,
+      date_begin,
+      date_end,
+      jore.route_mode((
+        select route
+        from jore.route route
+        where geometry.route_id = route.route_id
+          and geometry.direction = route.direction
+          and route.date_begin <= geometry.date_end
+          and route.date_end >= geometry.date_begin
+      )) as mode,
+      ST_MakeLine(point order by index asc) as geom,
+      0 as outliers,
+      0 as min_likelihood
+    FROM jore.point_geometry geometry
+    GROUP BY route_id, direction, date_begin, date_end
+  `)
+}
+
 knex.transaction(function(trx) {
   function loadTable(tableName) {
     return parseDat(
@@ -137,10 +162,13 @@ knex.transaction(function(trx) {
 
   trx.raw("drop schema if exists jore cascade")
     .then(() => trx.raw("create schema jore"))
+    .then(() => trx.raw("create type jore.mode as ENUM ('BUS', 'TRAM', 'RAIL', 'SUBWAY', 'FERRY')"))
     .then(() => createTables(trx.schema.withSchema("jore")))
     .then(() => createForeignKeys(trx.schema.withSchema("jore")))
     .then(() => createFunctions(trx))
     .then(loadData)
+    .then(() => loadGeometry(trx))
+    .then(() => trx.raw("CREATE INDEX ON jore.geometry USING GIST (geom)"))
     .then(trx.commit)
     .catch((err) => {
       console.error(err);

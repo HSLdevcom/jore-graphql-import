@@ -133,9 +133,6 @@ module.exports = [
     $$ language sql stable;
   `,
   `
-    create type jore.mode as ENUM ('BUS', 'TRAM', 'RAIL', 'SUBWAY', 'FERRY');
-  `,
-  `
     create function jore.route_mode(route jore.route) returns jore.mode as $$
       select
         case when route is null then null else
@@ -264,14 +261,13 @@ module.exports = [
   `,
   `
     create function jore.route_geometries(route jore.route, date date) returns setof jore.geometry_with_date as $$
-      select ST_AsGeoJSON(ST_MakeLine(point order by index asc))::jsonb, date_begin, date_end
-      from jore.point_geometry geometry
+      select ST_AsGeoJSON(geometry.geom)::jsonb, date_begin, date_end
+      from jore.geometry geometry
       where route.route_id = geometry.route_id
         and route.direction = geometry.direction
         and route.date_begin <= geometry.date_end
         and route.date_end >= geometry.date_begin
         and case when date is null then true else date between geometry.date_begin and geometry.date_end end
-      group by (date_begin, date_end);
     $$ language sql stable;
   `,
   `
@@ -390,46 +386,34 @@ module.exports = [
           from (
             select
               'Feature' as type,
-              ST_AsGeoJSON(geometry.geometry)::jsonb as geometry,
+              ST_AsGeoJSON(geom)::jsonb as geometry,
               json_build_object(
                 'route_id', route_id,
                 'direction', direction,
                 'date_begin', date_begin,
                 'date_end', date_end,
-                'mode', jore.route_mode((
-                  select route
-                  from jore.route route
-                  where geometry.route_id = route.route_id
-                    and geometry.direction = route.direction
-                    and date between route.date_begin and route.date_end
-                ))
+                'mode', mode
               ) as properties
-            from (
-              select
-                case when
-                  min_lat is null or
-                  max_lat is null or
-                  min_lon is null or
-                  max_lon is null
-                then
-                  ST_MakeLine(point order by index asc)
-                else ST_Intersection(
-                  ST_MakeLine(point order by index asc),
-                  ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
-                ) end as geometry,
-                route_id, direction, date_begin, date_end
-              from jore.point_geometry
-              where date between date_begin and date_end
-              group by route_id, direction, date_begin, date_end
-            ) as geometry
-            where not ST_IsEmpty(geometry) and exists (
+            from jore.geometry geometry
+            where date between geometry.date_begin and geometry.date_end
+            and case when
+              min_lat is null or
+              max_lat is null or
+              min_lon is null or
+              max_lon is null
+            then
+              true
+            else
+              geometry.geom &&
+              ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
+            end and exists (
               select 1
               from jore.departure departure
               where departure.route_id = geometry.route_id
                 and departure.direction = geometry.direction
                 and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
                 and date between departure.date_begin and departure.date_end
-            )
+              )
           ) as f
         ) as fc
     $$ language sql stable;
