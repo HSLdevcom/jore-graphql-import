@@ -7,6 +7,8 @@ const knex = require("knex")({
 // install postgis functions in knex.postgis;
 const st = require("knex-postgis")(knex);
 
+const fs = require("fs")
+
 const _ = require("lodash");
 const path = require("path");
 
@@ -15,23 +17,6 @@ const parseDat = require("./parseDat");
 const sourcePath = filename => path.join(__dirname, "..", "data", filename);
 
 const tables = require('./schema');
-const functions = require('./functions');
-
-function dropTables(schema) {
-  schema = schema
-    .dropTableIfExists("departure")
-    .dropTableIfExists("route_segment")
-    .dropTableIfExists("stop")
-    .dropTableIfExists("terminal")
-    .dropTableIfExists("stop_area")
-    .dropTableIfExists("line");
-
-  Object.keys(tables).forEach(function(tableName) {
-    schema = schema.dropTableIfExists(tableName);
-  });
-
-  return schema;
-}
 
 function createTables(schema) {
   Object.entries(tables).forEach(function([tableName, { fields }]) {
@@ -103,35 +88,7 @@ function createForeignKeys(schema) {
   return schema;
 }
 
-function createFunctions(knex) {
-  return functions.reduce((promise, f) => promise.then(() => knex.raw(f)), Promise.resolve());
-}
-
-function loadGeometry(trx) {
-  return trx.raw(`
-    INSERT INTO jore.geometry
-    SELECT
-      route_id,
-      direction,
-      date_begin,
-      date_end,
-      jore.route_mode((
-        select route
-        from jore.route route
-        where geometry.route_id = route.route_id
-          and geometry.direction = route.direction
-          and route.date_begin <= geometry.date_end
-          and route.date_end >= geometry.date_begin
-      )) as mode,
-      ST_MakeLine(point order by index asc) as geom,
-      0 as outliers,
-      0 as min_likelihood
-    FROM jore.point_geometry geometry
-    GROUP BY route_id, direction, date_begin, date_end
-  `)
-}
-
-knex.transaction(function(trx) {
+knex.transaction(async function(trx) {
   function loadTable(tableName) {
     return parseDat(
       sourcePath(tables[tableName].filename),
@@ -143,39 +100,21 @@ knex.transaction(function(trx) {
     );
   }
 
-  function loadData() {
-    return loadTable("terminal")
-      .then(() => loadTable("stop_area"))
-      .then(() => loadTable("stop"))
-      .then(() => (
-        Promise.all([
-          loadTable("terminal_group"),
-          loadTable("line"),
-          loadTable("route"),
-          loadTable("route_segment"),
-          loadTable("point_geometry"),
-          loadTable("departure"),
-          loadTable("note")
-        ]))
-      );
-  }
-
-  trx.raw("drop schema if exists jore cascade")
-    .then(() => trx.raw("create schema jore"))
-    .then(() => trx.raw("create type jore.mode as ENUM ('BUS', 'TRAM', 'RAIL', 'SUBWAY', 'FERRY')"))
-    .then(() => createTables(trx.schema.withSchema("jore")))
-    .then(() => createForeignKeys(trx.schema.withSchema("jore")))
-    .then(() => createFunctions(trx))
-    .then(loadData)
-    .then(() => loadGeometry(trx))
-    .then(() => trx.raw("CREATE INDEX ON jore.geometry USING GIST (geom)"))
-    .then(trx.commit)
-    .catch((err) => {
-      console.error(err);
-      return trx.rollback();
-    })
-    .then(knex.destroy)
-    .catch((err) => {
-      console.error(err);
-    });
+  await trx.raw(fs.readFileSync("createSchema.sql"))
+  await createTables(trx.schema.withSchema("jore"))
+  await createForeignKeys(trx.schema.withSchema("jore"))
+  await trx.raw(fs.readFileSync("createFunctions.sql"))
+  await loadTable("terminal")
+  await loadTable("stop_area")
+  await loadTable("stop")
+  await loadTable("terminal_group")
+  await loadTable("line")
+  await loadTable("route")
+  await loadTable("route_segment")
+  await loadTable("point_geometry")
+  await loadTable("departure")
+  await loadTable("note")
+  return trx.raw(fs.readFileSync("createGeometry.sql"))
+}).catch((err) => {
+  console.error(err);
 });
