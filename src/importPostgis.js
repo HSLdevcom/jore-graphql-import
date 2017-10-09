@@ -1,3 +1,7 @@
+const fs = require("fs")
+const path = require("path");
+const _ = require("lodash");
+
 const knex = require("knex")({
   dialect: "postgres",
   client: "pg",
@@ -7,16 +11,14 @@ const knex = require("knex")({
 // install postgis functions in knex.postgis;
 const st = require("knex-postgis")(knex);
 
-const fs = require("fs")
-
-const _ = require("lodash");
-const path = require("path");
-
 const parseDat = require("./parseDat");
+const tables = require('./schema');
+
+const createSchemaSQL = fs.readFileSync(path.join(__dirname, "createSchema.sql"), "utf8");
+const createFunctionsSQL = fs.readFileSync(path.join(__dirname, "createFunctions.sql"), "utf8");
+const createGeometrySQL = fs.readFileSync(path.join(__dirname, "createGeometry.sql"), "utf8");
 
 const sourcePath = filename => path.join(__dirname, "..", "data", filename);
-
-const tables = require('./schema');
 
 function createTables(schema) {
   Object.entries(tables).forEach(function([tableName, { fields }]) {
@@ -100,10 +102,10 @@ knex.transaction(async function(trx) {
     );
   }
 
-  await trx.raw(fs.readFileSync("createSchema.sql"))
+  await trx.raw(createSchemaSQL)
   await createTables(trx.schema.withSchema("jore"))
   await createForeignKeys(trx.schema.withSchema("jore"))
-  await trx.raw(fs.readFileSync("createFunctions.sql"))
+  await trx.raw(createFunctionsSQL)
   await loadTable("terminal")
   await loadTable("stop_area")
   await loadTable("stop")
@@ -114,7 +116,7 @@ knex.transaction(async function(trx) {
   await loadTable("point_geometry")
   await loadTable("departure")
   await loadTable("note")
-  await trx.raw(fs.readFileSync("createGeometry.sql"))
+  await trx.raw(createGeometrySQL)
 }).then(() => {
   return knex.destroy();
 }).catch((err) => {
