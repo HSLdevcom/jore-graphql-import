@@ -13,6 +13,15 @@ create function jore.stop_route_segments_for_date(stop jore.stop, date date) ret
     and date between route_segment.date_begin and route_segment.date_end;
 $$ language sql stable;
 
+create index on jore.departure (route_id, direction) 
+  where stop_role = 1 
+    and day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su') 
+    and departure.extra_departure != 'L';
+    
+create index on jore.departure (route_id, direction, stop_id) 
+  where day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su') 
+    and departure.extra_departure != 'L';
+
 create function jore.route_has_regular_day_departures(route jore.route, date date) returns boolean as $$
   select exists (
       select true
@@ -21,6 +30,7 @@ create function jore.route_has_regular_day_departures(route jore.route, date dat
         and route.direction = departure.direction
         and route.date_begin <= departure.date_end
         and route.date_end >= departure.date_begin
+        and departure.stop_role = 1
         and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
         and departure.extra_departure != 'L'
         and case when date is null then true else date between departure.date_begin and departure.date_end end
@@ -35,6 +45,7 @@ create function jore.route_segment_has_regular_day_departures(route_segment jore
         and route_segment.direction = departure.direction
         and route_segment.date_begin <= departure.date_end
         and route_segment.date_end >= departure.date_begin
+        and route_segment.stop_id = departure.stop_id
         and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
         and departure.extra_departure != 'L'
         and case when date is null then true else date between departure.date_begin and departure.date_end end
