@@ -231,7 +231,11 @@ module.exports = {
       { length: 8, name: "date_end", type: "date" },
       { length: 1, name: "stop_role", type: "integer" },
       { length: 4, name: "note", type: "string" },
-      { length: 3, name: "vehicle", type: "string" }
+      { length: 1, name: "vehicle", type: "string" },
+      { length: 1, name: "arrival_is_next_day", type: "boolean" },
+      { length: 2, name: "arrival_hours", type: "integer" },
+      { length: 2, name: "arrival_minutes", type: "integer" },
+      { length: 1, name: "extra_departure", type: "string" }
     ]
   },
   note: {
