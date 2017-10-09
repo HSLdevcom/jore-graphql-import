@@ -114,7 +114,10 @@ knex.transaction(async function(trx) {
   await loadTable("point_geometry")
   await loadTable("departure")
   await loadTable("note")
-  return trx.raw(fs.readFileSync("createGeometry.sql"))
+  await trx.raw(fs.readFileSync("createGeometry.sql"))
+}).then(() => {
+  return knex.destroy();
 }).catch((err) => {
   console.error(err);
+  process.exit(1);
 });
