@@ -1,18 +1,18 @@
-const fs = require("fs")
+const fs = require("fs");
 const path = require("path");
 const _ = require("lodash");
 
 const knex = require("knex")({
   dialect: "postgres",
   client: "pg",
-  connection: process.env.PG_CONNECTION_STRING
+  connection: process.env.PG_CONNECTION_STRING,
 });
 
 // install postgis functions in knex.postgis;
 const st = require("knex-postgis")(knex);
 
 const parseDat = require("./parseDat");
-const tables = require('./schema');
+const tables = require("./schema");
 
 const createSchemaSQL = fs.readFileSync(path.join(__dirname, "createSchema.sql"), "utf8");
 const createFunctionsSQL = fs.readFileSync(path.join(__dirname, "createFunctions.sql"), "utf8");
@@ -21,20 +21,20 @@ const createGeometrySQL = fs.readFileSync(path.join(__dirname, "createGeometry.s
 const sourcePath = filename => path.join(__dirname, "..", "data", filename);
 
 function createTables(schema) {
-  Object.entries(tables).forEach(function([tableName, { fields }]) {
-    schema = schema.createTable(tableName, function(table) {
-      fields.forEach(function({
+  Object.entries(tables).forEach(([tableName, { fields }]) => {
+    // eslint-disable-next-line no-param-reassign
+    schema = schema.createTable(tableName, (table) => {
+      fields.forEach(({
         length,
         name,
         type,
         unique,
         primary,
         index,
-        foreign,
-        typeOptions
-      }) {
+        typeOptions,
+      }) => {
         if (name && type) {
-          let column;
+          let column; // eslint-disable-line no-unused-vars
           if (type === "string") {
             column = table.string(name, length);
           } else if (type === "decimal") {
@@ -62,7 +62,7 @@ function createTables(schema) {
         (_.find(fields, { name: "x" }) && _.find(fields, { name: "y" }))
       ) {
         table.specificType("point", "geometry(point, 4326)");
-        table.index("point", `${tableName}_points_gix`, "GIST")
+        table.index("point", `${tableName}_points_gix`, "GIST");
       }
     });
   });
@@ -71,17 +71,18 @@ function createTables(schema) {
 }
 
 function createForeignKeys(schema) {
-  Object.entries(tables).forEach(function([tableName, { fields, primary }]) {
-    schema = schema.table(tableName, function(table) {
+  Object.entries(tables).forEach(([tableName, { fields, primary }]) => {
+    // eslint-disable-next-line no-param-reassign
+    schema = schema.table(tableName, (table) => {
       if (primary) {
-        table.unique(primary).primary(primary)
+        table.unique(primary).primary(primary);
       }
-      fields.forEach(function({ name, type, foreign }) {
+      fields.forEach(({ name, type, foreign }) => {
         if (name && type && foreign) {
           table
             .foreign(name)
             .references(foreign.split(".")[1])
-            .inTable("jore." + foreign.split(".")[0]);
+            .inTable(`jore.${foreign.split(".")[0]}`);
         }
       });
     });
@@ -90,7 +91,7 @@ function createForeignKeys(schema) {
   return schema;
 }
 
-knex.transaction(async function(trx) {
+knex.transaction(async (trx) => {
   function loadTable(tableName) {
     return parseDat(
       sourcePath(tables[tableName].filename),
@@ -98,28 +99,26 @@ knex.transaction(async function(trx) {
       knex,
       tableName,
       trx,
-      st
+      st,
     );
   }
 
-  await trx.raw(createSchemaSQL)
-  await createTables(trx.schema.withSchema("jore"))
-  await createForeignKeys(trx.schema.withSchema("jore"))
-  await trx.raw(createFunctionsSQL)
-  await loadTable("terminal")
-  await loadTable("stop_area")
-  await loadTable("stop")
-  await loadTable("terminal_group")
-  await loadTable("line")
-  await loadTable("route")
-  await loadTable("route_segment")
-  await loadTable("point_geometry")
-  await loadTable("departure")
-  await loadTable("note")
-  await trx.raw(createGeometrySQL)
-}).then(() => {
-  return knex.destroy();
-}).catch((err) => {
+  await trx.raw(createSchemaSQL);
+  await createTables(trx.schema.withSchema("jore"));
+  await createForeignKeys(trx.schema.withSchema("jore"));
+  await trx.raw(createFunctionsSQL);
+  await loadTable("terminal");
+  await loadTable("stop_area");
+  await loadTable("stop");
+  await loadTable("terminal_group");
+  await loadTable("line");
+  await loadTable("route");
+  await loadTable("route_segment");
+  await loadTable("point_geometry");
+  await loadTable("departure");
+  await loadTable("note");
+  await trx.raw(createGeometrySQL);
+}).then(() => knex.destroy()).catch((err) => {
   console.error(err);
   process.exit(1);
 });
