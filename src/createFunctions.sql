@@ -1,4 +1,14 @@
 
+create index on jore.departure (route_id, direction);
+create index on jore.departure (route_id, direction, stop_id);
+
+create function jore.is_regular_day_departure(departure jore.departure) returns boolean as $$
+    begin
+        return departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
+        and departure.extra_departure is distinct from 'L';
+    end
+$$ language plpgsql immutable;
+
 create function jore.stop_departures_for_date(stop jore.stop, date date) returns setof jore.departure as $$
   select *
   from jore.departure departure
@@ -13,15 +23,6 @@ create function jore.stop_route_segments_for_date(stop jore.stop, date date) ret
     and date between route_segment.date_begin and route_segment.date_end;
 $$ language sql stable;
 
-create index on jore.departure (route_id, direction) 
-  where stop_role = 1 
-    and day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su') 
-    and departure.extra_departure != 'L';
-    
-create index on jore.departure (route_id, direction, stop_id) 
-  where day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su') 
-    and departure.extra_departure != 'L';
-
 create function jore.route_has_regular_day_departures(route jore.route, date date) returns boolean as $$
   select exists (
       select true
@@ -31,8 +32,7 @@ create function jore.route_has_regular_day_departures(route jore.route, date dat
         and route.date_begin <= departure.date_end
         and route.date_end >= departure.date_begin
         and departure.stop_role = 1
-        and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
-        and departure.extra_departure != 'L'
+        and jore.is_regular_day_departure(departure)
         and case when date is null then true else date between departure.date_begin and departure.date_end end
     );
 $$ language sql stable;
@@ -46,8 +46,7 @@ create function jore.route_segment_has_regular_day_departures(route_segment jore
         and route_segment.date_begin <= departure.date_end
         and route_segment.date_end >= departure.date_begin
         and route_segment.stop_id = departure.stop_id
-        and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
-        and departure.extra_departure != 'L'
+        and jore.is_regular_day_departure(departure)
         and case when date is null then true else date between departure.date_begin and departure.date_end end
     );
 $$ language sql stable;
@@ -382,8 +381,7 @@ create function jore.network_by_date_as_geojson(
           from jore.departure departure
           where departure.route_id = geometry.route_id
             and departure.direction = geometry.direction
-            and departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
-            and departure.extra_departure != 'L'
+            and jore.is_regular_day_departure(departure)
             and date between departure.date_begin and departure.date_end
           )
       ) as f
