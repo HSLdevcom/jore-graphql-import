@@ -1,7 +1,6 @@
 const fs = require("fs");
-var path = require("path");
-var readline = require("readline");
-var iconv = require("iconv-lite");
+const readline = require("readline");
+const iconv = require("iconv-lite");
 
 const isWhitespaceOnly = /^\s*$/;
 
@@ -31,38 +30,37 @@ function parseLine(line, fields, knex, st) {
         values[name] = value;
       }
     }
-    index = index + length;
+    index += length;
   });
   if (values.lat && values.lon) {
-    values.point = st.geomFromText(`Point(${values.lon} ${values.lat})`, 4326)
+    values.point = st.geomFromText(`Point(${values.lon} ${values.lat})`, 4326);
   }
   if (values.x && values.y) {
-    values.point = knex.raw(`ST_Transform(ST_GeomFromText('Point(${values.x} ${values.y})',2392),4326)`)
+    values.point = knex.raw(`ST_Transform(ST_GeomFromText('Point(${values.x} ${values.y})',2392),4326)`);
   }
   return values;
 }
 
 
 function parseDat(filename, fields, knex, tableName, trx, st) {
-  let i = 0;
   let results = [];
 
   return new Promise((resolve, reject) => {
     const lineReader = readline.createInterface({
       input: fs
         .createReadStream(filename)
-        .pipe(iconv.decodeStream("ISO-8859-1"))
+        .pipe(iconv.decodeStream("ISO-8859-1")),
     });
 
-    lineReader.on("line", line => {
+    lineReader.on("line", (line) => {
       if (!isWhitespaceOnly.test(line)) {
-        results.push(parseLine(line, fields, knex, st))
+        results.push(parseLine(line, fields, knex, st));
 
-        if (++i % 2000 === 0) {
+        if (results.length % 2000 === 0) {
           lineReader.pause();
           console.log(`Inserting ${results.length} lines from ${filename} to ${tableName}`);
           knex
-            .withSchema('jore')
+            .withSchema("jore")
             .transacting(trx)
             .insert(results)
             .into(tableName)
@@ -71,7 +69,7 @@ function parseDat(filename, fields, knex, tableName, trx, st) {
             })
             .catch((error) => {
               reject(error);
-            })
+            });
           results = [];
         }
       }
@@ -80,7 +78,7 @@ function parseDat(filename, fields, knex, tableName, trx, st) {
     lineReader.on("close", () => {
       console.log(`Inserting ${results.length} lines from ${filename} to ${tableName}`);
       knex
-        .withSchema('jore')
+        .withSchema("jore")
         .transacting(trx)
         .insert(results)
         .into(tableName)
