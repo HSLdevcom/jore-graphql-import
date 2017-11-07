@@ -406,6 +406,7 @@ module.exports = {
         name: "route_id",
         type: "string",
         index: true,
+        notNullable: true,
       },
       {
         length: 1,
