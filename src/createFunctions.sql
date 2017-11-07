@@ -99,6 +99,23 @@ create function jore.route_segment_departure_notes(route_segment jore.route_segm
     and case when date is null then true else date between note.date_begin and note.date_end end;
 $$ language sql stable;
 
+create function jore.line_notes(line jore.line, date date) returns setof jore.note as $$
+  select *
+  from jore.note note
+  where line.line_id = note.line_id
+    and (
+      note.date_begin is null
+      or note.date_end is null or (
+        note.date_begin <= line.date_end
+        and note.date_end >= line.date_begin
+        and case when date is null
+          then true
+          else date between note.date_begin and note.date_end
+        end
+      )
+    )
+$$ language sql stable;
+
 create function jore.route_segment_next_stops(route_segment jore.route_segment) returns setof jore.route_segment as $$
   select *
   from jore.route_segment inner_route_segment
