@@ -32,6 +32,7 @@ function createTables(schema) {
         primary,
         index,
         typeOptions,
+        notNullable,
       }) => {
         if (name && type) {
           let column; // eslint-disable-line no-unused-vars
@@ -54,6 +55,9 @@ function createTables(schema) {
           }
           if (index) {
             column = column.index();
+          }
+          if (notNullable) {
+            column = column.notNullable();
           }
         }
       });
