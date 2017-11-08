@@ -13,14 +13,14 @@ create function jore.stop_departures_for_date(stop jore.stop, date date) returns
   select *
   from jore.departure departure
   where departure.stop_id = stop.stop_id
-    and date between date_begin and date_end;
+    and case when date is null then true else date between date_begin and date_end end;
 $$ language sql stable;
 
 create function jore.stop_route_segments_for_date(stop jore.stop, date date) returns setof jore.route_segment as $$
   select *
   from jore.route_segment route_segment
   where route_segment.stop_id = stop.stop_id
-    and date between route_segment.date_begin and route_segment.date_end;
+    and case when date is null then true else date between route_segment.date_begin and route_segment.date_end end;
 $$ language sql stable;
 
 create function jore.route_has_regular_day_departures(route jore.route, date date) returns boolean as $$
