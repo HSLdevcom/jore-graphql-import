@@ -104,15 +104,12 @@ create function jore.line_notes(line jore.line, date date) returns setof jore.no
   from jore.note note
   where line.line_id = note.line_id
     and (
-      note.date_begin is null
-      or note.date_end is null or (
-        note.date_begin <= line.date_end
-        and note.date_end >= line.date_begin
-        and case when date is null
-          then true
-          else date between note.date_begin and note.date_end
-        end
-      )
+      (note.date_begin is null or note.date_begin <= line.date_end)
+      and (note.date_end is null or note.date_end >= line.date_begin)
+      and case when date is null then true else (
+          (note.date_begin is null or note.date_begin <= date)
+          and (note.date_end is null or note.date_end >= date)
+      ) end
     )
 $$ language sql stable;
 
