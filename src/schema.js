@@ -564,7 +564,12 @@ module.exports = {
         length: 1,
         name: "extra_departure",
         type: "enu",
-        typeOptions: ["L", /* What are these? */ "V", "0"],
+        typeOptions: [
+          "L" /* Lisälähtö */,
+          "V" /* Vara-auto */,
+          "LV" /* Lisälähtö Vara-autolla */
+          "0"
+        ],
       },
     ],
   },
