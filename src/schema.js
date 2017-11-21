@@ -565,10 +565,10 @@ module.exports = {
         name: "extra_departure",
         type: "enu",
         typeOptions: [
-          "L" /* Lisälähtö */,
-          "V" /* Vara-auto */,
-          "LV" /* Lisälähtö Vara-autolla */
-          "0"
+          "L", // Lisälähtö
+          "V", // Vara-auto
+          "LV", // Lisälähtö Vara-autolla
+          "0",
         ],
       },
     ],
