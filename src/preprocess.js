@@ -2,26 +2,31 @@
 const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
+const iconv = require("iconv-lite");
 const schema = require("./schema");
 
 const isWhitespaceOnly = /^\s*$/;
+
+const filenames = Object.values(schema)
+  .map(table => table.filename)
+  .filter(filename => !!filename);
 
 function processLines(filename, callback) {
   return new Promise((resolve, reject) => {
     const filePath = path.join(__dirname, "..", "data", filename);
     const tempPath = `${filePath}.tmp`;
 
-    const lineReader = readline.createInterface({ input: fs.createReadStream(filePath) });
-    const outStream = fs.createWriteStream(tempPath);
+    const input = fs.createReadStream(filePath);
+    const output = fs.createWriteStream(tempPath);
+    const lineReader = readline.createInterface({ input });
 
     lineReader.on("line", (line) => {
       if (!isWhitespaceOnly.test(line)) {
-        callback(line, outStream);
+        callback(line, output);
       }
     });
-
     lineReader.on("close", () => {
-      outStream.end();
+      output.end();
       fs.rename(tempPath, filePath, error => (error ? reject(error) : resolve()));
     });
   });
@@ -43,10 +48,6 @@ function readLineLength(filename) {
 }
 
 async function replaceLinebreaks() {
-  const filenames = Object.values(schema)
-    .map(table => table.filename)
-    .filter(filename => !!filename);
-
   for (let i = 0; i < filenames.length; i += 1) {
     const lineLength = await readLineLength(filenames[i]);
 
@@ -90,7 +91,27 @@ async function replaceGeometryIndexes() {
   await processLines("reittimuoto.dat", callback);
 }
 
-replaceLinebreaks()
+function updateEncodingInner(filename) {
+  return new Promise((resolve, reject) => {
+    const filePath = path.join(__dirname, "..", "data", filename);
+    const tempPath = `${filePath}.tmp`;
+    const inStream = fs.createReadStream(filePath);
+    const outStream = fs.createWriteStream(tempPath);
+    inStream.pipe(iconv.decodeStream("ISO-8859-1")).pipe(outStream);
+    outStream.on("close", () => {
+      fs.rename(tempPath, filePath, error => (error ? reject(error) : resolve()));
+    });
+  });
+}
+
+async function updateEncoding() {
+  for (let i = 0; i < filenames.length; i += 1) {
+    await updateEncodingInner(filenames[i]);
+  }
+}
+
+updateEncoding()
+  .then(() => replaceLinebreaks())
   .then(() => replaceGeometryIndexes())
   .catch((error) => {
     console.error(error);
