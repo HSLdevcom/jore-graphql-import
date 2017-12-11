@@ -1,6 +1,5 @@
 const fs = require("fs");
 const readline = require("readline");
-const iconv = require("iconv-lite");
 
 const isWhitespaceOnly = /^\s*$/;
 
@@ -14,16 +13,17 @@ function parseLine(line, fields, knex, st) {
         values[name] = null;
       } else if (type === "decimal") {
         values[name] = parseFloat(value);
+        if (Number.isNaN(values[name])) {
+          throw new Error(`Failed to parse value for field ${name}. Line:\n${line}`);
+        }
       } else if (type === "integer") {
         values[name] = parseInt(value, 10);
         if (Number.isNaN(values[name])) {
-          console.error(`Found NaN value for ${name}. Line:`);
-          console.error(line);
+          throw new Error(`Failed to parse value for field ${name}. Line:\n${line}`);
         }
       } else if (type === "date") {
         if (value.length !== 8) {
-          console.error("Date length not 8. Line:");
-          console.error(line);
+          throw new Error(`Invalid value ${value} for field ${name}. Line:\n${line}`);
         }
         values[name] = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
       } else {
@@ -41,53 +41,38 @@ function parseLine(line, fields, knex, st) {
   return values;
 }
 
-
 function parseDat(filename, fields, knex, tableName, trx, st) {
-  let results = [];
+  const insertLines = async (lines) => {
+    console.log(`Inserting ${lines.length} lines from ${filename} to ${tableName}`);
+    await knex.withSchema("jore").transacting(trx).insert(lines).into(tableName);
+  };
 
   return new Promise((resolve, reject) => {
-    const lineReader = readline.createInterface({
-      input: fs
-        .createReadStream(filename)
-        .pipe(iconv.decodeStream("ISO-8859-1")),
-    });
+    const lines = [];
+    const lineReader = readline.createInterface({ input: fs.createReadStream(filename) });
 
-    lineReader.on("line", (line) => {
-      if (!isWhitespaceOnly.test(line)) {
-        results.push(parseLine(line, fields, knex, st));
-
-        if (results.length % 2000 === 0) {
-          lineReader.pause();
-          console.log(`Inserting ${results.length} lines from ${filename} to ${tableName}`);
-          knex
-            .withSchema("jore")
-            .transacting(trx)
-            .insert(results)
-            .into(tableName)
-            .then(() => {
-              lineReader.resume();
-            })
-            .catch((error) => {
-              reject(error);
-            });
-          results = [];
+    lineReader.on("line", async (line) => {
+      try {
+        if (!isWhitespaceOnly.test(line)) {
+          lines.push(parseLine(line, fields, knex, st));
         }
+        if (lines.length >= 2000) {
+          lineReader.pause();
+          await insertLines(lines.splice(0));
+          lineReader.resume();
+        }
+      } catch (error) {
+        reject(error);
       }
     });
 
-    lineReader.on("close", () => {
-      console.log(`Inserting ${results.length} lines from ${filename} to ${tableName}`);
-      knex
-        .withSchema("jore")
-        .transacting(trx)
-        .insert(results)
-        .into(tableName)
-        .then((result) => {
-          resolve(result);
-        })
-        .catch((error) => {
-          reject(error);
-        });
+    lineReader.on("close", async () => {
+      try {
+        await insertLines(lines);
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
     });
   });
 }
