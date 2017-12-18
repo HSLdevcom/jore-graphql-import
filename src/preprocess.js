@@ -57,7 +57,10 @@ async function replaceLinebreaks() {
       const currentLength = lines.join("\r\n").length;
 
       if (currentLength > lineLength) {
-        throw new Error(`Failed to replace linebreak(s):\n${lines.join("\n")}`);
+        const output = lines.join("\n");
+        stream.write(`${output}\n`);
+        console.log(`Did not replace linebreak(s):\n${output}`);
+        lines = [];
       }
       if (currentLength === lineLength) {
         const output = lines.join("  ");
