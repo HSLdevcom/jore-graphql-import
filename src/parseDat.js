@@ -48,17 +48,19 @@ function parseDat(filename, fields, knex, tableName, trx, st) {
   };
 
   return new Promise((resolve, reject) => {
-    const lines = [];
+    let lines = [];
     const lineReader = readline.createInterface({ input: fs.createReadStream(filename) });
 
     lineReader.on("line", async (line) => {
       try {
         if (!isWhitespaceOnly.test(line)) {
-          lines.push(parseLine(line, fields, knex, st));
+          lines = [...lines, parseLine(line, fields, knex, st)];
         }
         if (lines.length >= 2000) {
           lineReader.pause();
-          await insertLines(lines.splice(0));
+          const linesToInsert = lines;
+          lines = [];
+          await insertLines(linesToInsert);
           lineReader.resume();
         }
       } catch (error) {
