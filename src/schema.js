@@ -35,7 +35,6 @@ module.exports = {
         length: 20,
         name: "name_se",
         type: "string",
-        // TODO: Add when data conforms notNullable: true,
       },
       {
         length: 20,
@@ -103,7 +102,6 @@ module.exports = {
         length: 40,
         name: "name_se",
         type: "string",
-        notNullable: true,
       },
       { length: 14 },
       { length: 8, name: "lat", type: "decimal" },
@@ -153,7 +151,6 @@ module.exports = {
         length: 40,
         name: "name_se",
         type: "string",
-        notNullable: true,
       },
       { length: 14 },
       { length: 8, name: "lat", type: "decimal" },
@@ -180,7 +177,6 @@ module.exports = {
         length: 60,
         name: "name_se",
         type: "string",
-        // TODO: Add when data conforms notNullable: true,
       },
       {
         length: 30,
@@ -192,7 +188,6 @@ module.exports = {
         length: 30,
         name: "origin_se",
         type: "string",
-        // TODO: Add when data conforms notNullable: true,
       },
       {
         length: 30,
@@ -204,7 +199,6 @@ module.exports = {
         length: 30,
         name: "destination_se",
         type: "string",
-        // TODO: Add when data conforms notNullable: true,
       },
       {
         length: 8,
@@ -260,7 +254,6 @@ module.exports = {
         length: 60,
         name: "name_se",
         type: "string",
-        notNullable: true,
       },
       {
         length: 2,
@@ -278,7 +271,6 @@ module.exports = {
         length: 20,
         name: "origin_se",
         type: "string",
-        // TODO: Add when data conforms notNullable: true,
       },
       {
         length: 7,
@@ -303,7 +295,6 @@ module.exports = {
         length: 20,
         name: "destination_se",
         type: "string",
-        notNullable: true,
       },
       {
         length: 7,
