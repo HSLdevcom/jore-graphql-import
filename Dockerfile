@@ -16,7 +16,9 @@ RUN yarn install
 # Copy app source
 COPY . ${WORK}
 
+RUN yarn lint
+
 # Fetch and import data
 CMD curl http://dev.hsl.fi/hse/netti_talvi.zip > all.zip && \
   unzip all.zip -d ${WORK}/data && \
-  npm run import
+  yarn start
