@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "Data importer for jore-graphql",
   "scripts": {
-    "import": "node src/preprocess.js && node --max_old_space_size=4096 src/importPostgis.js"
+    "start": "node src/preprocess.js && node --max_old_space_size=4096 src/importPostgis.js",
+    "lint": "eslint src"
   },
   "repository": {
     "type": "git",
