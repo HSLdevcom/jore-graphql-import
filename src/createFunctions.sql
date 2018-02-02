@@ -2,6 +2,41 @@
 create index on jore.departure (route_id, direction) where stop_role = 1;
 create index on jore.departure (route_id, direction, stop_id);
 
+create type jore.terminus as (
+  line_id character varying(6),
+  stop_id character varying(6),
+  lat numeric(9,6),
+  lon numeric(9,6),
+  stop_short_id character varying(6),
+  stop_area_id character varying(6)
+);
+
+create function jore.date_terminus_by_date_and_bbox(
+  date date,
+  min_lat double precision,
+  min_lon double precision,
+  max_lat double precision,
+  max_lon double precision
+  ) returns setof jore.terminus as $$
+    select 
+      l.line_id AS line_id,
+      s.stop_id AS stop_id,
+      s.lat AS lat,
+      s.lon AS lon,
+      s.short_id AS stop_short_id,
+      s.stop_area_id AS stop_area_id
+    from
+      jore.line l,
+      jore.stop s,
+      jore.route_segment rs
+    where
+      l.line_id = rs.route_id AND
+      rs.stop_index = '1' AND
+      rs.stop_id = s.stop_id AND
+      date between rs.date_begin and rs.date_end AND
+      s.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
+  $$ language sql stable;
+
 create function jore.departure_is_regular_day_departure(departure jore.departure) returns boolean as $$
     begin
         return departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
