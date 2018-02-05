@@ -11,7 +11,16 @@ create type jore.terminus as (
   stop_area_id character varying(6)
 );
 
-create function jore.date_terminus_by_date_and_bbox(
+create type jore.terminus_grouped as (
+  line_id character varying(6)[],
+  stop_id character varying(6),
+  lat numeric(9,6),
+  lon numeric(9,6),
+  stop_short_id character varying(6),
+  stop_area_id character varying(6)
+);
+
+create function jore.terminus_by_date_and_bbox(
   date date,
   min_lat double precision,
   min_lon double precision,
@@ -35,6 +44,32 @@ create function jore.date_terminus_by_date_and_bbox(
       rs.stop_id = s.stop_id AND
       date between rs.date_begin and rs.date_end AND
       s.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
+  $$ language sql stable;
+
+create function jore.terminus_by_date_and_bbox_grouped(
+  date date,
+  min_lat double precision,
+  min_lon double precision,
+  max_lat double precision,
+  max_lon double precision
+) returns setof jore.terminus_grouped as $$
+  SELECT
+    array_agg(line_id),
+    stop_id,
+    lat,
+    lon,
+    stop_short_id,
+    stop_area_id
+  FROM
+    jore.terminus_by_date_and_bbox(date, min_lat, min_lon, max_lat, max_lon)
+  GROUP BY 
+  (
+    stop_id,
+    lat,
+    lon,
+    stop_short_id,
+    stop_area_id
+  );
   $$ language sql stable;
 
 create function jore.departure_is_regular_day_departure(departure jore.departure) returns boolean as $$
