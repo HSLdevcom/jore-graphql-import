@@ -13,10 +13,8 @@ create type jore.terminus as (
 
 create type jore.terminus_grouped as (
   line_id character varying(6)[],
-  stop_id character varying(6),
   lat numeric(9,6),
   lon numeric(9,6),
-  stop_short_id character varying(6),
   stop_area_id character varying(6)
 );
 
@@ -55,19 +53,13 @@ create function jore.terminus_by_date_and_bbox_grouped(
 ) returns setof jore.terminus_grouped as $$
   SELECT
     array_agg(line_id),
-    stop_id,
-    lat,
-    lon,
-    stop_short_id,
+    avg(lat),
+    avg(lon),
     stop_area_id
   FROM
     jore.terminus_by_date_and_bbox(date, min_lat, min_lon, max_lat, max_lon)
   GROUP BY 
   (
-    stop_id,
-    lat,
-    lon,
-    stop_short_id,
     stop_area_id
   );
   $$ language sql stable;
