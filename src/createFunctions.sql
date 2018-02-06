@@ -15,34 +15,41 @@ create function jore.route_section_intermediates(
   max_lat double precision,
   max_lon double precision
 ) returns setof jore.section_intermediate as $$
-  SELECT
-    route_section_intermediate.routes,
-    ST_X(route_section_intermediate.point) as lon,
-    ST_Y(route_section_intermediate.point) as lat
+SELECT
+  route_section_intermediate.routes,
+  ST_X(route_section_intermediate.point) as lon,
+  ST_Y(route_section_intermediate.point) as lat
   FROM (
     SELECT
-      array_agg(route_section.route_id) as routes,
-      ST_LineInterpolatePoint(route_section.geom, 0.5) as point
+      median.routes,
+      ST_GeometricMedian(ST_Union(median.point)) as point
     FROM (
       SELECT
-        (ST_DUMP(ST_SPLIT(route.geom,joined_point.point))).geom as geom,
-        route.route_id as route_id
-      FROM
-        (select * from jore.geometry) route
-      INNER JOIN (
-        SELECT ST_Union(intersection.point) as point
-        FROM (
-          SELECT *
-          FROM jore.point_geometry
-          WHERE node_type = 'X'
-          AND date between date_begin and date_end
-          AND point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
-        ) intersection
-      ) joined_point
-      ON ST_INTERSECTS(route.geom, joined_point.point)
-    ) route_section GROUP BY geom
+        array_agg(route_section.route_id) as routes,
+        ST_LineInterpolatePoint(route_section.geom, 0.5) as point
+      FROM (
+        SELECT
+          (ST_DUMP(ST_SPLIT(route.geom,joined_point.point))).geom as geom,
+          route.route_id as route_id
+        FROM
+          (select * from jore.geometry) route
+        INNER JOIN (
+          SELECT ST_Union(intersection.point) as point
+          FROM (
+            SELECT *
+            FROM jore.point_geometry
+            WHERE node_type = 'X'
+            AND date between date_begin and date_end
+            AND point && ST_MakeEnvelope(min_lat, min_lon, max_lat, max_lon, 4326)
+          ) intersection
+        ) joined_point
+        ON ST_INTERSECTS(route.geom, joined_point.point)
+      ) route_section 
+      WHERE ST_Length(route_section.geom) > 0.005
+      GROUP BY geom
+    ) median GROUP BY routes
   ) route_section_intermediate
-  WHERE route_section_intermediate.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
+  WHERE route_section_intermediate.point && ST_MakeEnvelope(min_lat, min_lon, max_lat, max_lon, 4326);
 $$ language sql stable;
 
 create type jore.terminus as (
