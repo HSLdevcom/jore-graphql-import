@@ -44,13 +44,6 @@ FROM (
     route_section_intermediate.angle as angle
     FROM (
 
-      -- Trying to group all sections that have the same routes
-      SELECT
-        median.routes,
-        ST_GeometricMedian(ST_Union(median.point)) as point,
-        avg(median.angle) as angle
-      FROM (
-
         -- Grouping sections that have same geom
         SELECT
           array_sort(array_agg(route_section.route_id)) as routes,
@@ -86,10 +79,6 @@ FROM (
         WHERE ST_Length(route_section.geom) > 0.005
         GROUP BY geom
         -- Geom based grouping end
-
-      ) median 
-      GROUP BY routes
-      -- Route based grouping end
 
     ) route_section_intermediate
     WHERE route_section_intermediate.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
