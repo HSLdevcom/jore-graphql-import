@@ -2,18 +2,25 @@
 create index on jore.departure (route_id, direction) where stop_role = 1;
 create index on jore.departure (route_id, direction, stop_id);
 
+CREATE OR REPLACE FUNCTION array_sort (ANYARRAY)
+  RETURNS ANYARRAY LANGUAGE SQL
+  AS $$
+  SELECT ARRAY(SELECT unnest($1) ORDER BY 1)
+$$;
+
+CREATE AGGREGATE array_accum (ANYARRAY)
+(
+    sfunc = array_cat,
+    stype = anyarray,
+    initcond = '{}'
+);  
+
 create type jore.section_intermediate as (
   routes character varying(6)[],
   lon numeric,
   lat numeric,
   angle double precision
 );
-
-CREATE OR REPLACE FUNCTION array_sort (ANYARRAY)
-  RETURNS ANYARRAY LANGUAGE SQL
-  AS $$
-  SELECT ARRAY(SELECT unnest($1) ORDER BY 1)
-$$;
 
 create or replace function jore.route_section_intermediates(
   date date,
@@ -23,22 +30,28 @@ create or replace function jore.route_section_intermediates(
   max_lon double precision
 ) returns setof jore.section_intermediate as $$
 SELECT
-  routes,
+  array_accum(routes),
   lon,
   lat,
   min(angle) as angle
 FROM (
+
+  -- Rounding center points to 4 digits to allow grouping
   SELECT
     array_sort(route_section_intermediate.routes) as routes,
     round((ST_X(route_section_intermediate.point))::numeric, 4) as lon,
     round((ST_Y(route_section_intermediate.point))::numeric, 4) as lat,
     route_section_intermediate.angle as angle
     FROM (
+
+      -- Trying to group all sections that have the same routes
       SELECT
         median.routes,
         ST_GeometricMedian(ST_Union(median.point)) as point,
         avg(median.angle) as angle
       FROM (
+
+        -- Grouping sections that have same geom
         SELECT
           array_sort(array_agg(route_section.route_id)) as routes,
           ST_LineInterpolatePoint(route_section.geom, 0.5) as point,
@@ -47,29 +60,43 @@ FROM (
             ST_LineInterpolatePoint(route_section.geom, 0.6)
           )/(2*pi())*360 as angle
         FROM (
+
+          -- Splits and explode all geometries based on intersecting intersections
           SELECT
             (ST_DUMP(ST_SPLIT(route.geom,point_union.points))).geom as geom,
             route.route_id as route_id
           FROM
             (select * from jore.geometry) route
           INNER JOIN (
+
+              -- Get all intersections within area
               SELECT ST_Union(point) as points
               FROM jore.point_geometry
               WHERE node_type = 'X'
               AND date between date_begin and date_end
               AND point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
+              -- all intersections end
+
           ) point_union
           ON ST_INTERSECTS(route.geom, point_union.points)
           ORDER BY route.route_id
+          -- intersecting intersections exploding end
+
         ) route_section 
         WHERE ST_Length(route_section.geom) > 0.005
         GROUP BY geom
+        -- Geom based grouping end
+
       ) median 
       GROUP BY routes
+      -- Route based grouping end
+
     ) route_section_intermediate
     WHERE route_section_intermediate.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
+    -- Central point grouping end
+
   ) all_intermediates
-GROUP BY lon, lat, routes
+GROUP BY lon, lat
 $$ language sql stable;
 
 create type jore.terminus as (
