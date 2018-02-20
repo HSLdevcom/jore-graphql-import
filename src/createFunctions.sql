@@ -22,6 +22,100 @@ create type jore.section_intermediate as (
   angle double precision
 );
 
+create or replace function jore.route_section_intermediates_two(
+  date date,
+  min_lat double precision,
+  min_lon double precision,
+  max_lat double precision,
+  max_lon double precision
+) returns setof jore.section_intermediate as $$
+SELECT
+  ins.routes as routes,
+  lon,
+  lat,
+  max(angle)
+FROM
+(
+Select
+  array_agg(lines.route_id) as routes,
+  ST_X(lines.point)::numeric as lon,
+  ST_Y(lines.point)::numeric as lat,
+  max(angle) as angle
+FROM 
+(
+  SELECT
+    point,
+    angle,
+    route_id
+  FROM
+  (
+
+    SELECT
+      point
+    FROM (
+
+      SELECT 
+        ST_LineInterpolatePoint(geom, 0.5) as point
+      FROM (
+
+        SELECT
+          (ST_DUMP(
+            ST_SPLIT(
+              route.geom, road_intersections.points
+            )
+          )).geom
+        FROM
+        (
+          select * 
+          from jore.geometry
+          where 
+            ST_Crosses(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+            AND date between date_begin and date_end
+        ) route
+        LEFT JOIN (
+
+          SELECT
+            ST_Union(point) as points
+          FROM
+            jore.point_geometry
+          WHERE
+            node_type = 'X'
+            AND date between date_begin and date_end
+            AND point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
+
+        ) road_intersections
+        ON ST_INTERSECTS(route.geom, road_intersections.points)
+
+      ) section
+      WHERE ST_Length(section.geom) > 0.002
+
+    ) points
+    Group by point
+
+  ) middle
+  LEFT JOIN
+  (
+    select 
+      route_id,
+      ST_Azimuth(
+        ST_LineInterpolatePoint(geom, 0.4),
+        ST_LineInterpolatePoint(geom, 0.6)
+      )/(2*pi())*360 as angle,
+      geom
+    from 
+      jore.geometry
+    where 
+      ST_Crosses(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+      AND date between date_begin and date_end
+  ) route
+  ON ST_Distance(route.geom, middle.point) < 0.00015
+) lines
+Where lines.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
+Group by lines.point
+) ins
+Group by lon, lat, routes
+$$ language sql stable;
+
 create or replace function jore.route_section_intermediates(
   date date,
   min_lat double precision,
