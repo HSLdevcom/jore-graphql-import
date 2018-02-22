@@ -54,40 +54,53 @@ FROM
       point
     FROM (
 
-      SELECT 
+      SELECT
         ST_LineInterpolatePoint(geom, 0.5) as point
       FROM (
 
+        Select 
+          routes,
+          geom
+        FROM (
+
         SELECT
-          (ST_DUMP(
-            ST_SPLIT(
-              route.geom, road_intersections.points
-            )
-          )).geom
-        FROM
-        (
-          select * 
-          from jore.geometry
-          where 
-            ST_Crosses(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
-            AND date between date_begin and date_end
-        ) route
-        LEFT JOIN (
-
+          geom,
+          array_agg(route_id order by route_id) as routes
+        FROM (
           SELECT
-            ST_Union(point) as points
+            (ST_DUMP(
+              ST_SPLIT(
+                route.geom, road_intersections.points
+              )
+            )).geom,
+            route.route_id
           FROM
-            jore.point_geometry
-          WHERE
-            node_type = 'X'
-            AND date between date_begin and date_end
-            AND point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
+          (
+            select *
+            from jore.geometry
+            where 
+              date between date_begin and date_end
+              AND ST_X(ST_StartPoint(geom)) < ST_X(ST_EndPoint(geom))
+          ) route
+          LEFT JOIN
+          (
 
-        ) road_intersections
-        ON ST_INTERSECTS(route.geom, road_intersections.points)
+            SELECT
+              ST_Union(point) as points
+            FROM
+              jore.point_geometry
+            WHERE
+              node_type = 'X'
+              AND date between date_begin and date_end
+              AND point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
 
-      ) section
-      WHERE ST_Length(section.geom) > 0.002
+          ) road_intersections
+          ON ST_INTERSECTS(route.geom, road_intersections.points)
+        ) sections
+        GROUP BY geom
+        ) line_sections
+      ) lines
+      WHERE ST_LENGTH(geom) > 0.005
 
     ) points
     Group by point
