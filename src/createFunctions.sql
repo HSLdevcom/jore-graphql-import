@@ -30,16 +30,21 @@ create or replace function jore.route_section_intermediates_two(
   max_lon double precision
 ) returns setof jore.section_intermediate as $$
 SELECT
-  ins.routes as routes,
-  lon,
-  lat,
+  routes,
+  ST_X(point)::numeric as lon,
+  ST_Y(point)::numeric as lat,
   max(angle)
 FROM
 (
+
+Select
+  routes,
+  (ST_Dump(ST_Collect(ST_ClusterWithin(point, 0.0005)))).geom as point,
+  max(angle) as angle
+FROM (
 Select
   array_agg(lines.route_id) as routes,
-  ST_X(lines.point)::numeric as lon,
-  ST_Y(lines.point)::numeric as lat,
+  lines.point,
   max(angle) as angle
 FROM 
 (
@@ -50,60 +55,77 @@ FROM
   FROM
   (
 
-    SELECT
-      point
-    FROM (
+
+SELECT
+ ST_GeometryN(unnest(ST_ClusterWithin(temp_.point, 0.0035)), 1) as point
+FROM (
+
+Select
+  array_sort(array_agg(route_id)) as routes,
+  point
+From (
+
+  SELECT
+    ST_GeometryN(unnest(ST_ClusterWithin(point, 0.0005)), 1) as point
+  FROM (
 
       SELECT
-        ST_LineInterpolatePoint(geom, 0.5) as point
+        ST_LineInterpolatePoint(geom, 0.5) as point,
+        geom,
+        type
       FROM (
-
-        Select 
-          routes,
-          geom
-        FROM (
-
         SELECT
-          geom,
-          array_agg(route_id order by route_id) as routes
-        FROM (
+          (ST_DUMP(
+            ST_SPLIT(
+              route.geom, road_intersections.points
+            )
+          )).geom,
+          type
+        FROM
+        (
+          select *
+          from jore.geometry
+          where 
+            date between date_begin and date_end
+            AND ST_X(ST_StartPoint(geom)) <= ST_X(ST_EndPoint(geom))
+            AND ST_Intersects(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+        ) route
+        LEFT JOIN
+        (
+
           SELECT
-            (ST_DUMP(
-              ST_SPLIT(
-                route.geom, road_intersections.points
-              )
-            )).geom,
-            route.route_id
+            ST_Union(point) as points,
+            max(node_type) as type
           FROM
-          (
-            select *
-            from jore.geometry
-            where 
-              date between date_begin and date_end
-              AND ST_X(ST_StartPoint(geom)) < ST_X(ST_EndPoint(geom))
-          ) route
-          LEFT JOIN
-          (
+            jore.point_geometry
+          WHERE
+            node_type = 'X'
+        ) road_intersections
+        ON ST_INTERSECTS(route.geom, road_intersections.points)
+      ) temp
+      WHERE ST_Length(geom) > 0.002
 
-            SELECT
-              ST_Union(point) as points
-            FROM
-              jore.point_geometry
-            WHERE
-              node_type = 'X'
-              AND date between date_begin and date_end
-              AND point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
+  ) dfgdfg
+  WHERE type = 'X'
+  GROUP BY type
 
-          ) road_intersections
-          ON ST_INTERSECTS(route.geom, road_intersections.points)
-        ) sections
-        GROUP BY geom
-        ) line_sections
-      ) lines
-      WHERE ST_LENGTH(geom) > 0.005
+) middle
+LEFT JOIN
+  (
+    select 
+      route_id,
+      geom
+    from 
+      jore.geometry
+  ) route
+  ON ST_Distance(route.geom, middle.point) < 0.0005
+Group by point
 
-    ) points
-    Group by point
+
+) temp_
+GROUP By routes
+
+
 
   ) middle
   LEFT JOIN
@@ -118,16 +140,23 @@ FROM
     from 
       jore.geometry
     where 
-      ST_Crosses(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+      ST_Intersects(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
       AND date between date_begin and date_end
   ) route
-  ON ST_Distance(route.geom, middle.point) < 0.00015
+  ON ST_Distance(route.geom, middle.point) < 0.0005
 ) lines
 Where lines.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
 Group by lines.point
+) iiis
+Group by routes
+
 ) ins
 Group by lon, lat, routes
 $$ language sql stable;
+
+
+
+
 
 create or replace function jore.route_section_intermediates(
   date date,
