@@ -109,7 +109,8 @@ FROM
       FROM 
         jore.geometry
       WHERE
-        ST_Intersects(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+        date between date_begin and date_end
+        AND ST_Intersects(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
     ) route
     ON ST_Distance(route.geom, road_points.point) < 0.0002
     GROUP BY point
