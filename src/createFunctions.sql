@@ -57,16 +57,16 @@ FROM
 
 
 SELECT
- ST_GeometryN(unnest(ST_ClusterWithin(temp_.point, 0.0035)), 1) as point
+  ST_GeometryN(unnest(ST_ClusterWithin(temp_.point, 0.003)), 1) as point
 FROM (
 
 Select
-  array_sort(array_agg(route_id)) as routes,
+  array_sort(array_agg(DISTINCT route_id)) as routes,
   point
 From (
 
   SELECT
-    ST_GeometryN(unnest(ST_ClusterWithin(point, 0.0005)), 1) as point
+    ST_GeometryN(unnest(ST_ClusterWithin(point, 0.001)), 1) as point
   FROM (
 
       SELECT
@@ -104,7 +104,7 @@ From (
         ) road_intersections
         ON ST_INTERSECTS(route.geom, road_intersections.points)
       ) temp
-      WHERE ST_Length(geom) > 0.002
+      WHERE ST_Length(geom) > 0.0005
 
   ) dfgdfg
   WHERE type = 'X'
@@ -152,7 +152,7 @@ Group by lines.point
 Group by routes
 
 ) ins
-WHERE array_length(routes, 1) < 15
+WHERE array_length(routes, 1) < 1
 Group by lon, lat, routes
 $$ language sql stable;
 
