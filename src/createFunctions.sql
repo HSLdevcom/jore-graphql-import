@@ -100,6 +100,7 @@ From (
             jore.point_geometry
           WHERE
             node_type = 'X'
+            AND ST_Intersects(point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
         ) road_intersections
         ON ST_INTERSECTS(route.geom, road_intersections.points)
       ) temp
@@ -117,15 +118,14 @@ LEFT JOIN
       geom
     from 
       jore.geometry
+    where
+      ST_Intersects(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
   ) route
-  ON ST_Distance(route.geom, middle.point) < 0.0005
+  ON ST_Distance(route.geom, middle.point) < 0.0002
 Group by point
-
 
 ) temp_
 GROUP By routes
-
-
 
   ) middle
   LEFT JOIN
@@ -145,12 +145,14 @@ GROUP By routes
   ) route
   ON ST_Distance(route.geom, middle.point) < 0.0005
 ) lines
-Where lines.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
+Where ST_Intersects(lines.point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
 Group by lines.point
 ) iiis
+
 Group by routes
 
 ) ins
+WHERE array_length(routes, 1) < 15
 Group by lon, lat, routes
 $$ language sql stable;
 
