@@ -152,7 +152,7 @@ Group by lines.point
 Group by routes
 
 ) ins
-WHERE array_length(routes, 1) < 1
+WHERE array_length(routes, 1) < 15
 Group by lon, lat, routes
 $$ language sql stable;
 
