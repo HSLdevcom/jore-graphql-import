@@ -15,57 +15,6 @@ create type jore.section_intermediate as (
   angle double precision
 );
 
-CREATE OR REPLACE FUNCTION jore.route_section_intermediates(
-  date date,
-  min_lat double precision,
-  min_lon double precision,
-  max_lat double precision,
-  max_lon double precision
-) RETURNS setof jore.section_intermediate AS $$
-SELECT
-  routes,
-  ST_X(point)::numeric as lon,
-  ST_Y(point)::numeric as lat,
-  angle as angle
-FROM
-(
-  SELECT
-    ST_GeometryN(
-      unnest(
-        ST_ClusterWithin(points_grouped_on_routes.point, 0.003)
-      ), 1
-    ) AS point,
-    routes,
-    max(angle) AS angle
-  FROM (
-    SELECT
-      array_sort(array_agg(DISTINCT route_id)) AS routes,
-      max(angle) AS angle,
-      point
-    FROM jore.get_road_points_clustered_on_distance(date, min_lat, min_lon, max_lat, max_lon, 0.001) road_points
-    LEFT JOIN
-    (
-      SELECT 
-        route_id,
-        ST_Azimuth(
-          ST_LineInterpolatePoint(geom, 0.49),
-          ST_LineInterpolatePoint(geom, 0.5)
-        )/(2*pi())*360 AS angle,
-        geom
-      FROM 
-        jore.geometry
-      WHERE
-        ST_Intersects(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
-    ) route
-    ON ST_Distance(route.geom, road_points.point) < 0.0002
-    GROUP BY point
-  ) points_grouped_on_routes
-  GROUP BY routes
-) clustered_points_based_on_routes
-WHERE array_length(routes, 1) < 10
-$$ language sql stable;
-
-
 CREATE OR REPLACE FUNCTION jore.get_road_points_clustered_on_distance(
   date date,
   min_lat double precision,
@@ -118,6 +67,56 @@ FROM (
 ) road_section_middle_point
 WHERE type = 'X'
 GROUP BY type
+$$ language sql stable;
+
+CREATE OR REPLACE FUNCTION jore.route_section_intermediates(
+  date date,
+  min_lat double precision,
+  min_lon double precision,
+  max_lat double precision,
+  max_lon double precision
+) RETURNS setof jore.section_intermediate AS $$
+SELECT
+  routes,
+  ST_X(point)::numeric as lon,
+  ST_Y(point)::numeric as lat,
+  angle as angle
+FROM
+(
+  SELECT
+    ST_GeometryN(
+      unnest(
+        ST_ClusterWithin(points_grouped_on_routes.point, 0.003)
+      ), 1
+    ) AS point,
+    routes,
+    max(angle) AS angle
+  FROM (
+    SELECT
+      array_sort(array_agg(DISTINCT route_id)) AS routes,
+      max(angle) AS angle,
+      point
+    FROM jore.get_road_points_clustered_on_distance(date, min_lat, min_lon, max_lat, max_lon, 0.001) road_points
+    LEFT JOIN
+    (
+      SELECT 
+        route_id,
+        ST_Azimuth(
+          ST_LineInterpolatePoint(geom, 0.49),
+          ST_LineInterpolatePoint(geom, 0.5)
+        )/(2*pi())*360 AS angle,
+        geom
+      FROM 
+        jore.geometry
+      WHERE
+        ST_Intersects(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+    ) route
+    ON ST_Distance(route.geom, road_points.point) < 0.0002
+    GROUP BY point
+  ) points_grouped_on_routes
+  GROUP BY routes
+) clustered_points_based_on_routes
+WHERE array_length(routes, 1) < 10
 $$ language sql stable;
 
 create type jore.terminus as (
