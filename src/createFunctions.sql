@@ -33,7 +33,7 @@ FROM (
   SELECT
     ST_LineInterpolatePoint(geom, 0.5) as point,
     type
-  FROM (
+    FROM (
     SELECT
       (ST_DUMP(
         ST_SPLIT(
@@ -117,7 +117,6 @@ FROM
   ) points_grouped_on_routes
   GROUP BY routes
 ) clustered_points_based_on_routes
-WHERE array_length(routes, 1) < 10
 $$ language sql stable;
 
 create type jore.terminus as (
@@ -126,61 +125,84 @@ create type jore.terminus as (
   lat numeric(9,6),
   lon numeric(9,6),
   stop_short_id character varying(6),
-  stop_area_id character varying(6)
+  stop_area_id character varying(6),
+  terminal_id character varying(6)
 );
 
 create type jore.terminus_grouped as (
-  line_id character varying(6)[],
+  lines character varying(6)[],
   lat numeric(9,6),
   lon numeric(9,6),
-  stop_area_id character varying(6)
+  stop_area_id character varying(6),
+  terminal_id character varying(6),
+  name_fi character varying(40),
+  name_se character varying(40)
 );
 
-create function jore.terminus_by_date_and_bbox(
+create or replace function jore.terminus_by_date_and_bbox(
   date date,
   min_lat double precision,
   min_lon double precision,
   max_lat double precision,
   max_lon double precision
   ) returns setof jore.terminus as $$
-    select 
-      l.line_id AS line_id,
-      s.stop_id AS stop_id,
-      s.lat AS lat,
-      s.lon AS lon,
-      s.short_id AS stop_short_id,
-      s.stop_area_id AS stop_area_id
-    from
-      jore.line l,
-      jore.stop s,
-      jore.route_segment rs
-    where
-      l.line_id = rs.route_id AND
-      rs.stop_index = '1' AND
-      rs.stop_id = s.stop_id AND
-      date between rs.date_begin and rs.date_end AND
-      s.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
+  select 
+    l.line_id AS line_id,
+    s.stop_id AS stop_id,
+    s.lat AS lat,
+    s.lon AS lon,
+    s.short_id AS stop_short_id,
+    s.stop_area_id AS stop_area_id,
+    s.terminal_id AS terminal_id
+  from
+    jore.line l,
+    jore.stop s,
+    jore.route_segment rs
+  where
+    l.line_id = rs.route_id AND
+    rs.stop_index = '1' AND
+    rs.stop_id = s.stop_id AND
+    date between rs.date_begin and rs.date_end AND
+    s.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
+
   $$ language sql stable;
 
-create function jore.terminus_by_date_and_bbox_grouped(
+create or replace function jore.terminus_by_date_and_bbox_grouped(
   date date,
   min_lat double precision,
   min_lon double precision,
   max_lat double precision,
   max_lon double precision
 ) returns setof jore.terminus_grouped as $$
+SELECT
+  terminus.lines,
+  terminus.lat,
+  terminus.lon,
+  terminus.stop_area_id,
+  terminus.terminal_id,
+  terminal.name_fi as name_fi,
+  terminal.name_se as name_se
+FROM (
   SELECT
-    array_agg(line_id),
-    avg(lat),
-    avg(lon),
-    stop_area_id
+    array_agg(line_id) as lines,
+    avg(lat) as lat,
+    avg(lon) as lon,
+    stop_area_id,
+    terminal_id
   FROM
     jore.terminus_by_date_and_bbox(date, min_lat, min_lon, max_lat, max_lon)
-  GROUP BY 
-  (
-    stop_area_id
-  );
-  $$ language sql stable;
+  GROUP BY stop_area_id, terminal_id
+) terminus
+LEFT JOIN (
+  SELECT
+    terminal_id,
+    name_fi,
+    name_se
+  FROM
+    jore.terminal
+) terminal
+ON terminus.terminal_id = terminal.terminal_id
+$$ language sql stable;
 
 create function jore.departure_is_regular_day_departure(departure jore.departure) returns boolean as $$
     begin
