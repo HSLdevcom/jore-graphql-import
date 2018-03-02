@@ -47,7 +47,7 @@ FROM (
       FROM jore.geometry
       WHERE 
         date between date_begin and date_end
-        AND ST_X(ST_StartPoint(geom)) <= ST_X(ST_EndPoint(geom))
+        AND (route_id != '31M1' AND route_id != '31M2')
         AND ST_Intersects(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
     ) route
     LEFT JOIN
@@ -63,7 +63,7 @@ FROM (
     ) road_intersections
     ON ST_INTERSECTS(route.geom, road_intersections.points)
   ) road_sections
-  WHERE ST_Length(geom) > 0.0005
+  WHERE ST_Length(geom) > 0.001
 ) road_section_middle_point
 WHERE type = 'X'
 GROUP BY type
@@ -86,7 +86,7 @@ FROM
   SELECT
     ST_GeometryN(
       unnest(
-        ST_ClusterWithin(points_grouped_on_routes.point, 0.003)
+        ST_ClusterWithin(points_grouped_on_routes.point, 0.01)
       ), 1
     ) AS point,
     routes,
