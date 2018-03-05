@@ -85,37 +85,44 @@ FROM
 (
   SELECT
     ST_GeometryN(
-      unnest(
-        ST_ClusterWithin(points_grouped_on_routes.point, 0.01)
-      ), 1
-    ) AS point,
+      geom_collection,
+      ((Floor(ST_NumGeometries(geom_collection) / 2) :: INTEGER) + 1)
+    ) as point,
     routes,
-    max(angle) AS angle
+    angle
   FROM (
     SELECT
-      array_sort(array_agg(DISTINCT route_id)) AS routes,
-      max(angle) AS angle,
-      point
-    FROM jore.get_road_points_clustered_on_distance(date, min_lat, min_lon, max_lat, max_lon, 0.001) road_points
-    LEFT JOIN
-    (
-      SELECT 
-        route_id,
-        ST_Azimuth(
-          ST_LineInterpolatePoint(geom, 0.49),
-          ST_LineInterpolatePoint(geom, 0.5)
-        )/(2*pi())*360 AS angle,
-        geom
-      FROM 
-        jore.geometry
-      WHERE
-        date between date_begin and date_end
-        AND ST_Intersects(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
-    ) route
-    ON ST_Distance(route.geom, road_points.point) < 0.0002
-    GROUP BY point
-  ) points_grouped_on_routes
-  GROUP BY routes
+      unnest(
+        ST_ClusterWithin(points_grouped_on_routes.point, 0.01)
+      ) as geom_collection,
+      routes,
+      max(angle) AS angle
+    FROM (
+      SELECT
+        array_sort(array_agg(DISTINCT route_id)) AS routes,
+        max(angle) AS angle,
+        point
+      FROM jore.get_road_points_clustered_on_distance(date, min_lat, min_lon, max_lat, max_lon, 0.001) road_points
+      LEFT JOIN
+      (
+        SELECT
+          route_id,
+          ST_Azimuth(
+            ST_LineInterpolatePoint(geom, 0.49),
+            ST_LineInterpolatePoint(geom, 0.5)
+          )/(2*pi())*360 AS angle,
+          geom
+        FROM 
+          jore.geometry
+        WHERE
+          date between date_begin and date_end
+          AND ST_Intersects(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+      ) route
+      ON ST_Distance(route.geom, road_points.point) < 0.0002
+      GROUP BY point
+    ) points_grouped_on_routes
+    GROUP BY routes
+  ) geom_collections
 ) clustered_points_based_on_routes
 $$ language sql stable;
 
