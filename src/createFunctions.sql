@@ -80,6 +80,7 @@ FROM (
   ) road_intersections
   ON ST_INTERSECTS(route.geom, road_intersections.points)
 ) road_sections
+GROUP BY geom
 $$ language sql stable;
 
 CREATE OR REPLACE FUNCTION jore.route_section_intermediates(
