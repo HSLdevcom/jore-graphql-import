@@ -51,34 +51,46 @@ SELECT
   ST_Length(ST_Transform(geom, 3067)) as length
 FROM (
   SELECT
-    (ST_DUMP(
-      ST_SPLIT(
-        route.geom, road_intersections.points
-      )
-    )).geom AS geom
-  FROM
-  (
-    SELECT geometry.geom
-    FROM jore.geometry geometry
-    LEFT JOIN jore.route route
-    ON geometry.route_id = route.route_id
-    WHERE 
-      date between geometry.date_begin and geometry.date_end
-      AND (geometry.route_id != '31M1' AND geometry.route_id != '31M2')
-      AND route.type != '21'
-      AND ST_Intersects(geometry.geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
-  ) route
-  LEFT JOIN
+    geom
+  FROM (
+    SELECT
+      (ST_DUMP(
+        ST_SPLIT(
+          route.geom, road_intersections.points
+        )
+      )).geom AS geom
+    FROM
+    (
+      SELECT geometry.geom
+      FROM jore.geometry geometry
+      LEFT JOIN jore.route route
+      ON geometry.route_id = route.route_id
+      WHERE 
+        date between geometry.date_begin and geometry.date_end
+        AND (geometry.route_id != '31M1' AND geometry.route_id != '31M2')
+        AND route.type != '21'
+        AND ST_Intersects(geometry.geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+    ) route
+    LEFT JOIN
+    (
+      SELECT
+        ST_Union(point) AS points
+      FROM
+        jore.point_geometry
+      WHERE
+        node_type = 'X'
+        AND ST_Intersects(point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+    ) road_intersections
+    ON ST_INTERSECTS(route.geom, road_intersections.points)
+  ) unfiltered_route_sections
+  INNER JOIN
   (
     SELECT
-      ST_Union(point) AS points
+      ST_Union(point) as points
     FROM
-      jore.point_geometry
-    WHERE
-      node_type = 'X'
-      AND ST_Intersects(point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
-  ) road_intersections
-  ON ST_INTERSECTS(route.geom, road_intersections.points)
+      jore.stop
+  ) stops
+  ON ST_Distance(unfiltered_route_sections.geom, stops.points) < 0.0002
 ) road_sections
 GROUP BY geom
 $$ language sql stable;
