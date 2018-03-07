@@ -101,7 +101,7 @@ FROM
   SELECT
     ST_GeometryN(
       geom_collection,
-      ((Floor(ST_NumGeometries(geom_collection) / 2) :: INTEGER) + 1)
+      1
     ) as point,
     routes,
     angle,
@@ -112,35 +112,40 @@ FROM
         ST_ClusterWithin(points_grouped_on_routes.point, 0.01)
       ) as geom_collection,
       routes,
-      median(angle) AS angle,
-      sum(length) as length
+      (array_agg(angle))[1]::numeric AS angle,
+      -- median(angle) as angle,
+      max(length) as length
     FROM (
-      SELECT
-        array_sort(array_agg(DISTINCT route_id)) AS routes,
-        median(angle) AS angle,
-        road_points.point AS point,
-        max(road_points.length) AS length
-      FROM jore.get_road_points_clustered_on_distance(date, min_lat, min_lon, max_lat, max_lon, 0.001) road_points
-      LEFT JOIN
-      (
+      SELECT *
+      FROM (
         SELECT
-          geometry.route_id,
-          (Floor(ST_Azimuth(
-            ST_LineInterpolatePoint(geom, 0.49),
-            ST_LineInterpolatePoint(geom, 0.5)
-          )/(2*pi())*360)::INTEGER) AS angle,
-          geom
-        FROM 
-          jore.geometry geometry,
-          jore.route route
-        WHERE
-          geometry.route_id = route.route_id
-          AND route.type != '21'
-          AND date between geometry.date_begin and geometry.date_end
-          AND ST_Intersects(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
-      ) route
-      ON ST_Distance(route.geom, road_points.point) < 0.0002
-      GROUP BY point
+          array_sort(array_agg(DISTINCT route_id)) AS routes,
+          (array_agg(angle))[1] AS angle,
+          road_points.point AS point,
+          max(road_points.length) AS length
+        FROM jore.get_road_points_clustered_on_distance(date, min_lat, min_lon, max_lat, max_lon, 0.001) road_points
+        LEFT JOIN
+        (
+          SELECT
+            geometry.route_id,
+            (Floor(ST_Azimuth(
+              ST_LineInterpolatePoint(geom, 0.49),
+              ST_LineInterpolatePoint(geom, 0.5)
+            )/(2*pi())*360)::INTEGER) AS angle,
+            geom
+          FROM 
+            jore.geometry geometry,
+            jore.route route
+          WHERE
+            geometry.route_id = route.route_id
+            AND route.type != '21'
+            AND date between geometry.date_begin and geometry.date_end
+            AND ST_Intersects(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+        ) route
+        ON ST_Distance(route.geom, road_points.point) < 0.0002
+        GROUP BY point
+        ) points
+      ORDER BY length
     ) points_grouped_on_routes
     GROUP BY routes
   ) geom_collections
