@@ -37,6 +37,46 @@ CREATE AGGREGATE median(NUMERIC) (
   INITCOND='{}'
 );
 
+create type jore.terminal_name as (
+  name_fi character varying(40),
+  name_se character varying(40),
+  lon numeric,
+  lat numeric,
+  type character varying(2)
+);
+
+CREATE OR REPLACE FUNCTION jore.get_terminalnames(
+  date date,
+  min_lat double precision,
+  min_lon double precision,
+  max_lat double precision,
+  max_lon double precision
+) RETURNS setof jore.terminal_name AS $$
+SELECT
+  name_fi,
+  name_se,
+  lon,
+  lat,
+  route.type
+FROM
+  jore.terminal terminal
+INNER JOIN (
+  SELECT
+    route.type as type,
+    stop.terminal_id as terminal_id
+  FROM
+    jore.stop stop,
+    jore.route route,
+    jore.departure departure
+  WHERE
+    ST_Intersects(stop.point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+    AND stop.stop_id = departure.stop_id
+    AND departure.route_id = route.route_id
+    AND (route.type = '06' OR route.type = '12')
+) route
+ON terminal.terminal_id = route.terminal_id
+GROUP BY name_fi, name_se, lon, lat, route.type
+$$ language sql stable;
 
 CREATE OR REPLACE FUNCTION jore.get_road_points_clustered_on_distance(
   date date,
