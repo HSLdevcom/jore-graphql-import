@@ -120,6 +120,8 @@ FROM (
         date between geometry.date_begin and geometry.date_end
         AND (geometry.route_id != '31M1' AND geometry.route_id != '31M2')
         AND route.type != '21'
+        AND route.type != '06'
+        AND route.type != '12'
         AND ST_Intersects(geometry.geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
     ) route
     LEFT JOIN
@@ -140,9 +142,12 @@ FROM (
       ST_Union(point) as points
     FROM
       jore.stop
+    WHERE
+      ST_Intersects(point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
   ) stops
   ON ST_Distance(unfiltered_route_sections.geom, stops.points) < 0.0002
 ) road_sections
+WHERE ST_Length(ST_Transform(geom, 3067)) > 50
 GROUP BY geom
 $$ language sql stable;
 
