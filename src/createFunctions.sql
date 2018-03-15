@@ -292,7 +292,7 @@ create or replace function jore.terminus_by_date_and_bbox(
   max_lon double precision
   ) returns setof jore.terminus as $$
   select 
-    l.line_id AS line_id,
+    r.route_id AS line_id,
     s.stop_id AS stop_id,
     s.lat AS lat,
     s.lon AS lon,
@@ -300,12 +300,10 @@ create or replace function jore.terminus_by_date_and_bbox(
     s.stop_area_id AS stop_area_id,
     s.terminal_id AS terminal_id
   from
-    jore.line l,
     jore.stop s,
     jore.route r,
     jore.route_segment rs
   where
-    l.line_id = rs.route_id AND
     rs.route_id = r.route_id AND
     rs.stop_index = '1' AND
     rs.stop_id = s.stop_id AND
