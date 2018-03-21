@@ -259,8 +259,9 @@ FROM
       ON ST_INTERSECTS(route.geom, road_intersections.points)
     ) segments
   ) segment_angles
-  ON ST_Distance(abd.geom, abc.point) < 0.001
+  ON ST_Distance(segment_angles.geom, geom_points.point) < 0.001
 ) clustered_points_based_on_routes
+WHERE ST_Intersects(point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
 GROUP BY point, routes, length
 $$ language sql stable;
 
