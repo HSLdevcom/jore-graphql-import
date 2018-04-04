@@ -49,6 +49,7 @@ CREATE AGGREGATE median(NUMERIC) (
 );
 
 create type jore.terminal_name as (
+  terminal_id character varying(7),
   name_fi character varying(40),
   name_se character varying(40),
   lon numeric,
@@ -64,29 +65,33 @@ CREATE OR REPLACE FUNCTION jore.get_terminalnames(
   max_lon double precision
 ) RETURNS setof jore.terminal_name AS $$
 SELECT
-  name_fi,
-  name_se,
-  lon,
-  lat,
-  route.type
-FROM
-  jore.terminal terminal
-INNER JOIN (
+  terminal_id,
+  first(name_fi),
+  first(name_se),
+  first(lon),
+  first(lat),
+  first(type)
+FROM (
   SELECT
-    route.type as type,
-    stop.terminal_id as terminal_id
+    terminal.terminal_id as terminal_id,
+    terminal.lat as lat,
+    terminal.lon as lon,
+    stop.name_fi as name_fi,
+    stop.name_se as name_se,
+    route.type as type
   FROM
+    jore.terminal terminal,
     jore.stop stop,
-    jore.route route,
-    jore.departure departure
-  WHERE
-    ST_Intersects(stop.point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
-    AND stop.stop_id = departure.stop_id
-    AND departure.route_id = route.route_id
-    AND (route.type = '06' OR route.type = '12')
-) route
-ON terminal.terminal_id = route.terminal_id
-GROUP BY name_fi, name_se, lon, lat, route.type
+    jore.route_segment segment,
+    jore.route route
+  WHERE terminal.terminal_id = stop.terminal_id
+  AND stop.stop_id = segment.stop_id
+  AND segment.route_id = route.route_id
+  AND (route.type = '12' OR route.type = '06')
+  AND ST_Intersects(terminal.point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+  AND date between route.date_begin and route.date_end 
+) terminals
+GROUP BY terminals.terminal_id
 $$ language sql stable;
 
 CREATE OR REPLACE FUNCTION jore.get_road_points_clustered_on_distance(
