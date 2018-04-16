@@ -128,6 +128,7 @@ CREATE OR REPLACE FUNCTION jore.get_route_angles_at_point(
       ON ST_Intersects(buf.geom, geom.geom)
       GROUP BY buf.geom, geom.geom
     ) sections
+    WHERE GeometryType(geom) = 'LINESTRING' 
     GROUP BY angle
   ) angle
 $$ language sql stable;
