@@ -114,7 +114,7 @@ CREATE OR REPLACE FUNCTION jore.get_route_angles_at_point(
         SELECT
           ST_Buffer(
             ST_SetSRID(ST_MakePoint(lon,lat),4326),
-            0.0005
+            0.001
           ) geom
       ) as buf
       LEFT JOIN (
