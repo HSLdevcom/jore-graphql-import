@@ -104,8 +104,8 @@ CREATE OR REPLACE FUNCTION jore.get_route_angles_at_point(
   FROM (
     SELECT
       (Floor(degrees(ST_Azimuth(
-        ST_LineInterpolatePoint(geom, 0),
-        ST_LineInterpolatePoint(geom, 1)
+        ST_LineInterpolatePoint(geom, 0.49),
+        ST_LineInterpolatePoint(geom, 0.50)
       )))::INTEGER) AS angle
     FROM (
       SELECT
