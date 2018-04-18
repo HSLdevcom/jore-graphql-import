@@ -146,13 +146,13 @@ SELECT
   max(length) as length
 FROM (
   SELECT
-    ST_ClusterDBSCAN(point, eps := 50, minpoints := 1) over () AS cid,
+    ST_ClusterDBSCAN(point, eps := 10, minpoints := 1) over () AS cid,
     point,
     length
   FROM (
     SELECT
-      ST_Transform(ST_LineInterpolatePoint(geom, 0.5), 3067) as point,
-      ST_Length(ST_Transform(geom, 3067)) as length
+      ST_LineInterpolatePoint(geom, 0.5) as point,
+      ST_Length(geom) as length
     FROM (
       SELECT
         geom
@@ -165,13 +165,15 @@ FROM (
           )).geom AS geom
         FROM
         (
-          SELECT geometry.geom
+          SELECT
+            ST_Transform(geometry.geom, 3067) as geom
           FROM jore.geometry geometry
           LEFT JOIN jore.route route
           ON geometry.route_id = route.route_id
           WHERE 
             date between geometry.date_begin and geometry.date_end
-            AND (geometry.route_id != '31M1' AND geometry.route_id != '31M2')
+            AND geometry.route_id != '31M1'
+            AND geometry.route_id != '31M2'
             AND route.type != '21'
             AND route.type != '06'
             AND route.type != '12'
@@ -180,7 +182,8 @@ FROM (
         LEFT JOIN
         (
           SELECT
-            ST_Union(point) AS points
+            ST_Union(ST_Buffer(ST_Transform(point, 3067), 10)) AS points
+            -- ST_Union(ST_Transform(point, 3067)) AS points
           FROM
             jore.point_geometry
           WHERE
@@ -192,13 +195,13 @@ FROM (
       INNER JOIN
       (
         SELECT
-          ST_Union(point) as points
+          ST_Union(ST_Transform(point, 3067)) as points
         FROM
           jore.stop
         WHERE
           ST_Intersects(point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
       ) stops
-      ON ST_Distance(unfiltered_route_sections.geom, stops.points) < 0.0002
+      ON ST_Distance(unfiltered_route_sections.geom, stops.points) < 20
     ) road_sections
     WHERE ST_Length(ST_Transform(geom, 3067)) > 50
     GROUP BY geom
@@ -243,13 +246,13 @@ FROM (
       FROM (
         SELECT
           unnest(
-            ST_ClusterWithin(points_grouped_on_routes.point, 0.01)
+            ST_ClusterWithin(points_grouped_on_routes.point, 1000)
           ) as geom_collection,
           routes,
           max(length) as length
         FROM (
           SELECT
-            ST_Transform(point, 4326) as point,
+            point,
             routes,
             length
           FROM (
@@ -274,7 +277,7 @@ FROM (
                 AND date between geometry.date_begin and geometry.date_end
                 AND ST_Intersects(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
             ) route
-            ON ST_Distance(route.geom, road_points.point) < 50
+            ON ST_Distance(route.geom, road_points.point) < 10
             GROUP BY point
             ) points
           ORDER BY length DESC
