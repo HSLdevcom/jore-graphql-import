@@ -232,7 +232,7 @@ FROM (
   FROM
   (
     SELECT
-      point,
+      ST_Transform(point, 4326) as point,
       routes,
       length
     FROM (
@@ -260,7 +260,21 @@ FROM (
               array_sort(array_agg(DISTINCT route_id)) AS routes,
               road_points.point AS point,
               max(road_points.length) AS length
-            FROM jore.get_road_points_clustered_on_distance(date, min_lat, min_lon, max_lat, max_lon, 0.001) road_points
+            FROM (
+              SELECT inter.*
+              FROM (
+                SELECT *
+                FROM jore.intermediate
+                WHERE ST_Intersects(ST_Transform(point, 4326), ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+              ) inter
+              INNER JOIN (
+                SELECT
+                  ST_Union(ST_Transform(point, 3067)) as points
+                FROM jore.terminus_by_date_and_bbox(date, min_lat, min_lon, max_lat, max_lon)
+              ) terminus_points
+              ON ST_Distance(inter.point, terminus_points.points) > 100
+            ) road_points
+            -- FROM jore.get_road_points_clustered_on_distance(date, min_lat, min_lon, max_lat, max_lon, 0.001) road_points
             LEFT JOIN
             (
               SELECT
@@ -298,7 +312,8 @@ create type jore.terminus as (
   lon numeric(9,6),
   stop_short_id character varying(6),
   stop_area_id character varying(6),
-  terminal_id character varying(6)
+  terminal_id character varying(6),
+  point geometry
 );
 
 create type jore.terminus_grouped as (
@@ -325,7 +340,8 @@ create or replace function jore.terminus_by_date_and_bbox(
     s.lon AS lon,
     s.short_id AS stop_short_id,
     s.stop_area_id AS stop_area_id,
-    s.terminal_id AS terminal_id
+    s.terminal_id AS terminal_id,
+    s.point AS point
   from
     jore.stop s,
     jore.route r,
