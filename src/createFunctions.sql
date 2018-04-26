@@ -20,7 +20,8 @@ CREATE OR REPLACE FUNCTION public.first_agg ( anyelement, anyelement )
 RETURNS anyelement LANGUAGE SQL IMMUTABLE STRICT AS $$
         SELECT $1;
 $$;
- 
+
+DROP AGGREGATE IF EXISTS public.FIRST(anyelement);
 CREATE AGGREGATE public.FIRST (
         sfunc    = public.first_agg,
         basetype = anyelement,
@@ -40,7 +41,8 @@ $$
    ) sub;
 $$
 LANGUAGE 'sql' IMMUTABLE;
- 
+
+DROP AGGREGATE IF EXISTS median(numeric);
 CREATE AGGREGATE median(NUMERIC) (
   SFUNC=array_append,
   STYPE=NUMERIC[],
@@ -210,6 +212,47 @@ FROM (
 GROUP BY cid
 $$ language sql stable;
 
+create type jore.terminus as (
+  line_id character varying(6),
+  stop_id character varying(6),
+  lat numeric(9,6),
+  lon numeric(9,6),
+  stop_short_id character varying(6),
+  stop_area_id character varying(6),
+  terminal_id character varying(6),
+  point geometry
+);
+
+create or replace function jore.terminus_by_date_and_bbox(
+  date date,
+  min_lat double precision,
+  min_lon double precision,
+  max_lat double precision,
+  max_lon double precision
+  ) returns setof jore.terminus as $$
+  select 
+    r.route_id AS line_id,
+    s.stop_id AS stop_id,
+    s.lat AS lat,
+    s.lon AS lon,
+    s.short_id AS stop_short_id,
+    s.stop_area_id AS stop_area_id,
+    s.terminal_id AS terminal_id,
+    s.point AS point
+  from
+    jore.stop s,
+    jore.route r,
+    jore.route_segment rs
+  where
+    rs.route_id = r.route_id AND
+    rs.stop_index = '1' AND
+    rs.stop_id = s.stop_id AND
+    r.type != '21' AND
+    date between rs.date_begin and rs.date_end AND
+    s.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
+
+$$ language sql stable;
+
 CREATE OR REPLACE FUNCTION jore.route_section_intermediates(
   date date,
   min_lat double precision,
@@ -264,8 +307,9 @@ FROM (
               SELECT inter.*
               FROM (
                 SELECT *
-                FROM jore.intermediate
-                WHERE ST_Intersects(ST_Transform(point, 4326), ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+                -- FROM jore.intermediate
+                FROM jore.get_road_points_clustered_on_distance(date, min_lat, min_lon, max_lat, max_lon, 0.001) road_points
+                -- WHERE ST_Intersects(ST_Transform(point, 4326), ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
               ) inter
               INNER JOIN (
                 SELECT
@@ -274,7 +318,6 @@ FROM (
               ) terminus_points
               ON ST_Distance(inter.point, terminus_points.points) > 100
             ) road_points
-            -- FROM jore.get_road_points_clustered_on_distance(date, min_lat, min_lon, max_lat, max_lon, 0.001) road_points
             LEFT JOIN
             (
               SELECT
@@ -305,17 +348,6 @@ FROM (
 ) intermediate_points
 $$ language sql stable;
 
-create type jore.terminus as (
-  line_id character varying(6),
-  stop_id character varying(6),
-  lat numeric(9,6),
-  lon numeric(9,6),
-  stop_short_id character varying(6),
-  stop_area_id character varying(6),
-  terminal_id character varying(6),
-  point geometry
-);
-
 create type jore.terminus_grouped as (
   lines character varying(6)[],
   lat numeric(9,6),
@@ -325,36 +357,6 @@ create type jore.terminus_grouped as (
   name_fi character varying(40),
   name_se character varying(40)
 );
-
-create or replace function jore.terminus_by_date_and_bbox(
-  date date,
-  min_lat double precision,
-  min_lon double precision,
-  max_lat double precision,
-  max_lon double precision
-  ) returns setof jore.terminus as $$
-  select 
-    r.route_id AS line_id,
-    s.stop_id AS stop_id,
-    s.lat AS lat,
-    s.lon AS lon,
-    s.short_id AS stop_short_id,
-    s.stop_area_id AS stop_area_id,
-    s.terminal_id AS terminal_id,
-    s.point AS point
-  from
-    jore.stop s,
-    jore.route r,
-    jore.route_segment rs
-  where
-    rs.route_id = r.route_id AND
-    rs.stop_index = '1' AND
-    rs.stop_id = s.stop_id AND
-    r.type != '21' AND
-    date between rs.date_begin and rs.date_end AND
-    s.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
-
-$$ language sql stable;
 
 create or replace function jore.terminus_by_date_and_bbox_grouped(
   date date,
