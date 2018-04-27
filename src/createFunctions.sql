@@ -16,6 +16,15 @@ create type jore.section_intermediate as (
   length numeric
 );
 
+create type jore.section_intermediate_with_geometry as (
+  routes character varying(6)[],
+  lon numeric,
+  lat numeric,
+  angles integer[],
+  length numeric,
+  point geometry
+);
+
 CREATE OR REPLACE FUNCTION public.first_agg ( anyelement, anyelement )
 RETURNS anyelement LANGUAGE SQL IMMUTABLE STRICT AS $$
         SELECT $1;
@@ -106,18 +115,18 @@ CREATE OR REPLACE FUNCTION jore.get_route_angles_at_point(
   FROM (
     SELECT
       (Floor(degrees(ST_Azimuth(
-        ST_LineInterpolatePoint(geom, 0.49),
-        ST_LineInterpolatePoint(geom, 0.50)
+        ST_LineInterpolatePoint(geom, 0.4),
+        ST_LineInterpolatePoint(geom, 0.6)
       )))::INTEGER) AS angle
     FROM (
       SELECT
         ST_Intersection(buf.geom, geom.geom) as geom
       FROM (
         SELECT
-          ST_Buffer(
-            ST_SetSRID(ST_MakePoint(lon,lat),4326),
-            0.001
-          ) geom
+          ST_Transform(ST_Buffer(
+            ST_Transform(ST_SetSRID(ST_MakePoint(lon,lat),4326), 3067),
+            100
+          ), 4326) geom
       ) as buf
       LEFT JOIN (
         SELECT
@@ -135,20 +144,15 @@ CREATE OR REPLACE FUNCTION jore.get_route_angles_at_point(
   ) angle
 $$ language sql stable;
 
-CREATE OR REPLACE FUNCTION jore.get_road_points_clustered_on_distance(
-  date date,
-  min_lat double precision,
-  min_lon double precision,
-  max_lat double precision,
-  max_lon double precision,
-  cluster_distance decimal
+CREATE OR REPLACE FUNCTION jore.get_road_points_clustered(
+  date date
 ) RETURNS Table(point geometry, length float) AS $$
 SELECT
   first(point) as point,
   max(length) as length
 FROM (
   SELECT
-    ST_ClusterDBSCAN(point, eps := 10, minpoints := 1) over () AS cid,
+    ST_ClusterDBSCAN(point, eps := 30, minpoints := 1) over () AS cid,
     point,
     length
   FROM (
@@ -179,18 +183,15 @@ FROM (
             AND route.type != '21'
             AND route.type != '06'
             AND route.type != '12'
-            AND ST_Intersects(geometry.geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
         ) route
         LEFT JOIN
         (
           SELECT
             ST_Union(ST_Buffer(ST_Transform(point, 3067), 10)) AS points
-            -- ST_Union(ST_Transform(point, 3067)) AS points
           FROM
             jore.point_geometry
           WHERE
             node_type = 'X'
-            AND ST_Intersects(point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
         ) road_intersections
         ON ST_INTERSECTS(route.geom, road_intersections.points)
       ) unfiltered_route_sections
@@ -200,8 +201,6 @@ FROM (
           ST_Union(ST_Transform(point, 3067)) as points
         FROM
           jore.stop
-        WHERE
-          ST_Intersects(point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
       ) stops
       ON ST_Distance(unfiltered_route_sections.geom, stops.points) < 20
     ) road_sections
@@ -222,6 +221,30 @@ create type jore.terminus as (
   terminal_id character varying(6),
   point geometry
 );
+
+create or replace function jore.get_all_terminuses(
+  date date
+) returns setof jore.terminus as $$
+  select 
+    r.route_id AS line_id,
+    s.stop_id AS stop_id,
+    s.lat AS lat,
+    s.lon AS lon,
+    s.short_id AS stop_short_id,
+    s.stop_area_id AS stop_area_id,
+    s.terminal_id AS terminal_id,
+    s.point AS point
+  from
+    jore.stop s,
+    jore.route r,
+    jore.route_segment rs
+  where
+    rs.route_id = r.route_id AND
+    rs.stop_index = '1' AND
+    rs.stop_id = s.stop_id AND
+    r.type != '21' AND
+    date between rs.date_begin and rs.date_end
+$$ language sql stable;
 
 create or replace function jore.terminus_by_date_and_bbox(
   date date,
@@ -250,28 +273,25 @@ create or replace function jore.terminus_by_date_and_bbox(
     r.type != '21' AND
     date between rs.date_begin and rs.date_end AND
     s.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
-
 $$ language sql stable;
 
 CREATE OR REPLACE FUNCTION jore.route_section_intermediates(
-  date date,
-  min_lat double precision,
-  min_lon double precision,
-  max_lat double precision,
-  max_lon double precision
-) RETURNS setof jore.section_intermediate AS $$
+  date date
+) RETURNS setof jore.section_intermediate_with_geometry AS $$
 SELECT
   routes,
   lon,
   lat,
   jore.get_route_angles_at_point(date, lat, lon) as angles,
-  length
+  length,
+  point
 FROM (
   SELECT
     routes,
     ST_X(point)::numeric as lon,
     ST_Y(point)::numeric as lat,
-    length::numeric as length
+    length::numeric as length,
+    point
   FROM
   (
     SELECT
@@ -307,14 +327,12 @@ FROM (
               SELECT inter.*
               FROM (
                 SELECT *
-                -- FROM jore.intermediate
-                FROM jore.get_road_points_clustered_on_distance(date, min_lat, min_lon, max_lat, max_lon, 0.001) road_points
-                -- WHERE ST_Intersects(ST_Transform(point, 4326), ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+                FROM jore.get_road_points_clustered(date) road_points
               ) inter
               INNER JOIN (
                 SELECT
                   ST_Union(ST_Transform(point, 3067)) as points
-                FROM jore.terminus_by_date_and_bbox(date, min_lat, min_lon, max_lat, max_lon)
+                FROM jore.get_all_terminuses(date)
               ) terminus_points
               ON ST_Distance(inter.point, terminus_points.points) > 100
             ) road_points
@@ -332,7 +350,6 @@ FROM (
                 AND route.type != '06'
                 AND route.type != '12'
                 AND date between geometry.date_begin and geometry.date_end
-                AND ST_Intersects(geom, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
             ) route
             ON ST_Distance(route.geom, road_points.point) < 10
             GROUP BY point
@@ -343,9 +360,38 @@ FROM (
       ) geom_collections
     ) geom_points
   ) clustered_points_based_on_routes
-  WHERE ST_Intersects(point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
   GROUP BY point, routes, length
 ) intermediate_points
+$$ language sql stable;
+
+CREATE OR REPLACE FUNCTION jore.create_intermediate_points(
+  date date
+) RETURNS VOID AS $$
+DROP TABLE IF EXISTS jore.intermediate_points_generate_date;
+DROP TABLE IF EXISTS jore.intermediate_points;
+CREATE TABLE jore.intermediate_points_generate_date AS
+  SELECT date as 'date';
+CREATE TABLE jore.intermediate_points AS
+  SELECT *
+  FROM jore.route_section_intermediates(date);
+$$ language sql volatile;
+
+CREATE OR REPLACE FUNCTION jore.get_intermediate_points(
+  min_lat double precision,
+  min_lon double precision,
+  max_lat double precision,
+  max_lon double precision
+) RETURNS setof jore.section_intermediate AS $$
+  SELECT
+    routes,
+    lon,
+    lat,
+    angles,
+    length
+  FROM
+    jore.intermediate_points
+  WHERE
+    ST_Intersects(point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
 $$ language sql stable;
 
 create type jore.terminus_grouped as (
