@@ -187,7 +187,7 @@ FROM (
         LEFT JOIN
         (
           SELECT
-            ST_Union(ST_Buffer(ST_Transform(point, 3067), 10)) AS points
+            ST_Union(ST_Buffer(ST_Transform(point, 3067), 30)) AS points
           FROM
             jore.point_geometry
           WHERE
@@ -204,9 +204,19 @@ FROM (
       ) stops
       ON ST_Distance(unfiltered_route_sections.geom, stops.points) < 20
     ) road_sections
-    WHERE ST_Length(ST_Transform(geom, 3067)) > 50
+    WHERE ST_Length(ST_Transform(geom, 3067)) > 40
     GROUP BY geom
   ) midpoints
+  INNER JOIN
+  (
+    SELECT
+      ST_Union(ST_Transform(point, 3067)) AS points
+    FROM
+      jore.point_geometry
+    WHERE
+      node_type = 'X'
+  ) stops
+  ON ST_Distance(midpoints.point, stops.points) > 30
 ) clustered
 GROUP BY cid
 $$ language sql stable;
@@ -351,7 +361,7 @@ FROM (
                 AND route.type != '12'
                 AND date between geometry.date_begin and geometry.date_end
             ) route
-            ON ST_Distance(route.geom, road_points.point) < 10
+            ON ST_Distance(route.geom, road_points.point) < 20
             GROUP BY point
             ) points
           ORDER BY length DESC
