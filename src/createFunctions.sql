@@ -181,7 +181,7 @@ FROM (
             AND geometry.route_id != '31M1'
             AND geometry.route_id != '31M2'
             AND route.route_id NOT LIKE '%X'
-            AND route.route_id ~ '^[0-9]*[A-Z]$'
+            AND route.route_id ~ '^[0-9]*[A-Z]?$'
             AND route.type != '21'
             AND route.type != '06'
             AND route.type != '12'
@@ -253,7 +253,7 @@ create or replace function jore.get_all_terminuses(
   where
     rs.route_id = r.route_id AND
     r.route_id NOT LIKE '%X' AND
-    r.route_id ~ '^[0-9]*[A-Z]$' AND
+    r.route_id ~ '^[0-9]*[A-Z]?$' AND
     rs.stop_index = '1' AND
     rs.stop_id = s.stop_id AND
     r.type != '21' AND
@@ -283,7 +283,7 @@ create or replace function jore.terminus_by_date_and_bbox(
   where
     rs.route_id = r.route_id AND
     r.route_id NOT LIKE '%X' AND
-    r.route_id ~ '^[0-9]*[A-Z]$' AND
+    r.route_id ~ '^[0-9]*[A-Z]?$' AND
     rs.stop_index = '1' AND
     rs.stop_id = s.stop_id AND
     r.type != '21' AND
@@ -366,7 +366,7 @@ FROM (
                 AND route.type != '06'
                 AND route.type != '12'
                 AND route.route_id NOT LIKE '%X'
-                AND route.route_id ~ '^[0-9]*[A-Z]$'
+                AND route.route_id ~ '^[0-9]*[A-Z]?$'
                 AND date between geometry.date_begin and geometry.date_end
             ) route
             ON ST_Distance(route.geom, road_points.point) < 20
