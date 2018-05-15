@@ -226,6 +226,7 @@ $$ language sql stable;
 create type jore.terminus as (
   line_id character varying(6),
   stop_id character varying(6),
+  type character varying(6),
   lat numeric(9,6),
   lon numeric(9,6),
   stop_short_id character varying(6),
@@ -239,6 +240,7 @@ create or replace function jore.get_all_terminuses(
 ) returns setof jore.terminus as $$
   select 
     r.route_id AS line_id,
+    r.type AS type,
     s.stop_id AS stop_id,
     s.lat AS lat,
     s.lon AS lon,
@@ -269,6 +271,7 @@ create or replace function jore.terminus_by_date_and_bbox(
   ) returns setof jore.terminus as $$
   select 
     r.route_id AS line_id,
+    r.type AS type,
     s.stop_id AS stop_id,
     s.lat AS lat,
     s.lon AS lon,
@@ -418,6 +421,7 @@ create type jore.terminus_grouped as (
   lon numeric(9,6),
   stop_area_id character varying(6),
   terminal_id character varying(6),
+  type character varying(6),
   name_fi character varying(40),
   name_se character varying(40)
 );
@@ -435,6 +439,7 @@ SELECT
   terminus.lon,
   terminus.stop_area_id,
   terminus.terminal_id,
+  terminus.type,
   terminal.name_fi as name_fi,
   terminal.name_se as name_se
 FROM (
@@ -442,11 +447,12 @@ FROM (
     array_agg(line_id) as lines,
     avg(lat) as lat,
     avg(lon) as lon,
+    type as type,
     stop_area_id,
     terminal_id
   FROM
     jore.terminus_by_date_and_bbox(date, min_lat, min_lon, max_lat, max_lon)
-  GROUP BY stop_area_id, terminal_id
+  GROUP BY stop_area_id, terminal_id, type
 ) terminus
 LEFT JOIN (
   SELECT
