@@ -240,8 +240,8 @@ create or replace function jore.get_all_terminuses(
 ) returns setof jore.terminus as $$
   select 
     r.route_id AS line_id,
-    r.type AS type,
     s.stop_id AS stop_id,
+    r.type AS type,
     s.lat AS lat,
     s.lon AS lon,
     s.short_id AS stop_short_id,
@@ -271,8 +271,8 @@ create or replace function jore.terminus_by_date_and_bbox(
   ) returns setof jore.terminus as $$
   select 
     r.route_id AS line_id,
-    r.type AS type,
     s.stop_id AS stop_id,
+    r.type AS type,
     s.lat AS lat,
     s.lon AS lon,
     s.short_id AS stop_short_id,
