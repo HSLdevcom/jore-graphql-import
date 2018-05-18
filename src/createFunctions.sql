@@ -145,7 +145,8 @@ CREATE OR REPLACE FUNCTION jore.get_route_angles_at_point(
 $$ language sql stable;
 
 CREATE OR REPLACE FUNCTION jore.get_road_points_clustered(
-  date date
+  date date,
+  nearBuses boolean
 ) RETURNS Table(point geometry, length float) AS $$
 SELECT
   first(point) as point,
@@ -182,9 +183,13 @@ FROM (
             AND geometry.route_id != '31M2'
             AND route.route_id NOT LIKE '%X'
             AND route.route_id ~ '^[0-9]*[A-Z]?$'
-            AND route.type != '21'
             AND route.type != '06'
             AND route.type != '12'
+            AND
+            CASE
+              WHEN nearBuses THEN route.type = '21'
+              ELSE route.type != '21'
+            END
         ) route
         LEFT JOIN
         (
@@ -295,7 +300,9 @@ create or replace function jore.terminus_by_date_and_bbox(
 $$ language sql stable;
 
 CREATE OR REPLACE FUNCTION jore.route_section_intermediates(
-  date date
+  date date,
+  nearBuses boolean,
+  clusterSameWithin numeric
 ) RETURNS setof jore.section_intermediate_with_geometry AS $$
 SELECT
   routes,
@@ -328,7 +335,7 @@ FROM (
       FROM (
         SELECT
           unnest(
-            ST_ClusterWithin(points_grouped_on_routes.point, 1000)
+            ST_ClusterWithin(points_grouped_on_routes.point, clusterSameWithin)
           ) as geom_collection,
           routes,
           max(length) as length
@@ -346,7 +353,7 @@ FROM (
               SELECT inter.*
               FROM (
                 SELECT *
-                FROM jore.get_road_points_clustered(date) road_points
+                FROM jore.get_road_points_clustered(date, nearBuses) road_points
               ) inter
               INNER JOIN (
                 SELECT
@@ -365,12 +372,16 @@ FROM (
                 jore.route route
               WHERE
                 geometry.route_id = route.route_id
-                AND route.type != '21'
                 AND route.type != '06'
                 AND route.type != '12'
                 AND route.route_id NOT LIKE '%X'
                 AND route.route_id ~ '^[0-9]*[A-Z]?$'
                 AND date between geometry.date_begin and geometry.date_end
+                AND
+                CASE
+                  WHEN nearBuses THEN route.type = '21'
+                  ELSE route.type != '21'
+                END
             ) route
             ON ST_Distance(route.geom, road_points.point) < 20
             GROUP BY point
@@ -386,15 +397,32 @@ FROM (
 $$ language sql stable;
 
 CREATE OR REPLACE FUNCTION jore.create_intermediate_points(
-  date date
+  date date,
+  tag character varying(20)
 ) RETURNS VOID AS $$
 DROP TABLE IF EXISTS jore.intermediate_points_generate_date;
-DROP TABLE IF EXISTS jore.intermediate_points;
 CREATE TABLE jore.intermediate_points_generate_date AS
-  SELECT date as 'date';
+  SELECT 'date' as "date", '7th of May' as "createdAt", 'running' as "status";
+DROP TABLE IF EXISTS jore.intermediate_points;
 CREATE TABLE jore.intermediate_points AS
-  SELECT *
-  FROM jore.route_section_intermediates(date);
+(
+  SELECT
+    *,
+    false as nearBuses
+  FROM
+    jore.route_section_intermediates(date, false, 1000)
+)
+UNION ALL
+(
+  SELECT
+    *,
+    true as nearBuses
+  FROM
+    jore.route_section_intermediates(date, true, 200)
+);
+DROP TABLE IF EXISTS jore.intermediate_points_generate_date;
+CREATE TABLE jore.intermediate_points_generate_date AS
+  SELECT 'date' as "date", tag as "createdAt", 'done' as "status";
 $$ language sql volatile;
 
 CREATE OR REPLACE FUNCTION jore.get_intermediate_points(
