@@ -300,7 +300,8 @@ create or replace function jore.terminus_by_date_and_bbox(
   min_lat double precision,
   min_lon double precision,
   max_lat double precision,
-  max_lon double precision
+  max_lon double precision,
+  nearBuses boolean
   ) returns setof jore.terminus as $$
   select 
     r.route_id AS line_id,
@@ -322,7 +323,10 @@ create or replace function jore.terminus_by_date_and_bbox(
     r.route_id ~ '^[0-9]*[A-Z]?$' AND
     rs.stop_index = '1' AND
     rs.stop_id = s.stop_id AND
-    r.type != '21' AND
+    CASE
+      WHEN nearBuses THEN r.type = '21'
+      ELSE r.type != '21'
+    END AND
     date between rs.date_begin and rs.date_end AND
     s.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
 $$ language sql stable;
@@ -453,11 +457,12 @@ CREATE TABLE jore.intermediate_points_generate_date AS
   SELECT 'date' as "date", tag as "createdAt", 'done' as "status";
 $$ language sql volatile;
 
-CREATE OR REPLACE FUNCTION jore.get_intermediate_points(
+CREATE OR REPLACE FUNCTION jore.get_section_intermediates(
   min_lat double precision,
   min_lon double precision,
   max_lat double precision,
-  max_lon double precision
+  max_lon double precision,
+  only_near_buses boolean
 ) RETURNS setof jore.section_intermediate AS $$
   SELECT
     routes,
@@ -469,6 +474,7 @@ CREATE OR REPLACE FUNCTION jore.get_intermediate_points(
     jore.intermediate_points
   WHERE
     ST_Intersects(point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+    AND nearBuses = only_near_buses
 $$ language sql stable;
 
 create type jore.terminus_grouped as (
@@ -482,12 +488,13 @@ create type jore.terminus_grouped as (
   name_se character varying(40)
 );
 
-create or replace function jore.terminus_by_date_and_bbox_grouped(
+create or replace function jore.get_terminus_by_date_and_bbox_grouped(
   date date,
   min_lat double precision,
   min_lon double precision,
   max_lat double precision,
-  max_lon double precision
+  max_lon double precision,
+  only_near_buses boolean
 ) returns setof jore.terminus_grouped as $$
 SELECT
   terminus.lines,
@@ -507,7 +514,7 @@ FROM (
     stop_area_id,
     terminal_id
   FROM
-    jore.terminus_by_date_and_bbox(date, min_lat, min_lon, max_lat, max_lon)
+    jore.terminus_by_date_and_bbox(date, min_lat, min_lon, max_lat, max_lon, only_near_buses)
   GROUP BY stop_area_id, terminal_id, type
 ) terminus
 LEFT JOIN (
@@ -820,11 +827,12 @@ create function jore.stop_grouped_by_short_id_by_bbox(
   group by stop.short_id, stop.name_fi, stop.name_se, stop.lat, stop.lon;
 $$ language sql stable;
 
-create or replace function jore.regular_stop_grouped_by_short_id_by_bbox(
+create or replace function jore.get_stop_grouped_by_short_id_by_bbox(
   min_lat double precision,
   min_lon double precision,
   max_lat double precision,
-  max_lon double precision
+  max_lon double precision,
+  only_near_buses boolean
 ) returns setof jore.stop_grouped as $$
   select stop.short_id, stop.name_fi, stop.name_se, stop.lat, stop.lon, array_agg(stop.stop_id)
   from jore.stop stop
@@ -834,7 +842,11 @@ create or replace function jore.regular_stop_grouped_by_short_id_by_bbox(
       INNER JOIN jore.route route
       ON departure.route_id = route.route_id
       WHERE stop.stop_id = departure.stop_id
-      AND route.type != '21'
+      AND
+      CASE
+        WHEN only_near_buses THEN route.type = '21'
+        ELSE route.type != '21'
+      END
   )
   AND stop.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
   group by stop.short_id, stop.name_fi, stop.name_se, stop.lat, stop.lon;
