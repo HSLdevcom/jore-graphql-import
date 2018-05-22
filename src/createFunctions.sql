@@ -59,8 +59,7 @@ CREATE AGGREGATE median(NUMERIC) (
   INITCOND='{}'
 );
 
-create type jore.terminal_name as (
-  terminal_id character varying(7),
+create type jore.station as (
   name_fi character varying(40),
   name_se character varying(40),
   lon numeric,
@@ -68,15 +67,14 @@ create type jore.terminal_name as (
   type character varying(2)
 );
 
-CREATE OR REPLACE FUNCTION jore.get_terminalnames(
+CREATE OR REPLACE FUNCTION jore.get_stations(
   date date,
   min_lat double precision,
   min_lon double precision,
   max_lat double precision,
   max_lon double precision
-) RETURNS setof jore.terminal_name AS $$
-SELECT
-  terminal_id,
+) RETURNS setof jore.station AS $$
+(SELECT
   first(name_fi),
   first(name_se),
   first(lon),
@@ -84,25 +82,55 @@ SELECT
   first(type)
 FROM (
   SELECT
-    terminal.terminal_id as terminal_id,
-    terminal.lat as lat,
-    terminal.lon as lon,
+    stop.lat as lat,
+    stop.lon as lon,
     stop.name_fi as name_fi,
     stop.name_se as name_se,
     route.type as type
   FROM
-    jore.terminal terminal,
     jore.stop stop,
-    jore.route_segment segment,
+    jore.route_segment route_segment,
     jore.route route
-  WHERE terminal.terminal_id = stop.terminal_id
-  AND stop.stop_id = segment.stop_id
-  AND segment.route_id = route.route_id
-  AND (route.type = '12' OR route.type = '06')
-  AND ST_Intersects(terminal.point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
-  AND date between route.date_begin and route.date_end 
-) terminals
-GROUP BY terminals.terminal_id
+  WHERE
+    stop.stop_id = route_segment.stop_id
+    AND route_segment.route_id = route.route_id
+    AND (type = '12' OR type = '06' OR type = '07' )
+    AND date between route.date_begin and route.date_end
+    AND ST_Intersects(stop.point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+) stations
+GROUP BY name_fi)
+UNION ALL
+(
+SELECT
+  first(name_fi),
+  first(name_se),
+  first(lon),
+  first(lat),
+  first(type)
+FROM (
+  SELECT
+    stop.lat as lat,
+    stop.lon as lon,
+    stop.name_fi as name_fi,
+    stop.name_se as name_se,
+    route.type as type,
+    terminal.terminal_id as terminal_id
+  FROM
+    jore.stop stop,
+    jore.route_segment route_segment,
+    jore.route route,
+    jore.terminal terminal
+  WHERE
+    stop.stop_id = route_segment.stop_id
+    AND route_segment.route_id = route.route_id
+    AND terminal.terminal_id = stop.terminal_id
+    AND stop.terminal_id IS NOT NULL
+    AND type = '01'
+    AND date between route.date_begin and route.date_end
+    AND ST_Intersects(stop.point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
+) stations
+GROUP BY terminal_id
+)
 $$ language sql stable;
 
 CREATE OR REPLACE FUNCTION jore.get_route_angles_at_point(
