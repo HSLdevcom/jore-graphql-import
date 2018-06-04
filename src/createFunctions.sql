@@ -827,12 +827,13 @@ create function jore.stop_grouped_by_short_id_by_bbox(
   group by stop.short_id, stop.name_fi, stop.name_se, stop.lat, stop.lon;
 $$ language sql stable;
 
-create or replace function jore.get_stop_grouped_by_short_id_by_bbox(
+create or replace function jore.get_stop_grouped_by_short_id_by_bbox_and_date(
   min_lat double precision,
   min_lon double precision,
   max_lat double precision,
   max_lon double precision,
-  only_near_buses boolean
+  only_near_buses boolean,
+  date date
 ) returns setof jore.stop_grouped as $$
   select stop.short_id, stop.name_fi, stop.name_se, stop.lat, stop.lon, array_agg(stop.stop_id)
   from jore.stop stop
@@ -842,6 +843,7 @@ create or replace function jore.get_stop_grouped_by_short_id_by_bbox(
       INNER JOIN jore.route route
       ON departure.route_id = route.route_id
       WHERE stop.stop_id = departure.stop_id
+      AND date between departure.date_begin and departure.date_end
       AND
       CASE
         WHEN only_near_buses THEN route.type = '21'
