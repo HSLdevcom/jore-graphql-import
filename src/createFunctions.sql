@@ -510,12 +510,12 @@ FROM (
     array_agg(line_id) as lines,
     avg(lat) as lat,
     avg(lon) as lon,
-    type as type,
+    first(type) as type,
     stop_area_id,
     terminal_id
   FROM
     jore.terminus_by_date_and_bbox(date, min_lat, min_lon, max_lat, max_lon, only_near_buses)
-  GROUP BY stop_area_id, terminal_id, type
+  GROUP BY stop_area_id, terminal_id
 ) terminus
 LEFT JOIN (
   SELECT
