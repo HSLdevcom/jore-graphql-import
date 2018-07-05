@@ -322,12 +322,13 @@ create or replace function jore.terminus_by_date_and_bbox(
     r.route_id NOT LIKE '%X' AND
     r.route_id ~ '^[0-9]*[A-Z]?$' AND
     rs.stop_index = '1' AND
-    rs.stop_id = s.stop_id AND
+    rs.stop_id = s.stop_id
+    AND
     CASE
       WHEN nearBuses THEN r.type = '21'
       ELSE r.type != '21'
-    END AND
-    date between rs.date_begin and rs.date_end AND
+    END
+    AND date between rs.date_begin and rs.date_end AND
     s.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
 $$ language sql stable;
 
@@ -434,7 +435,7 @@ CREATE OR REPLACE FUNCTION jore.create_intermediate_points(
 ) RETURNS VOID AS $$
 DROP TABLE IF EXISTS jore.intermediate_points_generate_date;
 CREATE TABLE jore.intermediate_points_generate_date AS
-  SELECT 'date' as "date", '7th of May' as "createdAt", 'running' as "status";
+  SELECT 'date' as "date", tag as "tag", 'running' as "status";
 DROP TABLE IF EXISTS jore.intermediate_points;
 CREATE TABLE jore.intermediate_points AS
 (
@@ -454,8 +455,16 @@ UNION ALL
 );
 DROP TABLE IF EXISTS jore.intermediate_points_generate_date;
 CREATE TABLE jore.intermediate_points_generate_date AS
-  SELECT 'date' as "date", tag as "createdAt", 'done' as "status";
+  SELECT 'date' as "date", tag as "tag", 'done' as "status";
 $$ language sql volatile;
+
+-- Creating empty table to keep postgres happy
+CREATE TABLE jore.intermediate_points AS
+SELECT
+  *,
+  true as nearBuses
+FROM
+  jore.route_section_intermediates('1990-01-01', true, 200);
 
 CREATE OR REPLACE FUNCTION jore.get_section_intermediates(
   min_lat double precision,
@@ -836,6 +845,31 @@ create or replace function jore.get_stop_grouped_by_short_id_by_bbox_and_date(
   date date
 ) returns setof jore.stop_grouped as $$
   select stop.short_id, stop.name_fi, stop.name_se, stop.lat, stop.lon, array_agg(stop.stop_id)
+  from
+    jore.stop stop,
+    jore.route_segment rs,
+    jore.route route
+  where
+    stop.stop_id = rs.stop_id
+    and rs.route_id = route.route_id
+    and date between route.date_begin and route.date_end
+    AND
+    CASE
+      WHEN only_near_buses THEN route.type = '21'
+      ELSE route.type != '21'
+    END
+    AND stop.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326)
+    group by stop.short_id, stop.name_fi, stop.name_se, stop.lat, stop.lon;
+$$ language sql stable;
+
+create or replace function jore.get_stop_grouped_by_short_id_by_bbox(
+  min_lat double precision,
+  min_lon double precision,
+  max_lat double precision,
+  max_lon double precision,
+  only_near_buses boolean
+) returns setof jore.stop_grouped as $$
+  select stop.short_id, stop.name_fi, stop.name_se, stop.lat, stop.lon, array_agg(stop.stop_id)
   from jore.stop stop
   where EXISTS (
       SELECT departure.stop_id
@@ -843,7 +877,6 @@ create or replace function jore.get_stop_grouped_by_short_id_by_bbox_and_date(
       INNER JOIN jore.route route
       ON departure.route_id = route.route_id
       WHERE stop.stop_id = departure.stop_id
-      AND date between departure.date_begin and departure.date_end
       AND
       CASE
         WHEN only_near_buses THEN route.type = '21'
