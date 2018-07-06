@@ -73,7 +73,7 @@ module.exports = {
         foreign: "terminal.terminal_id",
       },
       {
-        length: 7,
+        length: 6,
         name: "stop_area_id",
         type: "string",
         foreign: "stop_area.stop_area_id",
