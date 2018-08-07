@@ -20,5 +20,5 @@ docker build -t hsldevcom/jore-graphql-import .
 
 Start the importer:
 ```
-docker run --link jore-postgis -e "PG_CONNECTION_STRING=postgres://postgres:mysecretpassword@jore-postgis:5432/postgres" hsldevcom/jore-graphql-import
+docker run --link jore-postgis -e USERNAME="ftpusername" -e PASSWORD="ftppassword" -v downloads:/tmp/build -e "PG_CONNECTION_STRING=postgres://postgres:mysecretpassword@jore-postgis:5432/postgres" hsldevcom/jore-graphql-import
 ```
