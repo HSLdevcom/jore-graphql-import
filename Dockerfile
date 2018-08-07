@@ -19,6 +19,6 @@ COPY . ${WORK}
 RUN yarn lint
 
 # Fetch and import data
-CMD curl http://dev.hsl.fi/erikoispoiminta/erikoispoiminta.zip > all.zip && \
-  unzip all.zip -d ${WORK}/data && \
+CMD ./fetch.sh && \
+  unzip /tmp/build/latest.zip -d ${WORK}/data && \
   yarn start
