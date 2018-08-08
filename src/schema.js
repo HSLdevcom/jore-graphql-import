@@ -78,6 +78,41 @@ module.exports = {
         type: "string",
         foreign: "stop_area.stop_area_id",
       },
+      {
+        length: 1,
+        name: "poster_count",
+        type: "integer",
+      },
+      {
+        length: 1,
+        name: "driveby_timetable",
+        type: "integer",
+      },
+      {
+        length: 2,
+        name: "stop_type",
+        type: "string",
+      },
+      {
+        length: 20,
+        name: "distribution_area",
+        type: "string",
+      },
+      {
+        length: 3,
+        name: "distribution_order",
+        type: "integer",
+      },
+      {
+        length: 2,
+        name: "stop_zone",
+        type: "string",
+      },
+      {
+        length: 2,
+        name: "stop_tariff",
+        type: "string",
+      },
     ],
   },
   terminal: {
