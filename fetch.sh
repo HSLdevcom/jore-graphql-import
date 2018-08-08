@@ -3,11 +3,12 @@ set -e
 
 mkdir -p /tmp/build
 
-curl --list-only ftp://195.255.176.166/karttainfopoiminta/ --user ${USERNAME}:${PASSWORD} > /tmp/listings.txt
+curl --list-only ftp://195.255.176.166/karttainfopoiminta/ --user ${USERNAME}:${PASSWORD} > /tmp/allfiles.txt
 
-grep -E '^.*\.zip$' /tmp/listings.txt > /tmp/listingRes.txt
-mv /tmp/listingRes.txt /tmp/listings.txt
-export LATEST_FILE=`tail -1 /tmp/listings.txt`
+grep -E '^.*\.zip$' /tmp/allfiles.txt > /tmp/latestfile.txt
+export LATEST_FILE=`tail -1 /tmp/latestfile.txt`
+rm /tmp/allfiles.txt
+rm /tmp/latestfile.txt
 
 echo "Latest file is ${LATEST_FILE}"
 
