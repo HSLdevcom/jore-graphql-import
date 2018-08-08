@@ -9,6 +9,9 @@ Start a postgis docker container using:
 docker run --name jore-postgis -e POSTGRES_PASSWORD=mysecretpassword -d mdillon/postgis
 ```
 
+Add `-v ./postgres-data:/var/lib/postgresql/data` to the command above to make sure that the database is persisted.
+It is not needed for production as docker-compose handles volumes there.
+
 ### Install
 
 Build the container:
