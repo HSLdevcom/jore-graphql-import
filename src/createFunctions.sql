@@ -8,6 +8,17 @@ CREATE OR REPLACE FUNCTION array_sort (ANYARRAY)
   SELECT ARRAY(SELECT unnest($1) ORDER BY 1)
 $$;
 
+-- Creating empty table to keep postgres happy
+CREATE TABLE IF NOT EXISTS jorestatic.intermediate_points (
+  routes character varying[],
+  lon numeric,
+  lat numeric,
+  angles integer[],
+  length numeric,
+  point geometry,
+  nearbuses boolean
+);
+
 create type jore.section_intermediate as (
   routes character varying(6)[],
   lon numeric,
@@ -433,11 +444,8 @@ CREATE OR REPLACE FUNCTION jore.create_intermediate_points(
   date date,
   tag character varying(20)
 ) RETURNS VOID AS $$
-DROP TABLE IF EXISTS jore.intermediate_points_generate_date;
-CREATE TABLE jore.intermediate_points_generate_date AS
-  SELECT 'date' as "date", tag as "tag", 'running' as "status";
-DROP TABLE IF EXISTS jore.intermediate_points;
-CREATE TABLE jore.intermediate_points AS
+DELETE FROM jorestatic.intermediate_points;
+INSERT INTO jorestatic.intermediate_points
 (
   SELECT
     *,
@@ -453,18 +461,8 @@ UNION ALL
   FROM
     jore.route_section_intermediates(date, true, 200)
 );
-DROP TABLE IF EXISTS jore.intermediate_points_generate_date;
-CREATE TABLE jore.intermediate_points_generate_date AS
-  SELECT 'date' as "date", tag as "tag", 'done' as "status";
 $$ language sql volatile;
 
--- Creating empty table to keep postgres happy
-CREATE TABLE jore.intermediate_points AS
-SELECT
-  *,
-  true as nearBuses
-FROM
-  jore.route_section_intermediates('1990-01-01', true, 200);
 
 CREATE OR REPLACE FUNCTION jore.get_section_intermediates(
   min_lat double precision,
@@ -480,7 +478,7 @@ CREATE OR REPLACE FUNCTION jore.get_section_intermediates(
     angles,
     length
   FROM
-    jore.intermediate_points
+    jorestatic.intermediate_points
   WHERE
     ST_Intersects(point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
     AND nearBuses = only_near_buses
