@@ -587,16 +587,20 @@ $$ language sql stable;
 create function jore.route_line(route jore.route) returns setof jore.line as $$
   select *
   from jore.line line
-  where route.route_id like (line.line_id || '%')
+  where route.line_id = line.line_id
   order by line.line_id desc
   limit 1;
 $$ language sql stable;
 -- TODO: investigate why we have to return a setof here
 
 create function jore.route_segment_line(route_segment jore.route_segment) returns setof jore.line as $$
-  select *
+  select line.*
   from jore.line line
-  where route_segment.route_id like (line.line_id || '%')
+  join jore.route as route on (
+    route.line_id = line.line_id
+  )
+  where route_segment.route_id = route.route_id
+  and route.line_id = line.line_id
   order by line.line_id desc
   limit 1;
 $$ language sql stable;
@@ -747,14 +751,7 @@ $$ language sql stable;
 create function jore.line_routes(line jore.line) returns setof jore.route as $$
   select *
   from jore.route route
-  where route.route_id like (line.line_id || '%')
-    and not exists (
-      select true
-      from jore.line inner_line
-      where inner_line.line_id like (line.line_id || '_%')
-        and route.route_id like (inner_line.line_id || '%')
-      limit 1
-    );
+  where route.line_id = line.line_id;
 $$ language sql stable;
 
 create function jore.stop_calculated_heading(stop jore.stop) returns numeric as $$
