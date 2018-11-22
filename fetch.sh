@@ -1,6 +1,16 @@
 #!/bin/bash
 set -e
 
+if [[ -z "${USERNAME}" ]]; then
+  echo "FTP Username is not set, exiting!"
+  exit 2
+fi
+
+if [[ -z "${PASSWORD}" ]]; then
+  echo "FTP Password is not set, exiting!"
+  exit 2
+fi
+
 mkdir -p /tmp/build
 
 curl --list-only ftp://195.255.176.166/karttainfopoiminta/ --user ${USERNAME}:${PASSWORD} > /tmp/allfiles.txt
