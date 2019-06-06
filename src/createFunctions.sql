@@ -138,6 +138,7 @@ FROM (
     AND stop.terminal_id IS NOT NULL
     AND type = '01'
     AND date between route.date_begin and route.date_end
+    AND date between route_segment.date_begin and route_segment.date_end
     AND ST_Intersects(stop.point, ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326))
 ) stations
 GROUP BY terminal_id
