@@ -9,7 +9,8 @@
     "prettier": "prettier */**.{js,json} --write",
     "ftpsource": "ftp-srv ftp://127.0.0.1:2121 --root ./source",
     "knex": "knex",
-    "knex:local": "PG_CONNECTION_STRING=postgres://postgres:mysecretpassword@localhost:5678/postgres knex"
+    "knex:local": "PG_CONNECTION_STRING=postgres://postgres:mysecretpassword@localhost:5678/postgres knex",
+    "initdb": "node -r esm -r dotenv/config src/setup/initDb.js"
   },
   "repository": {
     "type": "git",
