@@ -37,12 +37,12 @@ export const upsert = async (data) => {
     .into(statusTable);
 };
 
-export const startImport = async (filename) => {};
-/*upsert({
+export const startImport = async (filename) =>
+  upsert({
     filename,
     import_end: null,
     success: false,
-  });*/
+  });
 
 export const importCompleted = async (filename, isSuccess = true, duration = 0) =>
   upsert({
