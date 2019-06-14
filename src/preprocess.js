@@ -51,7 +51,7 @@ export function processLine(tableName) {
 
   let maxLength = 0;
 
-  return throughConcurrent.obj({ maxConcurrency: 50 }, function createLine(
+  return throughConcurrent.obj({ maxConcurrency: 100 }, function createLine(
     chunk,
     enc,
     cb,
