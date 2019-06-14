@@ -5,28 +5,23 @@ import throughConcurrent from "through2-concurrent";
 import { upsert } from "./utils/upsert";
 import { getIndexForTable } from "./utils/getIndexForTable";
 import { createPrimaryKey } from "./utils/createPrimaryKey";
-import { uniqBy } from "lodash";
+import { sortedUniqBy } from "lodash";
 import { getPrimaryConstraint } from "./utils/getPrimaryConstraint";
 import { getKnex } from "./knex";
 
 const { knex } = getKnex();
 const NS_PER_SEC = 1e9;
 
-const queueQuery = (queue, queryPromise) => {
-  queue.push(queryPromise);
-};
+const createImportQuery = (insertOptions) =>
+  new Promise(async (resolve, reject) => {
+    const time = process.hrtime();
 
-const createInsertQuery = (insertOptions, onBeforeQuery, onAfterQuery) =>
-  new Promise((resolve, reject) => {
-    const val = onBeforeQuery();
-
-    knex
-      .transaction((trx) => upsert({ ...insertOptions, trx }))
-      .then(() => {
-        onAfterQuery(val);
-        resolve();
-      })
-      .catch(reject);
+    try {
+      await knex.transaction((trx) => upsert({ ...insertOptions, trx }));
+      resolve(time);
+    } catch (err) {
+      reject(err);
+    }
   });
 
 const createLineParser = (tableName) => {
@@ -67,35 +62,27 @@ export const createImportStreamForTable = async (tableName, queue) => {
   const primaryKeys = getIndexForTable(tableName);
   const constraint = await getPrimaryConstraint(tableName);
 
-  let chunkIndex = 0;
-
   lineParser.pipe(collect(1000, 250)).pipe(
     map((itemData) => {
       let insertItems = itemData;
 
       if (primaryKeys.length !== 0) {
-        insertItems = uniqBy(itemData, (item) => createPrimaryKey(item, primaryKeys));
+        insertItems = sortedUniqBy(itemData, (item) =>
+          createPrimaryKey(item, primaryKeys),
+        );
       }
 
-      return queueQuery(
-        queue,
-        createInsertQuery(
-          { tableName, data: insertItems, indices: primaryKeys, constraint },
-          () => {
-            /*console.log(
-              `${chunkIndex}. Importing ${itemData.length} lines to ${tableName}`,
-            );*/
-            const curChunk = chunkIndex;
-            chunkIndex++;
-            return [process.hrtime(), curChunk];
-          },
-          ([time, chunkIdx]) => {
-            const [execS, execNs] = process.hrtime(time);
-
-            const ms = (execS * NS_PER_SEC + execNs) / 1000000;
-            console.log(`Chunk ${chunkIdx} of ${tableName} imported in ${ms} ms`);
-          },
-        ),
+      queue.add(() =>
+        createImportQuery({
+          tableName,
+          data: insertItems,
+          indices: primaryKeys,
+          constraint,
+        }).then((time) => {
+          const [execS, execNs] = process.hrtime(time);
+          const ms = (execS * NS_PER_SEC + execNs) / 1000000;
+          console.log(`Records of ${tableName} imported in ${ms} ms`);
+        }),
       );
     }),
   );

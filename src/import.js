@@ -10,7 +10,7 @@ import iconv from "iconv-lite";
 import split from "split2";
 import { initDb } from "./setup/initDb";
 import { getKnex } from "./knex";
-import { intersection } from "lodash";
+import Queue from "p-queue";
 
 const { knex } = getKnex();
 const cwd = process.cwd();
@@ -31,10 +31,9 @@ export async function importFile(filePath) {
 
   try {
     await startImport(fileName);
-    const queue = [];
+    const queue = new Queue({ concurrency: 50 });
 
     console.log("Unpacking and processing the archive...");
-
     const directory = await Open.file(filePath);
 
     const chosenFiles = directory.files.filter((file) =>
@@ -80,7 +79,7 @@ export async function importFile(filePath) {
 
     console.log("Finishing up the DB queries...");
     await delay(1000);
-    await Promise.all(queue);
+    await queue.onEmpty();
 
     console.log("Creating the geometry table...");
     const createGeometrySQL = await fs.readFile(
