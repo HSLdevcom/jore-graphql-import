@@ -2,11 +2,14 @@ import schema from "./schema";
 import { parseLine } from "./parseLine";
 import { map, collect } from "etl";
 import throughConcurrent from "through2-concurrent";
-import { insert } from "./utils/insert";
+import { upsert } from "./utils/upsert";
 import { getIndexForTable } from "./utils/getIndexForTable";
 import { createPrimaryKey } from "./utils/createPrimaryKey";
 import { uniqBy } from "lodash";
+import { getPrimaryConstraint } from "./utils/getPrimaryConstraint";
+import { getKnex } from "./knex";
 
+const { knex } = getKnex();
 const NS_PER_SEC = 1e9;
 
 const queueQuery = (queue, queryPromise) => {
@@ -17,7 +20,8 @@ const createInsertQuery = (insertOptions, onBeforeQuery, onAfterQuery) =>
   new Promise((resolve, reject) => {
     const val = onBeforeQuery();
 
-    insert(insertOptions)
+    knex
+      .transaction((trx) => upsert({ ...insertOptions, trx }))
       .then(() => {
         onAfterQuery(val);
         resolve();
@@ -61,6 +65,7 @@ const createLineParser = (tableName) => {
 export const createImportStreamForTable = async (tableName, queue) => {
   const lineParser = createLineParser(tableName);
   const primaryKeys = getIndexForTable(tableName);
+  const constraint = await getPrimaryConstraint(tableName);
 
   let chunkIndex = 0;
 
@@ -75,7 +80,7 @@ export const createImportStreamForTable = async (tableName, queue) => {
       return queueQuery(
         queue,
         createInsertQuery(
-          { tableName, data: insertItems, primaryIndices: primaryKeys },
+          { tableName, data: insertItems, indices: primaryKeys, constraint },
           () => {
             /*console.log(
               `${chunkIndex}. Importing ${itemData.length} lines to ${tableName}`,
