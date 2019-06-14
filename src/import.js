@@ -36,18 +36,30 @@ export async function importFile(filePath) {
     console.log("Unpacking and processing the archive...");
 
     const directory = await Open.file(filePath);
+
     const chosenFiles = directory.files.filter((file) =>
       selectedFiles.includes(file.path),
     );
+
+    // Add static terminaaliryhma.dat file to the import.
+    // If you use more props or methods on the File objects returned
+    // from Unzipper.Open, remember to mirror them on this file.
+    const terminalGroupFileName = "terminaaliryhma.dat";
+    chosenFiles.push({
+      path: terminalGroupFileName,
+      stream() {
+        return fs.createReadStream(path.join(cwd, "data", terminalGroupFileName));
+      },
+    });
 
     console.log("Resetting the database...");
     await initDb();
 
     const filePromises = chosenFiles.map(
       (file) =>
-        new Promise((resolve, reject) => {
+        new Promise(async (resolve, reject) => {
           const tableName = getTableNameFromFileName(file.path);
-          const importStream = createImportStreamForTable(tableName, queue);
+          const importStream = await createImportStreamForTable(tableName, queue);
 
           file
             .stream()

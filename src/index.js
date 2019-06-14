@@ -68,9 +68,6 @@ createScheduledImport("daily", EARLY_MORNING, async (onComplete = () => {}) => {
 });
 
 (async () => {
-  console.log("Initializing DB...");
-  await initDb();
-
   // Start the task for the daily import as soon as the server starts.
   // This will start the timer.
   startScheduledImport("daily");
