@@ -1,24 +1,27 @@
 import schema from "./schema";
-import { getKnex } from "./knex";
 import { parseLine } from "./parseLine";
 import { map, collect } from "etl";
 import throughConcurrent from "through2-concurrent";
+import { insert } from "./utils/insert";
+import { getIndexForTable } from "./utils/getIndexForTable";
+import { createPrimaryKey } from "./utils/createPrimaryKey";
+import { uniqBy } from "lodash";
 
-const { knex } = getKnex();
-const SCHEMA = "jore";
+const NS_PER_SEC = 1e9;
 
 const queueQuery = (queue, queryPromise) => {
   queue.push(queryPromise);
 };
 
-const createInsertQuery = (tableName, data, onBeforeQuery) =>
+const createInsertQuery = (insertOptions, onBeforeQuery, onAfterQuery) =>
   new Promise((resolve, reject) => {
-    onBeforeQuery();
-    const tableId = `${SCHEMA}.${tableName}`;
+    const val = onBeforeQuery();
 
-    knex
-      .transaction((trx) => knex.batchInsert(tableId, data, 1000).transacting(trx))
-      .then(resolve)
+    insert(insertOptions)
+      .then(() => {
+        onAfterQuery(val);
+        resolve();
+      })
       .catch(reject);
   });
 
@@ -26,7 +29,7 @@ const createLineParser = (tableName) => {
   const { fields, lineSchema = fields } = schema[tableName] || {};
   let linesReceived = false;
 
-  return throughConcurrent.obj({ maxConcurrency: 50 }, (line, enc, cb) => {
+  return throughConcurrent.obj({ maxConcurrency: 100 }, (line, enc, cb) => {
     if (!line) {
       // line === null marks the end of the file. End the import stream
       // to flush any items left in the collect buffer.
@@ -55,22 +58,41 @@ const createLineParser = (tableName) => {
   });
 };
 
-export const createImportStreamForTable = (tableName, queue) => {
+export const createImportStreamForTable = async (tableName, queue) => {
   const lineParser = createLineParser(tableName);
+  const primaryKeys = getIndexForTable(tableName);
+
   let chunkIndex = 0;
 
-  lineParser.pipe(collect(1000, 500)).pipe(
-    map((itemData) =>
-      queueQuery(
+  lineParser.pipe(collect(1000, 250)).pipe(
+    map((itemData) => {
+      let insertItems = itemData;
+
+      if (primaryKeys.length !== 0) {
+        insertItems = uniqBy(itemData, (item) => createPrimaryKey(item, primaryKeys));
+      }
+
+      return queueQuery(
         queue,
-        createInsertQuery(tableName, itemData, () => {
-          console.log(
-            `${chunkIndex}. Importing ${itemData.length} lines to ${tableName}`,
-          );
-          chunkIndex++;
-        }),
-      ),
-    ),
+        createInsertQuery(
+          { tableName, data: insertItems, primaryIndices: primaryKeys },
+          () => {
+            /*console.log(
+              `${chunkIndex}. Importing ${itemData.length} lines to ${tableName}`,
+            );*/
+            const curChunk = chunkIndex;
+            chunkIndex++;
+            return [process.hrtime(), curChunk];
+          },
+          ([time, chunkIdx]) => {
+            const [execS, execNs] = process.hrtime(time);
+
+            const ms = (execS * NS_PER_SEC + execNs) / 1000000;
+            console.log(`Chunk ${chunkIdx} of ${tableName} imported in ${ms} ms`);
+          },
+        ),
+      );
+    }),
   );
 
   return lineParser;

@@ -7,7 +7,7 @@ import UploadExport from "./components/UploadExport";
 const AdminView = ({ isImporting, latestImportedFile, selectedTables }) => {
   return (
     <>
-      <h1>JORE history import admin</h1>
+      <h1>JORE import admin</h1>
       <StatusIndicator
         isImporting={isImporting}
         latestImportedFile={latestImportedFile}
