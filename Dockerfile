@@ -1,24 +1,17 @@
-FROM node:8
-
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y unzip
+FROM node:12
 
 ENV WORK /opt/jore
 
-# Create app directory
-RUN mkdir -p ${WORK}
 WORKDIR ${WORK}
-
 # Install app dependencies
 COPY package.json ${WORK}
 COPY yarn.lock ${WORK}
+
+# Copy the env file for production
+COPY .env.production ${WORK}/.env
+
 RUN yarn install
 
 # Copy app source
 COPY . ${WORK}
-
-RUN yarn lint
-
-# Fetch and import data
-CMD ./fetch.sh && \
-  unzip /tmp/build/latest.zip -d ${WORK}/data && \
-  yarn start
+CMD yarn run start:production
