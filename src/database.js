@@ -72,7 +72,7 @@ export const createImportStreamForTable = async (tableName, queue) => {
         );
       }
 
-      return queue.add(() =>
+      queue.add(() =>
         createImportQuery({
           tableName,
           data: insertItems,
