@@ -56,7 +56,7 @@ export async function fetchExportFromFTP() {
   if (
     !latestImported ||
     newestExportName !== get(latestImported, "filename") ||
-    (!latestImported.success && latestImported.import_end !== null)
+    !latestImported.success
   ) {
     // The archive will be downloaded to `downloads`.
     await fs.ensureDir(path.join(cwd, "downloads"));
