@@ -1,0 +1,3 @@
+[submodule "geometry-matcher"]
+	path = geometry-matcher
+	url = https://github.com/HSLdevcom/jore-geometry-matcher
