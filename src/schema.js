@@ -1,4 +1,4 @@
-module.exports = {
+const schema = {
   stop: {
     filename: "pysakki.dat",
     fields: [
@@ -63,9 +63,9 @@ module.exports = {
       { length: 8 },
       { length: 8 },
       { length: 1 },
-      { length: 15, name: "heading", type: "string" },
       { length: 1 },
-      { length: 3 },
+      { length: 15, name: "heading", type: "string" },
+      { length: 3, name: "stop_radius", type: "integer" },
       {
         length: 7,
         name: "terminal_id",
@@ -139,8 +139,8 @@ module.exports = {
         type: "string",
       },
       { length: 14 },
-      { length: 8, name: "lat", type: "decimal" },
-      { length: 8, name: "lon", type: "decimal" },
+      { length: 9, name: "lat", type: "decimal" },
+      { length: 9, name: "lon", type: "decimal" },
     ],
   },
   terminal_group: {
@@ -188,8 +188,8 @@ module.exports = {
         type: "string",
       },
       { length: 14 },
-      { length: 8, name: "lat", type: "decimal" },
-      { length: 8, name: "lon", type: "decimal" },
+      { length: 9, name: "lat", type: "decimal" },
+      { length: 9, name: "lon", type: "decimal" },
     ],
   },
   line: {
@@ -228,7 +228,6 @@ module.exports = {
         length: 30,
         name: "destination_fi",
         type: "string",
-        // TODO: Add when data conforms notNullable: true,
       },
       {
         length: 30,
@@ -416,7 +415,6 @@ module.exports = {
         length: 1,
         name: "pickup_dropoff_type",
         type: "integer",
-        // TODO: Add when data conforms notNullable: true,
       },
       { length: 2 },
       { length: 20, name: "destination_fi", type: "string" },
@@ -574,8 +572,8 @@ module.exports = {
         type: "integer",
         notNullable: true,
       },
-      { length: 4, name: "note", type: "string" },
       { length: 1, name: "vehicle", type: "string" },
+      { length: 4, name: "note", type: "string" },
       {
         length: 1,
         name: "arrival_is_next_day",
@@ -595,16 +593,63 @@ module.exports = {
         notNullable: true,
       },
       {
-        length: 1,
+        length: 2,
         name: "extra_departure",
-        type: "enu",
-        typeOptions: [
-          "L", // Lisälähtö
-          "V", // Vara-auto
-          "LV", // Lisälähtö Vara-autolla
-          "0",
-        ],
+        type: "string",
+        defaultTo: "N",
       },
+      {
+        length: 2,
+        name: "terminal_time",
+        type: "integer",
+      },
+      {
+        length: 2,
+        name: "recovery_time",
+        type: "integer",
+      },
+      {
+        length: 2,
+        name: "equipment_type",
+        type: "string",
+      },
+      {
+        length: 2,
+        name: "equipment_required",
+        type: "integer",
+      },
+      {
+        length: 12,
+        name: "bid_target_id",
+        type: "string",
+      },
+      {
+        length: 6,
+        name: "operator_id",
+        type: "string",
+      },
+      {
+        length: 20,
+        name: "available_operators",
+        type: "string",
+      },
+      {
+        length: 1,
+        name: "trunk_color_required",
+        type: "integer",
+      },
+    ],
+    // This is a bit silly, I know, but it's the only way to uniquely identify a departure.
+    primary: [
+      "route_id",
+      "direction",
+      "date_begin",
+      "date_end",
+      "hours",
+      "minutes",
+      "stop_id",
+      "day_type",
+      "extra_departure",
     ],
   },
   note: {
@@ -640,13 +685,11 @@ module.exports = {
         length: 8,
         name: "date_begin",
         type: "date",
-        // TODO: Add when data conforms notNullable: true,
       },
       {
         length: 8,
         name: "date_end",
         type: "date",
-        // TODO: Add when data conforms notNullable: true,
       },
     ],
   },
@@ -692,5 +735,151 @@ module.exports = {
       { name: "outliers", type: "integer" },
       { name: "min_likelihood", type: "float" },
     ],
+    primary: ["route_id", "direction", "date_begin", "date_end"],
   },
+  /*equipment: {
+    filename: "kalusto.dat",
+    fields: [
+      {
+        length: 1,
+        name: "class",
+        type: "string",
+      },
+      {
+        length: 7,
+        name: "registry_nr",
+        type: "string",
+        primary: true,
+        notNullable: true,
+      },
+      {
+        length: 5,
+        name: "vehicle_id",
+        type: "string",
+        index: true,
+        notNullable: true,
+      },
+      {
+        length: 2,
+        name: "age",
+        type: "string",
+      },
+      {
+        length: 10,
+        name: "type",
+        type: "string",
+      },
+      {
+        length: 1,
+        name: "multi_axle",
+        type: "integer",
+      },
+      {
+        length: 20,
+        name: "exterior_color",
+        type: "string",
+      },
+      {
+        length: 6,
+        name: "operator_id",
+        type: "string",
+      },
+      {
+        length: 2,
+        name: "emission_class",
+        type: "string",
+      },
+      {
+        length: 30,
+        name: "emission_desc",
+        type: "string",
+      },
+    ],
+  },
+  exception_days_calendar: {
+    filename: "epvkal.dat",
+    fields: [
+      {
+        length: 8,
+        name: "date_in_effect",
+        type: "date",
+        primary: true,
+        notNullable: true,
+      },
+      {
+        length: 2,
+        name: "exception_day_type",
+        type: "string",
+        notNullable: true,
+      },
+      {
+        length: 2,
+        name: "day_type",
+        type: "string",
+        notNullable: true,
+      },
+      {
+        length: 1,
+        name: "exclusive",
+        type: "integer",
+      },
+    ],
+  },
+  exception_days: {
+    filename: "eritpv.dat",
+    fields: [
+      {
+        length: 2,
+        name: "exception_day_type",
+        type: "string",
+        primary: true,
+        notNullable: true,
+      },
+      {
+        length: 50,
+        name: "description",
+        type: "string",
+      },
+    ],
+  },
+  replacement_days_calendar: {
+    filename: "kpvkal.dat",
+    fields: [
+      {
+        length: 8,
+        name: "date_in_effect",
+        type: "date",
+        primary: true,
+        notNullable: true,
+      },
+      {
+        length: 2,
+        name: "replacing_day_type",
+        type: "string",
+        notNullable: true,
+      },
+      {
+        length: 2,
+        name: "scope",
+        type: "string",
+      },
+      {
+        length: 2,
+        name: "day_type",
+        type: "string",
+        notNullable: true,
+      },
+      {
+        length: 4,
+        name: "time_begin",
+        type: "string",
+      },
+      {
+        length: 4,
+        name: "time_end",
+        type: "string",
+      },
+    ],
+  },*/
 };
+export default schema;
