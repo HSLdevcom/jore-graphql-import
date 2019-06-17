@@ -27,7 +27,7 @@ const getTableNameFromFileName = (filename) =>
 
 export async function importFile(filePath) {
   const execStart = process.hrtime();
-  const { selectedFiles } = getSelectedTables();
+  const { selectedFiles, selectedTables } = getSelectedTables();
   const fileName = path.basename(filePath);
 
   try {
@@ -82,14 +82,16 @@ export async function importFile(filePath) {
     await delay(1000);
     await queue.onEmpty();
 
-    console.log("Creating the geometry table...");
-    const createGeometrySQL = await fs.readFile(
-      path.join(cwd, "src", "setup", "createGeometry.sql"),
-      "utf8",
-    );
+    if (selectedTables.includes("geometry")) {
+      console.log("Creating the geometry table...");
+      const createGeometrySQL = await fs.readFile(
+        path.join(cwd, "src", "setup", "createGeometry.sql"),
+        "utf8",
+      );
 
-    await knex.raw(createGeometrySQL);
-    await runGeometryMatcher();
+      await knex.raw(createGeometrySQL);
+      await runGeometryMatcher();
+    }
 
     const [execDuration] = process.hrtime(execStart);
     await importCompleted(fileName, true, execDuration);
