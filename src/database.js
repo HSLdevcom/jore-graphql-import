@@ -5,7 +5,7 @@ import throughConcurrent from "through2-concurrent";
 import { upsert } from "./utils/upsert";
 import { getIndexForTable } from "./utils/getIndexForTable";
 import { createPrimaryKey } from "./utils/createPrimaryKey";
-import { sortedUniqBy } from "lodash";
+import { uniqBy } from "lodash";
 import { getPrimaryConstraint } from "./utils/getPrimaryConstraint";
 import { getKnex } from "./knex";
 
@@ -67,9 +67,7 @@ export const createImportStreamForTable = async (tableName, queue) => {
       let insertItems = itemData;
 
       if (primaryKeys.length !== 0) {
-        insertItems = sortedUniqBy(itemData, (item) =>
-          createPrimaryKey(item, primaryKeys),
-        );
+        insertItems = uniqBy(itemData, (item) => createPrimaryKey(item, primaryKeys));
       }
 
       queue.add(() =>
