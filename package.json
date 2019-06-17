@@ -3,14 +3,8 @@
   "version": "0.0.1",
   "description": "Data importer for jore-graphql",
   "scripts": {
-    "start": "node -r esm -r dotenv/config src/index.js",
-    "start:production": "forever start -c \"node -r esm -r dotenv/config\" src/index.js && forever -f logs 0",
-    "lint": "eslint src --fix",
-    "prettier": "prettier */**.{js,json} --write",
-    "ftpsource": "ftp-srv ftp://127.0.0.1:2121 --root ./source",
-    "knex": "knex",
-    "knex:local": "PG_CONNECTION_STRING=postgres://postgres:mysecretpassword@localhost:5678/postgres knex",
-    "initdb": "node -r esm -r dotenv/config src/setup/initDb.js"
+    "start": "node src/preprocess.js && node --max_old_space_size=4096 src/importPostgis.js",
+    "lint": "eslint src"
   },
   "repository": {
     "type": "git",
@@ -24,41 +18,15 @@
   },
   "homepage": "https://github.com/HSLdevcom/jore-graphql-import",
   "dependencies": {
-    "basic-ftp": "^3.6.0",
-    "cron": "^1.7.1",
-    "date-fns": "^1.30.1",
-    "dotenv": "^8.0.0",
-    "esm": "^3.2.25",
-    "etl": "^0.6.3",
-    "express": "^4.17.1",
-    "express-basic-auth": "^1.2.0",
-    "express-fileupload": "^1.1.5",
-    "express-react-views": "^0.11.0",
-    "forever": "^1.0.0",
-    "fs-extra": "^8.0.1",
     "iconv-lite": "^0.4.13",
     "knex": "^0.13.0",
     "knex-postgis": "^0.2.2",
-    "lodash": "^4.17.11",
-    "lru-cache": "^5.1.1",
-    "p-map": "^2.1.0",
-    "p-queue": "^6.0.2",
-    "pg": "^6.1.2",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
-    "split2": "^3.1.1",
-    "through2": "^3.0.1",
-    "through2-concurrent": "^2.0.0",
-    "unique-stream": "^2.3.1",
-    "unzipper": "^0.10.0"
+    "lodash": "^4.17.4",
+    "pg": "^6.1.2"
   },
   "devDependencies": {
-    "babel-eslint": "^10.0.1",
     "eslint": "^4.8.0",
     "eslint-config-airbnb-base": "^12.0.2",
-    "eslint-config-prettier": "^4.3.0",
-    "eslint-plugin-import": "^2.17.3",
-    "eslint-plugin-prettier": "^3.1.0",
-    "prettier": "^1.18.2"
+    "eslint-plugin-import": "^2.7.0"
   }
 }
