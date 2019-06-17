@@ -30,3 +30,7 @@ export const DEBUG = secretsEnv.DEBUG || "false";
 export const SERVER_PORT = secretsEnv.SERVER_PORT || 3000;
 export const ADMIN_PASSWORD = secretsEnv.ADMIN_PASSWORD || "password";
 export const PATH_PREFIX = secretsEnv.PATH_PREFIX || "/";
+export const PYTHON_CMD = process.env.PYTHON_CMD || "python";
+export const PBF_DOWNLOAD_URL =
+  "http://download.geofabrik.de/europe/finland-latest.osm.pbf";
+export const PBF_FILENAME = "finland-latest.osm.pbf";

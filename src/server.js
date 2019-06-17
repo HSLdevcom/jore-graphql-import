@@ -10,6 +10,7 @@ import { getSelectedTableStatus, setTableOption } from "./selectedTables";
 import { runScheduledImportNow } from "./schedule";
 import fs from "fs-extra";
 import { importFile } from "./import";
+import { runGeometryMatcher } from "./geometryMatcher";
 
 const cwd = process.cwd();
 const uploadPath = path.join(cwd, "uploads");
@@ -50,6 +51,11 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
 
   app.post("/run-daily", (req, res) => {
     runScheduledImportNow("daily");
+    res.redirect(PATH_PREFIX);
+  });
+
+  app.post("/run-geometry-matcher", (req, res) => {
+    runGeometryMatcher().catch((err) => console.error(err));
     res.redirect(PATH_PREFIX);
   });
 

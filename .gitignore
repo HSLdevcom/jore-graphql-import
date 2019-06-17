@@ -36,3 +36,4 @@ dist
 postgres-data
 downloads
 uploads
+*.pbf
