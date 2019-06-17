@@ -11,6 +11,7 @@ import split from "split2";
 import { initDb } from "./setup/initDb";
 import { getKnex } from "./knex";
 import Queue from "p-queue";
+import { runGeometryMatcher } from "./geometryMatcher";
 
 const { knex } = getKnex();
 const cwd = process.cwd();
@@ -88,6 +89,7 @@ export async function importFile(filePath) {
     );
 
     await knex.raw(createGeometrySQL);
+    await runGeometryMatcher();
 
     const [execDuration] = process.hrtime(execStart);
     await importCompleted(fileName, true, execDuration);
