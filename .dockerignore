@@ -3,3 +3,4 @@
 node_modules
 postgres-data/
 .env
+downloads
