@@ -33,5 +33,7 @@ tmp
 route-maps/**
 
 dist
-all.zip
 postgres-data
+downloads
+uploads
+*.pbf

@@ -1,122 +1,81 @@
-/* eslint-disable no-await-in-loop */
-const fs = require("fs");
-const path = require("path");
-const readline = require("readline");
-const iconv = require("iconv-lite");
-const schema = require("./schema");
+import throughConcurrent from "through2-concurrent";
 
 const isWhitespaceOnly = /^\s*$/;
 
-const filenames = Object.values(schema)
-  .map(table => table.filename)
-  .filter(filename => !!filename);
+function createLinebreaksReplacer() {
+  let lines = [];
 
-function processLines(filename, callback) {
-  return new Promise((resolve, reject) => {
-    const filePath = path.join(__dirname, "..", "data", filename);
-    const tempPath = `${filePath}.tmp`;
+  return (line, lineLength) => {
+    lines.push(line);
 
-    const input = fs.createReadStream(filePath);
-    const output = fs.createWriteStream(tempPath);
-    const lineReader = readline.createInterface({ input });
+    const currentLength = lines.join("\n").length;
+    let output = "";
 
-    lineReader.on("line", (line) => {
-      if (!isWhitespaceOnly.test(line)) {
-        callback(line, output);
-      }
-    });
-    lineReader.on("close", () => {
-      output.end();
-      fs.rename(tempPath, filePath, error => (error ? reject(error) : resolve()));
-    });
-  });
+    if (currentLength > lineLength) {
+      output = `${lines.join("\n")}\n`;
+      console.log(`Did not replace linebreak(s):\n${output}`);
+      lines = [];
+    }
+    if (currentLength === lineLength) {
+      output = `${lines.join("  ")}\n`;
+      if (lines.length > 1) console.log(`Replaced linebreak(s):\n${output}`);
+      lines = [];
+    }
+
+    return output;
+  };
 }
 
-function readLineLength(filename) {
-  return new Promise((resolve) => {
-    let maxLength = 0;
-    const filePath = path.join(__dirname, "..", "data", filename);
-    const lineReader = readline.createInterface({ input: fs.createReadStream(filePath) });
-
-    lineReader.on("line", (line) => {
-      if (line.length > maxLength) maxLength = line.length;
-    });
-    lineReader.on("close", () => {
-      resolve(maxLength);
-    });
-  });
-}
-
-async function replaceLinebreaks() {
-  for (let i = 0; i < filenames.length; i += 1) {
-    const lineLength = await readLineLength(filenames[i]);
-
-    let lines = [];
-    const callback = (line, stream) => {
-      lines = [...lines, line];
-      const currentLength = lines.join("\r\n").length;
-
-      if (currentLength > lineLength) {
-        const output = lines.join("\n");
-        stream.write(`${output}\n`);
-        console.log(`Did not replace linebreak(s):\n${output}`);
-        lines = [];
-      }
-      if (currentLength === lineLength) {
-        const output = lines.join("  ");
-        stream.write(`${output}\n`);
-        if (lines.length > 1) console.log(`Replaced linebreak(s):\n${output}`);
-        lines = [];
-      }
-    };
-
-    await processLines(filenames[i], callback);
-  }
-}
-
-async function replaceGeometryIndexes() {
+function replaceGeometryIndexes() {
   let index = 1;
   let previous;
 
-  const callback = (line, stream) => {
+  return (line) => {
     const lineId = line.substr(0, 24);
-    index = (lineId === previous) ? (index + 1) : 1;
+    index = lineId === previous ? index + 1 : 1;
     const indexPadded = `${"0".repeat(4 - index.toString().length)}${index}`;
     const lineIndexed = `${line.substr(0, 32)}${indexPadded}${line.slice(36)}`;
-    stream.write(`${lineIndexed}\r\n`);
 
-    if (line !== lineIndexed) {
-      console.log(`Replaced invalid geometry index: ${lineId}`);
+    if (index === 1 && line !== lineIndexed) {
+      console.log("Replacing geometry indices...");
     }
+
     previous = lineId;
+    return lineIndexed;
   };
-
-  await processLines("reittimuoto.dat", callback);
 }
 
-function updateEncodingInner(filename) {
-  return new Promise((resolve, reject) => {
-    const filePath = path.join(__dirname, "..", "data", filename);
-    const tempPath = `${filePath}.tmp`;
-    const inStream = fs.createReadStream(filePath);
-    const outStream = fs.createWriteStream(tempPath);
-    inStream.pipe(iconv.decodeStream("ISO-8859-1")).pipe(outStream);
-    outStream.on("close", () => {
-      fs.rename(tempPath, filePath, error => (error ? reject(error) : resolve()));
-    });
+export function processLine(tableName) {
+  const geometryReplacer = replaceGeometryIndexes();
+  const lineBreaksReplacer = createLinebreaksReplacer();
+
+  let maxLength = 0;
+
+  return throughConcurrent.obj({ maxConcurrency: 100 }, function createLine(
+    chunk,
+    enc,
+    cb,
+  ) {
+    const str = enc === "buffer" ? chunk.toString("utf8") : chunk;
+
+    if (str && !isWhitespaceOnly.test(str)) {
+      if (str.length > maxLength) {
+        maxLength = str.length;
+      }
+
+      const linebreaksReplacedStr = lineBreaksReplacer(str, maxLength);
+
+      if (linebreaksReplacedStr) {
+        let resultLine = linebreaksReplacedStr;
+
+        if (tableName === "point_geometry") {
+          resultLine = geometryReplacer(linebreaksReplacedStr);
+        }
+
+        this.push(resultLine);
+      }
+    }
+
+    cb();
   });
 }
-
-async function updateEncoding() {
-  for (let i = 0; i < filenames.length; i += 1) {
-    await updateEncodingInner(filenames[i]);
-  }
-}
-
-updateEncoding()
-  .then(() => replaceLinebreaks())
-  .then(() => replaceGeometryIndexes())
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
