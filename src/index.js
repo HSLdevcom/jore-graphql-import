@@ -1,10 +1,9 @@
 /* eslint-disable consistent-return */
-import { createScheduledImport, EARLY_MORNING, startScheduledImport } from "./schedule";
+import { createScheduledImport, startScheduledImport } from "./schedule";
 import { importFile } from "./import";
-import { DEFAULT_EXPORT_SOURCE } from "./constants";
+import { DEFAULT_EXPORT_SOURCE, DAILY_TASK_SCHEDULE } from "./constants";
 import { fetchExportFromFTP } from "./sources/fetchExportFromFTP";
 import { server } from "./server";
-import { initDb } from "./setup/initDb";
 
 // The global state that informs the app if an import task is running.
 // Always check this state before starting an import.
@@ -40,7 +39,7 @@ const sources = {
 };
 
 // This is the daily scheduled task that runs the import.
-createScheduledImport("daily", EARLY_MORNING, async (onComplete = () => {}) => {
+createScheduledImport("daily", DAILY_TASK_SCHEDULE, async (onComplete = () => {}) => {
   const importId = "default-source";
   const downloadSource = sources[DEFAULT_EXPORT_SOURCE];
 
