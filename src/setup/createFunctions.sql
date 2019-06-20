@@ -173,13 +173,13 @@ CREATE OR REPLACE FUNCTION jore.get_route_angles_at_point(
           geom,
           route_id
         FROM jore.geometry
-        WHERE 
+        WHERE
           date between date_begin and date_end
       ) as geom
       ON ST_Intersects(buf.geom, geom.geom)
       GROUP BY buf.geom, geom.geom
     ) sections
-    WHERE GeometryType(geom) = 'LINESTRING' 
+    WHERE GeometryType(geom) = 'LINESTRING'
     GROUP BY angle
   ) angle
 $$ language sql stable;
@@ -217,7 +217,7 @@ FROM (
           FROM jore.geometry geometry
           LEFT JOIN jore.route route
           ON geometry.route_id = route.route_id
-          WHERE 
+          WHERE
             date between geometry.date_begin and geometry.date_end
             AND geometry.route_id != '31M1'
             AND geometry.route_id != '31M2'
@@ -283,7 +283,7 @@ create type jore.terminus as (
 create or replace function jore.get_all_terminuses(
   date date
 ) returns setof jore.terminus as $$
-  select 
+  select
     r.route_id AS line_id,
     s.stop_id AS stop_id,
     r.type AS type,
@@ -315,7 +315,7 @@ create or replace function jore.terminus_by_date_and_bbox(
   max_lon double precision,
   nearBuses boolean
   ) returns setof jore.terminus as $$
-  select 
+  select
     r.route_id AS line_id,
     s.stop_id AS stop_id,
     r.type AS type,
@@ -412,7 +412,7 @@ FROM (
               SELECT
                 geometry.route_id,
                 ST_Transform(geom, 3067) as geom
-              FROM 
+              FROM
                 jore.geometry geometry,
                 jore.route route
               WHERE

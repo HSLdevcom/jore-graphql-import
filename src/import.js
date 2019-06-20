@@ -12,6 +12,7 @@ import { initDb } from "./setup/initDb";
 import { getKnex } from "./knex";
 import Queue from "p-queue";
 import { runGeometryMatcher } from "./geometryMatcher";
+import { createForeignKeys } from "./setup/createDb";
 
 const { knex } = getKnex();
 const cwd = process.cwd();
@@ -92,6 +93,8 @@ export async function importFile(filePath) {
       await knex.raw(createGeometrySQL);
       await runGeometryMatcher();
     }
+
+    await createForeignKeys("jore", schema, knex);
 
     const [execDuration] = process.hrtime(execStart);
     await importCompleted(fileName, true, execDuration);

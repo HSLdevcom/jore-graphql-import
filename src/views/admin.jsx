@@ -17,9 +17,15 @@ const AdminView = ({ isImporting, latestImportedFile, selectedTables }) => {
       <DailyImport disabled={isImporting} />
       <UploadExport disabled={isImporting} />
       <SelectTables disabled={isImporting} selectedTables={selectedTables} />
+
       <h3>Run geometry matcher</h3>
       <form action={`${PATH_PREFIX}run-geometry-matcher`} method="post">
         <input type="submit" value="Run geometry matcher" />
+      </form>
+
+      <h3>Create foreign keys</h3>
+      <form action={`${PATH_PREFIX}create-foreign-keys`} method="post">
+        <input type="submit" value="Create foreign keys" />
       </form>
     </>
   );
