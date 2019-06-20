@@ -26,6 +26,7 @@ export const FTP_HOST = secretsEnv.FTP_HOST || "";
 export const FTP_PORT = secretsEnv.FTP_PORT || 21;
 export const FTP_PATH = secretsEnv.FTP_PATH || "/";
 export const DEFAULT_EXPORT_SOURCE = secretsEnv.DEFAULT_EXPORT_SOURCE || "daily";
+export const DAILY_TASK_SCHEDULE = secretsEnv.DAILY_TASK_SCHEDULE || "0 0 2 * * *";
 export const DEBUG = secretsEnv.DEBUG || "false";
 export const SERVER_PORT = secretsEnv.SERVER_PORT || 3000;
 export const ADMIN_PASSWORD = secretsEnv.ADMIN_PASSWORD || "password";

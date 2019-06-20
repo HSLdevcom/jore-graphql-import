@@ -2,7 +2,6 @@ import { CronJob } from "cron";
 import { invoke } from "lodash";
 
 export const MIDNIGHT = "0 0 0 * * *";
-export const EARLY_MORNING = "0 0 3 * * *";
 
 const scheduledImports = {};
 const runningTasks = [];
