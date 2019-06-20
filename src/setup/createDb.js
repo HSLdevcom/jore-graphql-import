@@ -79,6 +79,30 @@ export async function createPrimaryKeys(schema, config, knex) {
       if (primary) {
         table.unique(primary).primary(primary);
       }
+
+      fields.forEach(({ name, type, foreign }) => {
+        if (name && type && foreign) {
+          table
+            .foreign(name)
+            .references(foreign.split(".")[1])
+            .inTable(`jore.${foreign.split(".")[0]}`);
+        }
+      });
+    });
+  });
+}
+
+export async function createForeignKeys(schema, config, knex) {
+  return pMap(Object.entries(config), ([tableName, { fields }]) => {
+    return knex.schema.withSchema(schema).table(tableName, (table) => {
+      fields.forEach(({ name, type, foreign }) => {
+        if (name && type && foreign) {
+          table
+            .foreign(name)
+            .references(foreign.split(".")[1])
+            .inTable(`jore.${foreign.split(".")[0]}`);
+        }
+      });
     });
   });
 }

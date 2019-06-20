@@ -11,6 +11,9 @@ import { runScheduledImportNow } from "./schedule";
 import fs from "fs-extra";
 import { importFile } from "./import";
 import { runGeometryMatcher } from "./geometryMatcher";
+import { createForeignKeys } from "./setup/createDb";
+import schema from "./schema";
+import { getKnex } from "./knex";
 
 const cwd = process.cwd();
 const uploadPath = path.join(cwd, "uploads");
@@ -51,6 +54,13 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
 
   app.post("/run-daily", (req, res) => {
     runScheduledImportNow("daily");
+    res.redirect(PATH_PREFIX);
+  });
+
+  app.post("/create-foreign-keys", async (req, res) => {
+    const { knex } = getKnex();
+
+    await createForeignKeys("jore", schema, knex);
     res.redirect(PATH_PREFIX);
   });
 
