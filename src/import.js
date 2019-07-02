@@ -13,6 +13,7 @@ import { getKnex } from "./knex";
 import Queue from "p-queue";
 import { runGeometryMatcher } from "./geometryMatcher";
 import { createForeignKeys } from "./setup/createDb";
+import { clearDb } from "./setup/clearDb";
 
 const { knex } = getKnex();
 const cwd = process.cwd();
@@ -54,6 +55,7 @@ export async function importFile(filePath) {
     });
 
     console.log("Resetting the database...");
+    await clearDb();
     await initDb();
 
     const filePromises = chosenFiles.map(

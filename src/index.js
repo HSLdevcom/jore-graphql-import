@@ -4,11 +4,15 @@ import { importFile } from "./import";
 import { DEFAULT_EXPORT_SOURCE, DAILY_TASK_SCHEDULE } from "./constants";
 import { fetchExportFromFTP } from "./sources/fetchExportFromFTP";
 import { server } from "./server";
+import fs from "fs-extra";
+import path from "path";
+import { getKnex } from "./knex";
 
 // The global state that informs the app if an import task is running.
 // Always check this state before starting an import.
 let isImporting = false;
 let currentImporter = "";
+const { knex } = getKnex();
 
 // Marks the global isImporting state as true, blocking other imports.
 // Also acts as a guard that can be used in if-statements.
@@ -67,6 +71,13 @@ createScheduledImport("daily", DAILY_TASK_SCHEDULE, async (onComplete = () => {}
 });
 
 (async () => {
+  const createImportStatus = await fs.readFile(
+    path.join(__dirname, "setup", "createImportStatus.sql"),
+    "utf8",
+  );
+
+  await knex.raw(createImportStatus);
+
   // Start the task for the daily import as soon as the server starts.
   // This will start the timer.
   startScheduledImport("daily");
