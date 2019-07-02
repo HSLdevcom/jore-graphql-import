@@ -7,6 +7,8 @@ import { getKnex } from "../knex";
 
 const { knex } = getKnex();
 
+// Always run initDb on an empty database (after dropping the jore schema)
+
 export async function initDb() {
   try {
     const createSchemaSQL = await fs.readFile(
@@ -14,7 +16,16 @@ export async function initDb() {
       "utf8",
     );
 
-    await knex.raw(createSchemaSQL);
+    const createImportStatus = await fs.readFile(
+      path.join(__dirname, "createImportStatus.sql"),
+      "utf8",
+    );
+
+    await knex.raw(`
+      ${createSchemaSQL}
+      ${createImportStatus}
+    `);
+
     const createdTables = await createTables("jore", tables, knex);
 
     if (createdTables.length !== 0) {
