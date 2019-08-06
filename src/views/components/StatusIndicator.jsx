@@ -19,25 +19,25 @@ const StatusIndicator = ({ isImporting, latestImportedFile = {} }) => {
             import_end && (
               <>
                 The latest imported export was <strong>{filename}</strong>. The import
-                started at <strong>{format(import_start, DATE_FORMAT)}</strong> and{" "}
+                started at <strong>{format(import_start, DATE_FORMAT)} UTC</strong> and{" "}
                 <strong style={{ color: "green" }}>ended successfully</strong> at{" "}
-                <strong>{format(import_end, DATE_FORMAT)}</strong>.{" "}
+                <strong>{format(import_end, DATE_FORMAT)} UTC</strong>.{" "}
               </>
             )}
           {!success &&
             import_end && (
               <>
                 The latest imported export was <strong>{filename}</strong>. The import
-                started at <strong>{format(import_start, DATE_FORMAT)}</strong> but
+                started at <strong>{format(import_start, DATE_FORMAT)} UTC</strong> but
                 finished <strong style={{ color: "red" }}>unsuccessfully</strong> at{" "}
-                <strong>{format(import_end, DATE_FORMAT)}</strong>.
+                <strong>{format(import_end, DATE_FORMAT)} UTC</strong>.
               </>
             )}
           {!success &&
             !import_end && (
               <>
                 The currently running file is <strong>{filename}</strong>. The import
-                started at <strong>{format(import_start, DATE_FORMAT)}</strong>.
+                started at <strong>{format(import_start, DATE_FORMAT)} UTC</strong>.
               </>
             )}
         </p>
