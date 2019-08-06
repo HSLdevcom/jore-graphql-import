@@ -14,6 +14,8 @@ import Queue from "p-queue";
 import { runGeometryMatcher } from "./geometryMatcher";
 import { createForeignKeys } from "./setup/createDb";
 import { clearDb } from "./setup/clearDb";
+import { useIntermediateSchema } from "./utils/useIntermediateSchema";
+import { INTERMEDIATE_SCHEMA } from "./constants";
 
 const { knex } = getKnex();
 const cwd = process.cwd();
@@ -55,7 +57,11 @@ export async function importFile(filePath) {
     });
 
     console.log("Resetting the database...");
-    await clearDb();
+
+    // Remove the intermediate schema (by passing true) if it exists
+    await clearDb(true);
+
+    // Init the intermediate schema
     await initDb();
 
     const filePromises = chosenFiles.map(
@@ -87,16 +93,17 @@ export async function importFile(filePath) {
 
     if (selectedTables.includes("geometry")) {
       console.log("Creating the geometry table...");
+
       const createGeometrySQL = await fs.readFile(
         path.join(cwd, "src", "setup", "createGeometry.sql"),
         "utf8",
       );
 
-      await knex.raw(createGeometrySQL);
+      await knex.raw(useIntermediateSchema(createGeometrySQL));
       await runGeometryMatcher();
     }
 
-    await createForeignKeys("jore", schema, knex);
+    await createForeignKeys(INTERMEDIATE_SCHEMA, schema, knex);
 
     const [execDuration] = process.hrtime(execStart);
     await importCompleted(fileName, true, execDuration);

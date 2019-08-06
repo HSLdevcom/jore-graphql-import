@@ -1,7 +1,8 @@
 import { getKnex } from "../knex";
+import { INTERMEDIATE_SCHEMA } from "../constants";
 
 const { knex } = getKnex();
-const schema = "jore";
+const schema = INTERMEDIATE_SCHEMA;
 
 // "Upsert" function for PostgreSQL. Inserts or updates lines in bulk. Insert if
 // the primary key for the line is available, update otherwise.

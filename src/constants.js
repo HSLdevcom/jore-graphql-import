@@ -35,3 +35,5 @@ export const PYTHON_CMD = process.env.PYTHON_CMD || "python";
 export const PBF_DOWNLOAD_URL =
   "http://download.geofabrik.de/europe/finland-latest.osm.pbf";
 export const PBF_FILENAME = "finland-latest.osm.pbf";
+export const SCHEMA = "jore";
+export const INTERMEDIATE_SCHEMA = "jore2";

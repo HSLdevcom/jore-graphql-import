@@ -1,8 +1,9 @@
 import { get } from "lodash";
 import { getKnex } from "../knex";
+import { INTERMEDIATE_SCHEMA } from "../constants";
 
 const { knex } = getKnex();
-const schema = "jore";
+const schema = INTERMEDIATE_SCHEMA;
 
 export async function getPrimaryConstraint(tableName) {
   const { rows } = await knex.raw(

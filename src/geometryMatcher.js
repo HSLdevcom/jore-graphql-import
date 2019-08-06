@@ -4,6 +4,7 @@ import {
   PYTHON_CMD,
   PBF_DOWNLOAD_URL,
   PBF_FILENAME,
+  INTERMEDIATE_SCHEMA,
 } from "./constants";
 import path from "path";
 import fs from "fs-extra";
@@ -32,7 +33,13 @@ export const runGeometryMatcher = async () => {
     console.log(`Spawning matcher process with file ${filePath}`);
     const matcherProcess = childProcess.spawn(
       PYTHON_CMD,
-      ["jore_shape_mapfit.py", filePath, "+init=epsg:3067", PG_CONNECTION_STRING],
+      [
+        "jore_shape_mapfit.py",
+        filePath,
+        "+init=epsg:3067",
+        PG_CONNECTION_STRING,
+        INTERMEDIATE_SCHEMA,
+      ],
       {
         cwd: path.join(__dirname, "../", "geometry-matcher"),
       },

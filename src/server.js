@@ -2,7 +2,7 @@
 import express from "express";
 import fileUpload from "express-fileupload";
 import basicAuth from "express-basic-auth";
-import { ADMIN_PASSWORD, PATH_PREFIX, SERVER_PORT } from "./constants";
+import { ADMIN_PASSWORD, PATH_PREFIX, SERVER_PORT, SCHEMA } from "./constants";
 import { createEngine } from "express-react-views";
 import path from "path";
 import { getLatestImportedFile } from "./importStatus";
@@ -60,7 +60,7 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
   app.post("/create-foreign-keys", async (req, res) => {
     const { knex } = getKnex();
 
-    await createForeignKeys("jore", schema, knex);
+    await createForeignKeys(SCHEMA, schema, knex);
     res.redirect(PATH_PREFIX);
   });
 

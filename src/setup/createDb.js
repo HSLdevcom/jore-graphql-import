@@ -1,5 +1,6 @@
 import { find, compact } from "lodash";
 import pMap from "p-map";
+import { INTERMEDIATE_SCHEMA } from "../constants";
 
 export async function createTables(schema, config, knex) {
   const createdTables = await pMap(
@@ -91,7 +92,7 @@ export async function createForeignKeys(schema, config, knex) {
           table
             .foreign(name)
             .references(foreign.split(".")[1])
-            .inTable(`jore.${foreign.split(".")[0]}`);
+            .inTable(`${schema}.${foreign.split(".")[0]}`);
         }
       });
     });
