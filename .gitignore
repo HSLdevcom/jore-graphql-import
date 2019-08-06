@@ -37,3 +37,4 @@ postgres-data
 downloads
 uploads
 *.pbf
+.env
