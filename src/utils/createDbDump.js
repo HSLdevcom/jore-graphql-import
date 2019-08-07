@@ -26,20 +26,23 @@ export const createDbDump = async () => {
       resolve(filePath);
     } else {
       const pgConnection = parse(PG_CONNECTION_STRING);
-
       console.log(`Dumping the ${pgConnection.database} database into ${filePath}`);
 
-      const dumpProcess = childProcess.spawn("pg_dump", [`-f ${filePath}`, "-Fc"], {
-        cwd,
-        shell: true,
-        env: {
-          PGUSER: pgConnection.user,
-          PGPASSWORD: pgConnection.password,
-          PGHOST: pgConnection.host,
-          PGPORT: pgConnection.port,
-          PGDATABASE: pgConnection.database,
+      const dumpProcess = childProcess.spawn(
+        "pg_dump",
+        [`-f ${filePath}`, "-Fc", "-N '*old'", "-N '*new'"],
+        {
+          cwd,
+          shell: true,
+          env: {
+            PGUSER: pgConnection.user,
+            PGPASSWORD: pgConnection.password,
+            PGHOST: pgConnection.host,
+            PGPORT: pgConnection.port,
+            PGDATABASE: pgConnection.database,
+          },
         },
-      });
+      );
 
       dumpProcess.stderr.on("data", (data) => {
         lastError = data.toString("utf8");
