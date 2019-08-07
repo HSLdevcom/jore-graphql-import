@@ -1,3 +1,5 @@
+import { INTERMEDIATE_SCHEMA } from "./constants";
+
 const schema = {
   stop: {
     filename: "pysakki.dat",
@@ -724,7 +726,7 @@ const schema = {
       {
         name: "mode",
         type: "specificType",
-        typeOptions: "jore.mode",
+        typeOptions: `${INTERMEDIATE_SCHEMA}.mode`,
       },
       {
         name: "geom",

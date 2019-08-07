@@ -4,6 +4,8 @@ import path from "path";
 import tables from "../schema";
 import { pick } from "lodash";
 import { getKnex } from "../knex";
+import { INTERMEDIATE_SCHEMA } from "../constants";
+import { useIntermediateSchema } from "../utils/useIntermediateSchema";
 
 const { knex } = getKnex();
 
@@ -22,14 +24,14 @@ export async function initDb() {
     );
 
     await knex.raw(`
-      ${createSchemaSQL}
+      ${useIntermediateSchema(createSchemaSQL)}
       ${createImportStatus}
     `);
 
-    const createdTables = await createTables("jore", tables, knex);
+    const createdTables = await createTables(INTERMEDIATE_SCHEMA, tables, knex);
 
     if (createdTables.length !== 0) {
-      await createPrimaryKeys("jore", pick(tables, createdTables), knex);
+      await createPrimaryKeys(INTERMEDIATE_SCHEMA, pick(tables, createdTables), knex);
     }
 
     const createFunctionsSQL = await fs.readFile(
@@ -37,7 +39,7 @@ export async function initDb() {
       "utf8",
     );
 
-    await knex.raw(createFunctionsSQL);
+    await knex.raw(useIntermediateSchema(createFunctionsSQL));
   } catch (err) {
     console.error(err);
     throw err;

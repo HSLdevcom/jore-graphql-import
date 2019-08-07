@@ -1,0 +1,3 @@
+DROP SCHEMA IF EXISTS jore_old CASCADE;
+ALTER SCHEMA jore RENAME TO jore_old;
+ALTER SCHEMA jore_new RENAME TO jore;
