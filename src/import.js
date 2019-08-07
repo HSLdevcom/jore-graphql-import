@@ -57,7 +57,6 @@ export async function importFile(filePath) {
     });
 
     console.log("Resetting the database...");
-
     // Remove the intermediate schema (by passing true) if it exists
     await clearDb(true);
 
@@ -100,10 +99,23 @@ export async function importFile(filePath) {
       );
 
       await knex.raw(useIntermediateSchema(createGeometrySQL));
-      await runGeometryMatcher();
+      await runGeometryMatcher(INTERMEDIATE_SCHEMA);
     }
 
     await createForeignKeys(INTERMEDIATE_SCHEMA, schema, knex);
+
+    // Switch the current active schema to be named "[schema name]_old"
+    // and the new schema where we imported all the data to be named "[schema name]".
+    // The schema name is controlled by the SCHEMA and INTERMEDIATE_SCHEMA constants,
+    // and the schema name has traditionally been "jore". Note that the names are
+    // hard-coded in this particular SQL script.
+
+    const switchSchemasSQL = await fs.readFile(
+      path.join(cwd, "src", "setup", "switchSchemas.sql"),
+      "utf8",
+    );
+
+    await knex.raw(switchSchemasSQL);
 
     const [execDuration] = process.hrtime(execStart);
     await importCompleted(fileName, true, execDuration);

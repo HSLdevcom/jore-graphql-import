@@ -4,7 +4,7 @@ import {
   PYTHON_CMD,
   PBF_DOWNLOAD_URL,
   PBF_FILENAME,
-  INTERMEDIATE_SCHEMA,
+  SCHEMA,
 } from "./constants";
 import path from "path";
 import fs from "fs-extra";
@@ -13,7 +13,7 @@ import { download } from "./utils/download";
 const cwd = process.cwd();
 const downloadDir = path.join(cwd, "downloads");
 
-export const runGeometryMatcher = async () => {
+export const runGeometryMatcher = async (schema = SCHEMA) => {
   return new Promise(async (resolve, reject) => {
     console.log("Starting geometry match process.");
     const startTime = process.hrtime();
@@ -33,13 +33,7 @@ export const runGeometryMatcher = async () => {
     console.log(`Spawning matcher process with file ${filePath}`);
     const matcherProcess = childProcess.spawn(
       PYTHON_CMD,
-      [
-        "jore_shape_mapfit.py",
-        filePath,
-        "+init=epsg:3067",
-        PG_CONNECTION_STRING,
-        INTERMEDIATE_SCHEMA,
-      ],
+      ["jore_shape_mapfit.py", filePath, "+init=epsg:3067", PG_CONNECTION_STRING, schema],
       {
         cwd: path.join(__dirname, "../", "geometry-matcher"),
       },
@@ -50,9 +44,9 @@ export const runGeometryMatcher = async () => {
       console.log("Matcher error:", lastError);
     });
 
-    matcherProcess.stdout.on("data", (data) => {
-      // console.log("Matcher output:", data.toString("utf8"));
-    });
+    /*matcherProcess.stdout.on("data", (data) => {
+      console.log("Matcher output:", data.toString("utf8"));
+    });*/
 
     matcherProcess.on("close", (code) => {
       const [execDuration] = process.hrtime(startTime);
