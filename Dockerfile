@@ -11,7 +11,7 @@ RUN apt-get update && \
   apt-get update && \
   apt-get -y install protobuf-compiler python-dev \
     libprotobuf-dev make swig g++ libreadosm-dev libboost-graph-dev libproj-dev \
-    libgoogle-perftools-dev osmctools unzip zip wget && \
+    libgoogle-perftools-dev osmctools unzip zip wget postgresql-client && \
   rm -rf /var/lib/apt/lists/*
 
 RUN pip install imposm.parser && \

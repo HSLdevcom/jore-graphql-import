@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/HSLdevcom/jore-graphql-import",
   "dependencies": {
+    "@azure/storage-blob": "12.0.0-preview.2",
     "basic-ftp": "^3.6.0",
     "cron": "^1.7.1",
     "date-fns": "^1.30.1",
@@ -44,6 +45,7 @@
     "p-map": "^2.1.0",
     "p-queue": "^6.0.2",
     "pg": "^6.1.2",
+    "pg-connection-string": "^2.1.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "split2": "^3.1.1",
@@ -53,6 +55,7 @@
     "unzipper": "^0.10.0"
   },
   "devDependencies": {
+    "@types/fs-extra": "^8.0.0",
     "babel-eslint": "^10.0.1",
     "eslint": "^4.8.0",
     "eslint-config-airbnb-base": "^12.0.2",

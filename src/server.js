@@ -14,12 +14,16 @@ import { runGeometryMatcher } from "./geometryMatcher";
 import { createForeignKeys } from "./setup/createDb";
 import schema from "./schema";
 import { getKnex } from "./knex";
+import { createDbDump } from "./utils/createDbDump";
+import { uploadDbDump } from "./utils/uploadDbDump";
 
 const cwd = process.cwd();
 const uploadPath = path.join(cwd, "uploads");
 
 export const server = (isImporting, onBeforeImport, onAfterImport) => {
   const app = express();
+
+  let manualDumpInProgress = false;
 
   app.use(
     fileUpload({
@@ -46,6 +50,7 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
     const latestImportedFile = await getLatestImportedFile();
 
     res.render("admin", {
+      manualDumpInProgress,
       isImporting: isImporting(),
       latestImportedFile,
       selectedTables: getSelectedTableStatus(),
@@ -114,6 +119,20 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
     for (const tableName of allTables) {
       const isEnabled = enabledTables.includes(tableName);
       setTableOption(tableName, isEnabled);
+    }
+
+    res.redirect(PATH_PREFIX);
+  });
+
+  app.post("/dump-upload", (req, res) => {
+    if (!manualDumpInProgress) {
+      manualDumpInProgress = true;
+
+      createDbDump()
+        .then(uploadDbDump)
+        .then(() => {
+          manualDumpInProgress = false;
+        });
     }
 
     res.redirect(PATH_PREFIX);
