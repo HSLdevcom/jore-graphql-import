@@ -39,3 +39,4 @@ uploads
 *.pbf
 .env
 db.dump
+dumps

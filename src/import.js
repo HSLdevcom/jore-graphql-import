@@ -16,6 +16,8 @@ import { createForeignKeys } from "./setup/createDb";
 import { clearDb } from "./setup/clearDb";
 import { useIntermediateSchema } from "./utils/useIntermediateSchema";
 import { INTERMEDIATE_SCHEMA } from "./constants";
+import { createDbDump } from "./utils/createDbDump";
+import { uploadDbDump } from "./utils/uploadDbDump";
 
 const { knex } = getKnex();
 const cwd = process.cwd();
@@ -116,6 +118,9 @@ export async function importFile(filePath) {
     );
 
     await knex.raw(switchSchemasSQL);
+
+    const dumpFilePath = await createDbDump();
+    await uploadDbDump(dumpFilePath);
 
     const [execDuration] = process.hrtime(execStart);
     await importCompleted(fileName, true, execDuration);
