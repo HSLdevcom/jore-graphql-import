@@ -7,6 +7,13 @@ export const uploadDbDump = async (filePath) => {
   const account = AZURE_STORAGE_ACCOUNT;
   const accountKey = AZURE_STORAGE_KEY;
 
+  if (!account || !accountKey) {
+    console.log(
+      "Azure credentials not set. Set the AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_KEY env variables.",
+    );
+    return false;
+  }
+
   const fileExists = await fs.pathExists(filePath);
 
   if (!fileExists) {
