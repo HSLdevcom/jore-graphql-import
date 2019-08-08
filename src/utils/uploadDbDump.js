@@ -1,12 +1,12 @@
-import { STORAGE_NAME, STORAGE_ACCESS_KEY } from "../constants";
+import { AZURE_STORAGE_ACCOUNT, AZURE_STORAGE_KEY } from "../constants";
 import { SharedKeyCredential, BlobServiceClient } from "@azure/storage-blob";
 import path from "path";
 import fs from "fs-extra";
 
 export const uploadDbDump = async (filePath) => {
   // Enter your storage account name and shared key
-  const account = STORAGE_NAME;
-  const accountKey = STORAGE_ACCESS_KEY;
+  const account = AZURE_STORAGE_ACCOUNT;
+  const accountKey = AZURE_STORAGE_KEY;
 
   const fileExists = await fs.pathExists(filePath);
 

@@ -48,5 +48,5 @@ export const PBF_DOWNLOAD_URL =
 export const PBF_FILENAME = "finland-latest.osm.pbf";
 export const SCHEMA = "jore";
 export const INTERMEDIATE_SCHEMA = "jore_new";
-export const STORAGE_NAME = secretsEnv.STORAGE_NAME || "";
-export const STORAGE_ACCESS_KEY = secretsEnv.STORAGE_ACCESS_KEY || "";
+export const AZURE_STORAGE_ACCOUNT = secretsEnv.AZURE_STORAGE_ACCOUNT || "";
+export const AZURE_STORAGE_KEY = secretsEnv.AZURE_STORAGE_KEY || "";
