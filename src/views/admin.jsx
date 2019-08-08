@@ -19,8 +19,8 @@ const AdminView = ({
         latestImportedFile={latestImportedFile}
       />
       <hr />
-      <DailyImport disabled={isImporting} />
-      <UploadExport disabled={isImporting} />
+      <DailyImport disabled={isImporting || manualDumpInProgress} />
+      <UploadExport disabled={isImporting || manualDumpInProgress} />
       <SelectTables disabled={isImporting} selectedTables={selectedTables} />
 
       <h3>Run geometry matcher</h3>
