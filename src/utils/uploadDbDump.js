@@ -4,7 +4,6 @@ import path from "path";
 import fs from "fs-extra";
 
 export const uploadDbDump = async (filePath) => {
-  // Enter your storage account name and shared key
   const account = AZURE_STORAGE_ACCOUNT;
   const accountKey = AZURE_STORAGE_KEY;
 
@@ -18,12 +17,8 @@ export const uploadDbDump = async (filePath) => {
   console.log(`Uploading DB dump ${filePath} to Azure.`);
   const fileStat = await fs.stat(filePath);
 
-  const FOUR_MEGABYTES = 4 * 1024 * 1024;
-  const getFileStream = () =>
-    fs.createReadStream(filePath, { highWaterMark: FOUR_MEGABYTES });
+  const getFileStream = () => fs.createReadStream(filePath);
 
-  // Use SharedKeyCredential with storage account and account key
-  // SharedKeyCredential is only available in Node.js runtime, not in browsers
   const sharedKeyCredential = new SharedKeyCredential(account, accountKey);
   const blobServiceClient = new BlobServiceClient(
     `https://${account}.blob.core.windows.net`,
