@@ -33,13 +33,6 @@ export async function initDb() {
     if (createdTables.length !== 0) {
       await createPrimaryKeys(INTERMEDIATE_SCHEMA, pick(tables, createdTables), knex);
     }
-
-    const createFunctionsSQL = await fs.readFile(
-      path.join(__dirname, "createFunctions.sql"),
-      "utf8",
-    );
-
-    await knex.raw(useIntermediateSchema(createFunctionsSQL));
   } catch (err) {
     console.error(err);
     throw err;

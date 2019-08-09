@@ -138,6 +138,18 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
     res.redirect(PATH_PREFIX);
   });
 
+  app.post("/create-functions", (req, res) => {
+    const { knex } = getKnex();
+
+    const createFunctionsSQL = fs.readFileSync(
+      path.join(__dirname, "createFunctions.sql"),
+      "utf8",
+    );
+
+    knex.raw(createFunctionsSQL);
+    res.redirect(PATH_PREFIX);
+  });
+
   app.listen(SERVER_PORT, () => {
     console.log(`Server is listening on port ${SERVER_PORT}`);
   });

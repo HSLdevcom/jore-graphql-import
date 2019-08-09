@@ -33,6 +33,11 @@ const AdminView = ({
         <input type="submit" value="Create foreign keys" />
       </form>
 
+      <h3>Create functions</h3>
+      <form action={`${PATH_PREFIX}create-functions`} method="post">
+        <input type="submit" value="Create functions" />
+      </form>
+
       <h3>Upload dump of DB</h3>
 
       {manualDumpInProgress && <p>Dump in progress.</p>}
