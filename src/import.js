@@ -120,7 +120,7 @@ export async function importFile(filePath) {
     await knex.raw(switchSchemasSQL);
 
     const createFunctionsSQL = await fs.readFile(
-      path.join(__dirname, "createFunctions.sql"),
+      path.join(cwd, "src", "setup", "createFunctions.sql"),
       "utf8",
     );
 
