@@ -1,3 +1,7 @@
-DROP SCHEMA IF EXISTS jore_old CASCADE;
-ALTER SCHEMA jore RENAME TO jore_old;
-ALTER SCHEMA jore_new RENAME TO jore;
+DO
+$$
+    BEGIN
+        DROP SCHEMA IF EXISTS jore CASCADE;
+        ALTER SCHEMA jore_new RENAME TO jore;
+    END
+$$;

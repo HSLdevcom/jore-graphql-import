@@ -19,22 +19,37 @@ CREATE TABLE IF NOT EXISTS jorestatic.intermediate_points (
   nearbuses boolean
 );
 
-create type jore.section_intermediate as (
-  routes character varying(6)[],
-  lon numeric,
-  lat numeric,
-  angles integer[],
-  length numeric
-);
+DO
+$$
+    BEGIN
+        create type jore.section_intermediate as (
+            routes character varying(6)[],
+            lon numeric,
+            lat numeric,
+            angles integer[],
+            length numeric
+            );
+    EXCEPTION
+        WHEN duplicate_object THEN null;
+    END
+$$;
 
-create type jore.section_intermediate_with_geometry as (
-  routes character varying(6)[],
-  lon numeric,
-  lat numeric,
-  angles integer[],
-  length numeric,
-  point geometry
-);
+
+DO
+$$
+    BEGIN
+        create type jore.section_intermediate_with_geometry as (
+            routes character varying(6)[],
+            lon numeric,
+            lat numeric,
+            angles integer[],
+            length numeric,
+            point geometry
+            );
+    EXCEPTION
+        WHEN duplicate_object THEN null;
+    END
+$$;
 
 CREATE OR REPLACE FUNCTION public.first_agg ( anyelement, anyelement )
 RETURNS anyelement LANGUAGE SQL IMMUTABLE STRICT AS $$
@@ -70,13 +85,20 @@ CREATE AGGREGATE median(NUMERIC) (
   INITCOND='{}'
 );
 
-create type jore.station as (
-  name_fi character varying(40),
-  name_se character varying(40),
-  lon numeric,
-  lat numeric,
-  type character varying(2)
-);
+DO
+$$
+    BEGIN
+        create type jore.station as (
+            name_fi character varying(40),
+            name_se character varying(40),
+            lon numeric,
+            lat numeric,
+            type character varying(2)
+            );
+    EXCEPTION
+        WHEN duplicate_object THEN null;
+    END
+$$;
 
 CREATE OR REPLACE FUNCTION jore.get_stations(
   date date,
@@ -268,17 +290,24 @@ FROM (
 GROUP BY cid
 $$ language sql stable;
 
-create type jore.terminus as (
-  line_id character varying(6),
-  stop_id character varying(6),
-  type character varying(6),
-  lat numeric(9,6),
-  lon numeric(9,6),
-  stop_short_id character varying(6),
-  stop_area_id character varying(6),
-  terminal_id character varying(6),
-  point geometry
-);
+DO
+$$
+    BEGIN
+        create type jore.terminus as (
+            line_id character varying(6),
+            stop_id character varying(6),
+            type character varying(6),
+            lat numeric(9, 6),
+            lon numeric(9, 6),
+            stop_short_id character varying(6),
+            stop_area_id character varying(6),
+            terminal_id character varying(6),
+            point geometry
+            );
+    EXCEPTION
+        WHEN duplicate_object THEN null;
+    END
+$$;
 
 create or replace function jore.get_all_terminuses(
   date date
@@ -485,16 +514,23 @@ CREATE OR REPLACE FUNCTION jore.get_section_intermediates(
     AND nearBuses = only_near_buses
 $$ language sql stable;
 
-create type jore.terminus_grouped as (
-  lines character varying(6)[],
-  lat numeric(9,6),
-  lon numeric(9,6),
-  stop_area_id character varying(6),
-  terminal_id character varying(6),
-  type character varying(6),
-  name_fi character varying(40),
-  name_se character varying(40)
-);
+DO
+$$
+    BEGIN
+        create type jore.terminus_grouped as (
+            lines character varying(6)[],
+            lat numeric(9, 6),
+            lon numeric(9, 6),
+            stop_area_id character varying(6),
+            terminal_id character varying(6),
+            type character varying(6),
+            name_fi character varying(40),
+            name_se character varying(40)
+            );
+    EXCEPTION
+        WHEN duplicate_object THEN null;
+    END
+$$;
 
 create or replace function jore.get_terminus_by_date_and_bbox_grouped(
   date date,
@@ -693,21 +729,28 @@ create function jore.route_mode(route jore.route) returns jore.mode as $$
     end;
 $$ language sql immutable;
 
-create type jore.departure_group as (
-  stop_id       character varying(7),
-  route_id      character varying(6),
-  direction     character varying(1),
-  day_type      character varying(2)[],
-  is_next_day   boolean,
-  hours         integer,
-  minutes       integer,
-  is_accessible boolean,
-  date_begin    date,
-  date_end      date,
-  stop_role     integer,
-  note          character varying(4),
-  vehicle       character varying(3)[]
-);
+DO
+$$
+    BEGIN
+        create type jore.departure_group as (
+            stop_id character varying(7),
+            route_id character varying(6),
+            direction character varying(1),
+            day_type character varying(2)[],
+            is_next_day boolean,
+            hours integer,
+            minutes integer,
+            is_accessible boolean,
+            date_begin date,
+            date_end date,
+            stop_role integer,
+            note character varying(4),
+            vehicle character varying(3)[]
+            );
+    EXCEPTION
+        WHEN duplicate_object THEN null;
+    END
+$$;
 
 create function jore.route_departures_gropuped(route jore.route, date date) returns setof jore.departure_group as $$
   select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type), is_next_day,
@@ -784,11 +827,18 @@ create function jore.route_segment_notes(route_segment jore.route_segment, date 
    ) end;
 $$ language sql stable;
 
-create type jore.geometry_with_date as (
-  geometry jsonb,
-  date_begin date,
-  date_end date
-);
+DO
+$$
+    BEGIN
+        create type jore.geometry_with_date as (
+            geometry jsonb,
+            date_begin date,
+            date_end date
+            );
+    EXCEPTION
+        WHEN duplicate_object THEN null;
+    END
+$$;
 
 create function jore.route_geometries(route jore.route, date date) returns setof jore.geometry_with_date as $$
   select ST_AsGeoJSON(geometry.geom)::jsonb, date_begin, date_end
@@ -811,14 +861,21 @@ create function jore.stops_by_bbox(
   where stop.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
 $$ language sql stable;
 
-create type jore.stop_grouped as (
-  short_id     character varying(6),
-  name_fi      character varying(20),
-  name_se      character varying(20),
-  lat          numeric(9,6),
-  lon          numeric(9,6),
-  stop_ids     character varying(7)[]
-);
+DO
+$$
+    BEGIN
+        create type jore.stop_grouped as (
+            short_id character varying(6),
+            name_fi character varying(20),
+            name_se character varying(20),
+            lat numeric(9, 6),
+            lon numeric(9, 6),
+            stop_ids character varying(7)[]
+            );
+    EXCEPTION
+        WHEN duplicate_object THEN null;
+    END
+$$;
 
 create function jore.stop_grouped_by_short_id_by_bbox(
   min_lat double precision,
