@@ -572,28 +572,28 @@ LEFT JOIN (
 ON terminus.terminal_id = terminal.terminal_id
 $$ language sql stable;
 
-create function jore.departure_is_regular_day_departure(departure jore.departure) returns boolean as $$
+create or replace function jore.departure_is_regular_day_departure(departure jore.departure) returns boolean as $$
     begin
         return departure.day_type in ('Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su')
         and departure.extra_departure is distinct from 'L';
     end
 $$ language plpgsql immutable;
 
-create function jore.stop_departures_for_date(stop jore.stop, date date) returns setof jore.departure as $$
+create or replace function jore.stop_departures_for_date(stop jore.stop, date date) returns setof jore.departure as $$
   select *
   from jore.departure departure
   where departure.stop_id = stop.stop_id
     and case when date is null then true else date between date_begin and date_end end;
 $$ language sql stable;
 
-create function jore.stop_route_segments_for_date(stop jore.stop, date date) returns setof jore.route_segment as $$
+create or replace function jore.stop_route_segments_for_date(stop jore.stop, date date) returns setof jore.route_segment as $$
   select *
   from jore.route_segment route_segment
   where route_segment.stop_id = stop.stop_id
     and case when date is null then true else date between route_segment.date_begin and route_segment.date_end end;
 $$ language sql stable;
 
-create function jore.route_has_regular_day_departures(route jore.route, date date) returns boolean as $$
+create or replace function jore.route_has_regular_day_departures(route jore.route, date date) returns boolean as $$
   select exists (
       select true
       from jore.departure departure
@@ -607,7 +607,7 @@ create function jore.route_has_regular_day_departures(route jore.route, date dat
     );
 $$ language sql stable;
 
-create function jore.route_segment_has_regular_day_departures(route_segment jore.route_segment, date date) returns boolean as $$
+create or replace function jore.route_segment_has_regular_day_departures(route_segment jore.route_segment, date date) returns boolean as $$
   select exists (
       select true
       from jore.departure departure
@@ -621,7 +621,7 @@ create function jore.route_segment_has_regular_day_departures(route_segment jore
     );
 $$ language sql stable;
 
-create function jore.route_line(route jore.route) returns setof jore.line as $$
+create or replace function jore.route_line(route jore.route) returns setof jore.line as $$
   select *
   from jore.line line
   where route.line_id = line.line_id
@@ -630,7 +630,7 @@ create function jore.route_line(route jore.route) returns setof jore.line as $$
 $$ language sql stable;
 -- TODO: investigate why we have to return a setof here
 
-create function jore.route_segment_line(route_segment jore.route_segment) returns setof jore.line as $$
+create or replace function jore.route_segment_line(route_segment jore.route_segment) returns setof jore.line as $$
   select line.*
   from jore.line line
   join jore.route as route on (
@@ -643,7 +643,7 @@ create function jore.route_segment_line(route_segment jore.route_segment) return
 $$ language sql stable;
 -- TODO: investigate why we have to return a setof here
 
-create function jore.route_segment_route(route_segment jore.route_segment, date date) returns setof jore.route as $$
+create or replace function jore.route_segment_route(route_segment jore.route_segment, date date) returns setof jore.route as $$
   select *
   from jore.route route
   where route_segment.route_id = route.route_id
@@ -655,7 +655,7 @@ create function jore.route_segment_route(route_segment jore.route_segment, date 
 $$ language sql stable;
 -- TODO: investigate why we have to return a setof here
 
-create function jore.route_departure_notes(route jore.route, date date) returns jore.note as $$
+create or replace function jore.route_departure_notes(route jore.route, date date) returns jore.note as $$
   select *
   from jore.note note
   where note.line_id in (select line_id from jore.route_line(route))
@@ -664,7 +664,7 @@ create function jore.route_departure_notes(route jore.route, date date) returns 
     and case when date is null then true else date between note.date_begin and note.date_end end;
 $$ language sql stable;
 
-create function jore.route_segment_departure_notes(route_segment jore.route_segment, date date) returns jore.note as $$
+create or replace function jore.route_segment_departure_notes(route_segment jore.route_segment, date date) returns jore.note as $$
   select *
   from jore.note note
   where note.line_id in (select line_id from jore.route_segment_line(route_segment))
@@ -673,7 +673,7 @@ create function jore.route_segment_departure_notes(route_segment jore.route_segm
     and case when date is null then true else date between note.date_begin and note.date_end end;
 $$ language sql stable;
 
-create function jore.line_notes(line jore.line, date date) returns setof jore.note as $$
+create or replace function jore.line_notes(line jore.line, date date) returns setof jore.note as $$
   select *
   from jore.note note
   where line.line_id = note.line_id
@@ -687,7 +687,7 @@ create function jore.line_notes(line jore.line, date date) returns setof jore.no
     )
 $$ language sql stable;
 
-create function jore.route_segment_next_stops(route_segment jore.route_segment) returns setof jore.route_segment as $$
+create or replace function jore.route_segment_next_stops(route_segment jore.route_segment) returns setof jore.route_segment as $$
   select *
   from jore.route_segment inner_route_segment
   where route_segment.route_id = inner_route_segment.route_id
@@ -697,7 +697,7 @@ create function jore.route_segment_next_stops(route_segment jore.route_segment) 
     and route_segment.stop_index < inner_route_segment.stop_index;
 $$ language sql stable;
 
-create function jore.route_route_segments(route jore.route) returns setof jore.route_segment as $$
+create or replace function jore.route_route_segments(route jore.route) returns setof jore.route_segment as $$
   select *
   from jore.route_segment route_segment
   where route.route_id = route_segment.route_id
@@ -706,7 +706,7 @@ create function jore.route_route_segments(route jore.route) returns setof jore.r
     and route.date_end >= route_segment.date_begin;
 $$ language sql stable;
 
-create function jore.route_departures(route jore.route) returns setof jore.departure as $$
+create or replace function jore.route_departures(route jore.route) returns setof jore.departure as $$
   select *
   from jore.departure departure
   where route.route_id = departure.route_id
@@ -715,7 +715,7 @@ create function jore.route_departures(route jore.route) returns setof jore.depar
     and route.date_end >= departure.date_begin;
 $$ language sql stable;
 
-create function jore.route_mode(route jore.route) returns jore.mode as $$
+create or replace function jore.route_mode(route jore.route) returns jore.mode as $$
   select
     case when route is null then null else
       case route.type
@@ -752,7 +752,7 @@ $$
     END
 $$;
 
-create function jore.route_departures_gropuped(route jore.route, date date) returns setof jore.departure_group as $$
+create or replace function jore.route_departures_gropuped(route jore.route, date date) returns setof jore.departure_group as $$
   select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type), is_next_day,
     departure.hours, departure.minutes, departure.is_accessible, departure.date_begin, departure.date_end,
     departure.stop_role, departure.note, array_agg(departure.vehicle)
@@ -766,7 +766,7 @@ create function jore.route_departures_gropuped(route jore.route, date date) retu
     departure.is_accessible, departure.date_begin, departure.date_end, departure.stop_role, departure.note);
 $$ language sql stable;
 
-create function jore.route_segment_departures_gropuped(route_segment jore.route_segment, date date) returns setof jore.departure_group as $$
+create or replace function jore.route_segment_departures_gropuped(route_segment jore.route_segment, date date) returns setof jore.departure_group as $$
   select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type), is_next_day,
     departure.hours, departure.minutes, departure.is_accessible, departure.date_begin, departure.date_end,
     departure.stop_role, departure.note, array_agg(departure.vehicle)
@@ -781,7 +781,7 @@ create function jore.route_segment_departures_gropuped(route_segment jore.route_
     departure.is_accessible, departure.date_begin, departure.date_end, departure.stop_role, departure.note);
 $$ language sql stable;
 
-create function jore.stop_departures_gropuped(stop jore.stop, date date) returns setof jore.departure_group as $$
+create or replace function jore.stop_departures_gropuped(stop jore.stop, date date) returns setof jore.departure_group as $$
   select departure.stop_id, departure.route_id, departure.direction, array_agg(departure.day_type), is_next_day,
     departure.hours, departure.minutes, departure.is_accessible, departure.date_begin, departure.date_end,
     departure.stop_role, departure.note, array_agg(departure.vehicle)
@@ -792,13 +792,13 @@ create function jore.stop_departures_gropuped(stop jore.stop, date date) returns
     departure.is_accessible, departure.date_begin, departure.date_end, departure.stop_role, departure.note);
 $$ language sql stable;
 
-create function jore.line_routes(line jore.line) returns setof jore.route as $$
+create or replace function jore.line_routes(line jore.line) returns setof jore.route as $$
   select *
   from jore.route route
   where route.line_id = line.line_id;
 $$ language sql stable;
 
-create function jore.stop_calculated_heading(stop jore.stop) returns numeric as $$
+create or replace function jore.stop_calculated_heading(stop jore.stop) returns numeric as $$
   -- https://en.wikipedia.org/wiki/Mean_of_circular_quantities
   select mod(cast(degrees(atan2(avg(sin(heading)), avg(cos(heading)))) + 360 as numeric), 360)
     from (
@@ -815,7 +815,7 @@ create function jore.stop_calculated_heading(stop jore.stop) returns numeric as 
     ) as headings;
 $$ language sql stable;
 
-create function jore.route_segment_notes(route_segment jore.route_segment, date date) returns setof jore.note as $$
+create or replace function jore.route_segment_notes(route_segment jore.route_segment, date date) returns setof jore.note as $$
   select note
   from jore.note note
   where note.line_id = (select line_id from jore.route_segment_line(route_segment))
@@ -840,7 +840,7 @@ $$
     END
 $$;
 
-create function jore.route_geometries(route jore.route, date date) returns setof jore.geometry_with_date as $$
+create or replace function jore.route_geometries(route jore.route, date date) returns setof jore.geometry_with_date as $$
   select ST_AsGeoJSON(geometry.geom)::jsonb, date_begin, date_end
   from jore.geometry geometry
   where route.route_id = geometry.route_id
@@ -850,7 +850,7 @@ create function jore.route_geometries(route jore.route, date date) returns setof
     and case when date is null then true else date between geometry.date_begin and geometry.date_end end;
 $$ language sql stable;
 
-create function jore.stops_by_bbox(
+create or replace function jore.stops_by_bbox(
   min_lat double precision,
   min_lon double precision,
   max_lat double precision,
@@ -877,7 +877,7 @@ $$
     END
 $$;
 
-create function jore.stop_grouped_by_short_id_by_bbox(
+create or replace function jore.stop_grouped_by_short_id_by_bbox(
   min_lat double precision,
   min_lon double precision,
   max_lat double precision,
@@ -940,13 +940,13 @@ create or replace function jore.get_stop_grouped_by_short_id_by_bbox(
   group by stop.short_id, stop.name_fi, stop.name_se, stop.lat, stop.lon;
 $$ language sql stable;
 
-create function jore.stop_grouped_stops(stop_grouped jore.stop_grouped) returns setof jore.stop as $$
+create or replace function jore.stop_grouped_stops(stop_grouped jore.stop_grouped) returns setof jore.stop as $$
   select stop
   from jore.stop
   where stop.stop_id = any(stop_grouped.stop_ids);
 $$ language sql stable;
 
-create function jore.stop_siblings(stop jore.stop) returns setof jore.stop as $$
+create or replace function jore.stop_siblings(stop jore.stop) returns setof jore.stop as $$
   select *
   from jore.stop original_stop
   where original_stop.short_id = stop.short_id
@@ -956,7 +956,7 @@ create function jore.stop_siblings(stop jore.stop) returns setof jore.stop as $$
     and original_stop.lon = stop.lon;
 $$ language sql stable;
 
-create function jore.terminal_siblings(terminal jore.terminal) returns setof jore.terminal as $$
+create or replace function jore.terminal_siblings(terminal jore.terminal) returns setof jore.terminal as $$
   select terminal_to.*
   from jore.terminal_group terminal_group
   join jore.terminal terminal_to on terminal_to.terminal_id = terminal_group.terminal_id_to
@@ -968,13 +968,13 @@ create or replace function jore.stop_modes(stop jore.stop, date date) returns se
   from jore.stop_route_segments_for_date(stop, date) route_segment;
 $$ language sql stable;
 
-create function jore.terminal_modes(terminal jore.terminal, date date) returns setof jore.mode as $$
+create or replace function jore.terminal_modes(terminal jore.terminal, date date) returns setof jore.mode as $$
   select distinct jore.stop_modes(stop, date)
   from jore.stop stop
   where stop.terminal_id = terminal.terminal_id;
 $$ language sql stable;
 
-create function jore.stop_areas_by_bbox(
+create or replace function jore.stop_areas_by_bbox(
   min_lat double precision,
   min_lon double precision,
   max_lat double precision,
@@ -985,7 +985,7 @@ create function jore.stop_areas_by_bbox(
   where stop_area.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
 $$ language sql stable;
 
-create function jore.terminals_by_bbox(
+create or replace function jore.terminals_by_bbox(
   min_lat double precision,
   min_lon double precision,
   max_lat double precision,
@@ -996,7 +996,7 @@ create function jore.terminals_by_bbox(
   where terminal.point && ST_MakeEnvelope(min_lon, min_lat, max_lon, max_lat, 4326);
 $$ language sql stable;
 
-create function jore.network_by_date_as_geojson(
+create or replace function jore.network_by_date_as_geojson(
   date date,
   min_lat double precision,
   min_lon double precision,
@@ -1041,7 +1041,7 @@ create function jore.network_by_date_as_geojson(
     ) as fc
 $$ language sql stable;
 
-create function jore.point_network_as_geojson() returns json as $$
+create or replace function jore.point_network_as_geojson() returns json as $$
   select row_to_json(fc)
   from (
     select 'FeatureCollection' as type, array_to_json(array_agg(f)) as features

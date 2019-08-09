@@ -15,7 +15,7 @@ import { runGeometryMatcher } from "./geometryMatcher";
 import { createForeignKeys } from "./setup/createDb";
 import { clearDb } from "./setup/clearDb";
 import { useIntermediateSchema } from "./utils/useIntermediateSchema";
-import { INTERMEDIATE_SCHEMA } from "./constants";
+import { INTERMEDIATE_SCHEMA, SCHEMA } from "./constants";
 import { createDbDump } from "./utils/createDbDump";
 import { uploadDbDump } from "./utils/uploadDbDump";
 
@@ -104,8 +104,6 @@ export async function importFile(filePath) {
       await runGeometryMatcher(INTERMEDIATE_SCHEMA);
     }
 
-    await createForeignKeys(INTERMEDIATE_SCHEMA, schema, knex);
-
     // Switch the current active schema to be named "[schema name]_old"
     // and the new schema where we imported all the data to be named "[schema name]".
     // The schema name is controlled by the SCHEMA and INTERMEDIATE_SCHEMA constants,
@@ -118,6 +116,8 @@ export async function importFile(filePath) {
     );
 
     await knex.raw(switchSchemasSQL);
+
+    await createForeignKeys(SCHEMA, schema, knex);
 
     const createFunctionsSQL = await fs.readFile(
       path.join(cwd, "src", "setup", "createFunctions.sql"),

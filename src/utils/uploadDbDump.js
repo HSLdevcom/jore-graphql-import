@@ -1,4 +1,8 @@
-import { AZURE_STORAGE_ACCOUNT, AZURE_STORAGE_KEY } from "../constants";
+import {
+  AZURE_STORAGE_ACCOUNT,
+  AZURE_STORAGE_KEY,
+  AZURE_UPLOAD_CONTAINER,
+} from "../constants";
 import { SharedKeyCredential, BlobServiceClient } from "@azure/storage-blob";
 import path from "path";
 import fs from "fs-extra";
@@ -6,6 +10,7 @@ import fs from "fs-extra";
 export const uploadDbDump = async (filePath) => {
   const account = AZURE_STORAGE_ACCOUNT;
   const accountKey = AZURE_STORAGE_KEY;
+  const containerName = AZURE_UPLOAD_CONTAINER;
 
   if (!account || !accountKey) {
     console.log(
@@ -32,7 +37,6 @@ export const uploadDbDump = async (filePath) => {
     sharedKeyCredential,
   );
 
-  const containerName = "joredumps";
   const containerClient = blobServiceClient.getContainerClient(containerName);
 
   const blobName = path.basename(filePath);
