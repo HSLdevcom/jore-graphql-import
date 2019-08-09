@@ -142,7 +142,7 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
     const { knex } = getKnex();
 
     const createFunctionsSQL = fs.readFileSync(
-      path.join(__dirname, "createFunctions.sql"),
+      path.join(__dirname, "setup", "createFunctions.sql"),
       "utf8",
     );
 
