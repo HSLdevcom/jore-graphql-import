@@ -15,7 +15,7 @@ import { runGeometryMatcher } from "./geometryMatcher";
 import { createForeignKeys } from "./setup/createDb";
 import { clearDb } from "./setup/clearDb";
 import { useIntermediateSchema } from "./utils/useIntermediateSchema";
-import { INTERMEDIATE_SCHEMA, SCHEMA } from "./constants";
+import { INTERMEDIATE_SCHEMA, SCHEMA, AZURE_STORAGE_ACCOUNT } from "./constants";
 import { createDbDump } from "./utils/createDbDump";
 import { uploadDbDump } from "./utils/uploadDbDump";
 
@@ -126,8 +126,11 @@ export async function importFile(filePath) {
 
     await knex.raw(createFunctionsSQL);
 
-    const dumpFilePath = await createDbDump();
-    await uploadDbDump(dumpFilePath);
+    // Disallow dump and upload by unsetting AZURE_STORAGE_ACCOUNT
+    if (AZURE_STORAGE_ACCOUNT) {
+      const dumpFilePath = await createDbDump();
+      await uploadDbDump(dumpFilePath);
+    }
 
     const [execDuration] = process.hrtime(execStart);
     await importCompleted(fileName, true, execDuration);
