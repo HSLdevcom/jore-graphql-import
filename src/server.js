@@ -94,20 +94,18 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
         return res.status(500).send(err);
       }
 
-      const fileStream = fs.createReadStream(exportPath);
-
       if (onBeforeImport(importId)) {
         try {
-          await importFile(fileStream, exportName);
+          await importFile(exportPath);
         } catch (importError) {
           console.error(importError);
         }
 
         onAfterImport(importId);
       }
-
-      res.redirect(PATH_PREFIX);
     });
+
+    res.redirect(PATH_PREFIX);
   });
 
   app.post("/select-tables", (req, res) => {
