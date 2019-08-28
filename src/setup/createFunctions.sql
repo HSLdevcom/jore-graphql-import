@@ -19,6 +19,16 @@ CREATE TABLE IF NOT EXISTS jorestatic.intermediate_points (
   nearbuses boolean
 );
 
+-- Creating empty table to keep postgres happy
+CREATE TABLE IF NOT EXISTS jorestatic.status
+(
+    name character varying[],
+    target_date date,
+    status text,
+    created_at timestamp with time zone default CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone default CURRENT_TIMESTAMP
+);
+
 DO
 $$
     BEGIN
@@ -474,25 +484,28 @@ CREATE OR REPLACE FUNCTION jore.create_intermediate_points(
   date date,
   tag character varying(20)
 ) RETURNS VOID AS $$
-DELETE FROM jorestatic.intermediate_points;
-INSERT INTO jorestatic.intermediate_points
-(
-  SELECT
-    *,
-    false as nearBuses
-  FROM
-    jore.route_section_intermediates(date, false, 1000)
-)
-UNION ALL
-(
-  SELECT
-    *,
-    true as nearBuses
-  FROM
-    jore.route_section_intermediates(date, true, 200)
-);
-$$ language sql volatile;
+    IF EXISTS (SELECT status FROM jorestatic.status WHERE status != "PENDING") THEN
 
+
+        CREATE TABLE jorestatic.intermediate_points_new
+        (
+            like jorestatic.intermediate_points including all
+        );
+
+        INSERT INTO jorestatic.intermediate_points_new
+            (
+                SELECT *,
+                       false as nearBuses
+                FROM jore.route_section_intermediates(date, false, 1000)
+            )
+        UNION ALL
+        (
+            SELECT *,
+                   true as nearBuses
+            FROM jore.route_section_intermediates(date, true, 200)
+        );
+    END IF;
+$$ language sql volatile;
 
 CREATE OR REPLACE FUNCTION jore.get_section_intermediates(
   min_lat double precision,
