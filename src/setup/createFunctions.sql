@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS jorestatic.intermediate_points (
 -- Creating empty table to keep postgres happy
 CREATE TABLE IF NOT EXISTS jorestatic.status
 (
-    name character varying[],
+    name varchar(128),
     target_date date,
     status text,
     created_at timestamp with time zone default CURRENT_TIMESTAMP,
@@ -480,32 +480,43 @@ FROM (
 ) intermediate_points
 $$ language sql stable;
 
-CREATE OR REPLACE FUNCTION jore.create_intermediate_points(
-  date date,
-  tag character varying(20)
-) RETURNS VOID AS $$
-    IF EXISTS (SELECT status FROM jorestatic.status WHERE status != "PENDING") THEN
+CREATE OR REPLACE FUNCTION jore.create_intermediate_points(date date) RETURNS VOID AS $$
+    DECLARE
+    BEGIN
+        IF NOT EXISTS (SELECT * FROM jorestatic.status) THEN
+            INSERT INTO jorestatic.status ("target_date", "status", "name") VALUES (date, 'EMPTY', 'config');
+        END IF;
 
+        IF EXISTS (SELECT status FROM jorestatic.status WHERE name = 'config' AND status != 'PENDING') THEN
 
-        CREATE TABLE jorestatic.intermediate_points_new
-        (
-            like jorestatic.intermediate_points including all
-        );
+            UPDATE jorestatic.status SET status = 'PENDING' WHERE name = 'config';
 
-        INSERT INTO jorestatic.intermediate_points_new
+            CREATE TABLE IF NOT EXISTS jorestatic.intermediate_points_new
+            (
+                like jorestatic.intermediate_points including all
+            );
+
+            INSERT INTO jorestatic.intermediate_points_new
             (
                 SELECT *,
                        false as nearBuses
                 FROM jore.route_section_intermediates(date, false, 1000)
             )
-        UNION ALL
-        (
-            SELECT *,
-                   true as nearBuses
-            FROM jore.route_section_intermediates(date, true, 200)
-        );
-    END IF;
-$$ language sql volatile;
+
+            UNION ALL
+            (
+                SELECT *,
+                       true as nearBuses
+                FROM jore.route_section_intermediates(date, true, 200)
+            );
+
+            DROP TABLE IF EXISTS jorestatic.intermediate_points CASCADE;
+            ALTER TABLE jorestatic.intermediate_points_new RENAME TO intermediate_points;
+
+            UPDATE jorestatic.status SET status = 'READY' WHERE name = 'config';
+        END IF;
+    END;
+$$ language plpgsql;
 
 CREATE OR REPLACE FUNCTION jore.get_section_intermediates(
   min_lat double precision,
