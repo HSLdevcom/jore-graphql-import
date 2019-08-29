@@ -28,8 +28,8 @@ WORKDIR ${IMPORTER_DIR}
 COPY package.json ${IMPORTER_DIR}
 COPY yarn.lock ${IMPORTER_DIR}
 
-# Copy the env file for production
-COPY .env.production ${IMPORTER_DIR}/.env
+ARG BUILD_ENV=latest
+COPY .env.${BUILD_ENV} ${IMPORTER_DIR}/.env
 
 RUN yarn install
 

@@ -2,11 +2,11 @@
 set -e
 
 ORG=${ORG:-hsldevcom}
-DOCKER_TAG=${TRAVIS_BUILD_NUMBER:-latest}
+
+read -p "Tag: " TAG
+
+DOCKER_TAG=${TAG:-latest}
 DOCKER_IMAGE=$ORG/jore-graphql-import:${DOCKER_TAG}
-DOCKER_IMAGE_LATEST=$ORG/jore-graphql-import:latest
 
-docker build -t $DOCKER_IMAGE .
-
-docker tag $DOCKER_IMAGE $DOCKER_IMAGE_LATEST
-docker push $DOCKER_IMAGE_LATEST
+docker build --build-arg BUILD_ENV=${TAG:-latest} -t $DOCKER_IMAGE .
+docker push $DOCKER_IMAGE
