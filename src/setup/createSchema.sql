@@ -1,8 +1,6 @@
 create schema if not exists jore;
 GRANT ALL ON SCHEMA jore TO CURRENT_USER;
 
-create schema if not exists jorestatic;
-
 DO
 $$
     BEGIN
