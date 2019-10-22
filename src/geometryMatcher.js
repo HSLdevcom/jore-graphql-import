@@ -25,7 +25,7 @@ export const runGeometryMatcher = async (schema = SCHEMA) => {
 
     if (!fileExists) {
       console.log("Downloading PBF data...");
-      await download(PBF_DOWNLOAD_URL, filePath);
+      await download(PBF_DOWNLOAD_URL, filePath).catch((err) => console.log('Downloading PBF data failed...' + err));
     } else {
       console.log("PBF file exists...");
     }
