@@ -12,6 +12,8 @@ import { download } from "./utils/download";
 
 const cwd = process.cwd();
 const downloadDir = path.join(cwd, "downloads");
+const ONE_HOUR = 60 * 60 * 1000; /*/ ms */
+const PBF_UPDATE_INTERVAL = 24 * ONE_HOUR;
 
 export const runGeometryMatcher = async (schema = SCHEMA) => {
   return new Promise(async (resolve, reject) => {
@@ -23,9 +25,21 @@ export const runGeometryMatcher = async (schema = SCHEMA) => {
     const filePath = path.join(downloadDir, PBF_FILENAME);
     const fileExists = await fs.pathExists(filePath);
 
-    if (!fileExists) {
-      console.log("Downloading PBF data...");
-      await download(PBF_DOWNLOAD_URL, filePath).catch((err) => console.log('Downloading PBF data failed...' + err));
+    const modifiedLessThanDurationAgo = (durationMs) => {
+      const lastModified = fs.statSync(filePath, (err) => {
+        if (err) throw err;
+      }).mtimeMs;
+      return new Date().getTime() - durationMs > lastModified;
+    };
+
+    if (!fileExists || modifiedLessThanDurationAgo(PBF_UPDATE_INTERVAL)) {
+      console.log(
+        `PBF data does not exist or is older than ${PBF_UPDATE_INTERVAL /
+          3600000} hours. Downloading new PBF data...`,
+      );
+      await download(PBF_DOWNLOAD_URL, filePath).catch((err) =>
+        console.log(`Downloading PBF data failed...${err}`),
+      );
     } else {
       console.log("PBF file exists...");
     }
