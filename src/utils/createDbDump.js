@@ -5,7 +5,6 @@ import fs from "fs-extra";
 import format from "date-fns/format";
 import { parse } from "pg-connection-string";
 
-const currentDate = format(new Date(), "YYYY-MM-DD");
 const cwd = process.cwd();
 const dumpsDir = path.join(cwd, "dumps");
 
@@ -17,6 +16,7 @@ export const createDbDump = async () => {
     let lastError = null;
 
     await fs.ensureDir(dumpsDir);
+    const currentDate = format(new Date(), "YYYY-MM-DD");
     const currentDateFilename = `jore_dump_${currentDate}`;
     const filePath = path.join(dumpsDir, currentDateFilename);
     const fileExists = await fs.pathExists(filePath);

@@ -128,8 +128,13 @@ export async function importFile(filePath) {
 
     // Disallow dump and upload by unsetting AZURE_STORAGE_ACCOUNT
     if (AZURE_STORAGE_ACCOUNT) {
-      const dumpFilePath = await createDbDump();
-      await uploadDbDump(dumpFilePath);
+      try {
+        const dumpFilePath = await createDbDump();
+        await uploadDbDump(dumpFilePath);
+      } catch (err) {
+        console.log(err.message || "DB upload failed.");
+        console.log(err);
+      }
     }
 
     const [execDuration] = process.hrtime(execStart);

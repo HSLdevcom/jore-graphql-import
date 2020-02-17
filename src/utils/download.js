@@ -1,10 +1,10 @@
-import http from "http";
+import https from "https";
 import fs from "fs-extra";
 
 export const download = (url, dest) => {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
-    http
+    https
       .get(url, (response) => {
         response.pipe(file);
         file.on("finish", () => {
