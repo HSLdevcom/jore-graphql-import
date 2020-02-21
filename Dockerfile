@@ -4,8 +4,9 @@ ENV IMPORTER_DIR /opt/jore
 ENV MATCHER_DIR=${IMPORTER_DIR}/geometry-matcher
 ENV PG_CONNECTION_STRING="postgres://postgres:mysecretpassword@jore-postgis:5432/postgres"
 
-RUN apt-get update && \
-  apt-get -y install git build-essential software-properties-common && \
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
+  apt-get update && \
+  apt-get -y install git build-essential software-properties-common curl && \
   # Needs new versions from the Buster repo, otherwise the matcher won't work
   apt-add-repository 'deb http://ftp.us.debian.org/debian buster main contrib non-free' && \
   apt-get update && \
