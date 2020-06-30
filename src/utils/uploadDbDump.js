@@ -4,6 +4,7 @@ import {
   AZURE_UPLOAD_CONTAINER,
 } from "../constants";
 import { SharedKeyCredential, BlobServiceClient } from "@azure/storage-blob";
+import { reportInfo, reportError } from "../monitor";
 import path from "path";
 import fs from "fs-extra";
 
@@ -47,9 +48,11 @@ export const uploadDbDump = async (filePath) => {
   } catch (err) {
     console.log("Dump upload unsuccessful.");
     console.error(err);
+    await reportError(`Dump upload unsuccessful. Error: ${err}`);
     return false;
   }
 
   console.log("Dump upload successful.");
+  await reportInfo(`Dump upload successful.`);
   return true;
 };
