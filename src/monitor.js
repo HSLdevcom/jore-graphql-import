@@ -1,11 +1,10 @@
-import { SLACK_WEBHOOK_URL, ENVIRONMENT } from "./constants";
+import { SLACK_WEBHOOK_URL, ENVIRONMENT, SLACK_MONITOR_MENTION } from "./constants";
 import fetch from "node-fetch";
 import _ from "lodash";
 export const messageTypes = {
   ERROR: "error",
   INFO: "info",
 };
-
 export async function reportError(err = null) {
   const message =
     typeof err === "string" ? err : typeof err.message === "string" ? err.message : "";
@@ -25,8 +24,12 @@ export async function onMonitorEvent(
     return false;
   }
 
-  const fullMessage = `${type} message from hsl-jore-import [${ENVIRONMENT.toUpperCase()}]:\n
-  \`\`\`${message}\`\`\``;
+  const mentionUser = type === messageTypes.ERROR ? SLACK_MONITOR_MENTION : "";
+
+  const fullMessage = `${
+    mentionUser ? `Hey <@${mentionUser}>, ` : ""
+  }${type} message from JORE history importer [${ENVIRONMENT.toUpperCase()}]:\n
+\`\`\`${message}\`\`\``;
 
   const body = {
     type: "mrkdwn",

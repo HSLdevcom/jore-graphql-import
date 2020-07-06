@@ -53,3 +53,4 @@ export const AZURE_STORAGE_ACCOUNT = secretsEnv.AZURE_STORAGE_ACCOUNT || "";
 export const AZURE_STORAGE_KEY = secretsEnv.AZURE_STORAGE_KEY || "";
 export const SLACK_WEBHOOK_URL = secretsEnv.SLACK_WEBHOOK_URL || "";
 export const ENVIRONMENT = secretsEnv.ENVIRONMENT || "unknown";
+export const SLACK_MONITOR_MENTION = secretsEnv.SLACK_MONITOR_MENTION || "";
