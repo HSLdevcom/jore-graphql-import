@@ -24,17 +24,19 @@ export async function onMonitorEvent(
     return false;
   }
 
-  const mentionUser = type === messageTypes.ERROR ? SLACK_MONITOR_MENTION : "";
+  const userIds = SLACK_MONITOR_MENTION.split(",");
+
+  const mentionUsers =
+    type === messageTypes.ERROR ? userIds.map((id) => `<@${id}> `) : "";
 
   const fullMessage = `${
-    mentionUser ? `Hey <@${mentionUser}>, ` : ""
-  }${type} message from JORE history importer [${ENVIRONMENT.toUpperCase()}]:\n
+    mentionUsers ? `${mentionUsers} ` : ""
+  }${type} message from JORE importer [${ENVIRONMENT.toUpperCase()}]:\n
 \`\`\`${message}\`\`\``;
 
   const body = {
     type: "mrkdwn",
     text: fullMessage,
   };
-
   return fetch(SLACK_WEBHOOK_URL, { method: "POST", body: JSON.stringify(body) });
 }
