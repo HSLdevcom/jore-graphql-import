@@ -7,6 +7,7 @@ import { server } from "./server";
 import fs from "fs-extra";
 import path from "path";
 import { getKnex } from "./knex";
+import { reportInfo, reportError } from "./monitor";
 
 // The global state that informs the app if an import task is running.
 // Always check this state before starting an import.
@@ -80,6 +81,19 @@ createScheduledImport("daily", DAILY_TASK_SCHEDULE, async (onComplete = () => {}
 
   // Start the task for the daily import as soon as the server starts.
   // This will start the timer.
+  await reportInfo("Import started.");
   startScheduledImport("daily");
   server(() => isImporting, onBeforeImport, onAfterImport);
 })();
+
+const onCrash = async (e) => {
+  console.log("Uncaught Exception...");
+  console.error(e);
+  await reportError(`Uncaught exception: ${e.message || "Something happened!"}`);
+  await knex.destroy();
+  process.exit(99);
+};
+
+// catch uncaught exceptions, trace, then exit normally
+process.on("uncaughtException", onCrash);
+process.on("SIGABRT", onCrash);
