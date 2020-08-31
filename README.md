@@ -26,7 +26,7 @@ docker build -t hsldevcom/jore-graphql-import .
 
 Start the import process and a simple web UI running in http://localhost/jore-import/
 
-Docker environment variables can alternatively be passed by updating .env file in the project root:
+If in Swarm mode, Docker environment variables are by default read from [Docker secrets](https://docs.docker.com/engine/swarm/secrets/). If no Docker secret is found, the value is read from .env file defaults instead. The default values can be overridden by passing them as command line arguments like in example below:
 ```
 docker run --link jore-postgis -v downloads:/tmp/build \
 -e USERNAME="ftpusername" \
