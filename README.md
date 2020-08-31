@@ -2,9 +2,12 @@
 
 Data importer for [jore-graphql](https://github.com/HSLdevcom/jore-graphql)
 
+Read more about the [JORE import process](https://github.com/HSLdevcom/hsl-map-documentation/blob/master/Process%20schema/README.md#jore-import-process).
+
+
 ### Prerequisites
 
-Start a postgis docker container using:
+Start a generic postgis docker (or use [hsl-jore-postgis](https://github.com/HSLdevcom/hsl-jore-postgis)) container using:
 ```
 docker run --name jore-postgis -e POSTGRES_PASSWORD=mysecretpassword -d mdillon/postgis
 ```
@@ -21,7 +24,17 @@ docker build -t hsldevcom/jore-graphql-import .
 
 ### Run
 
-Start the importer:
+Start the import process and a simple web UI running in http://localhost/jore-import/
+
+If in Swarm mode, Docker environment variables are by default read from [Docker secrets](https://docs.docker.com/engine/swarm/secrets/). If no Docker secret is found, the value is read from .env file defaults instead. The default values can be overridden by passing them as command line arguments like in example below:
 ```
-docker run --link jore-postgis -e USERNAME="ftpusername" -e PASSWORD="ftppassword" -v downloads:/tmp/build -e "PG_CONNECTION_STRING=postgres://postgres:mysecretpassword@jore-postgis:5432/postgres" hsldevcom/jore-graphql-import
+docker run --link jore-postgis -v downloads:/tmp/build \
+-e USERNAME="ftpusername" \
+-e PASSWORD="ftppassword" \
+-e "PG_CONNECTION_STRING=postgres:postgres:mysecretpassword@jore-postgis:5432/postgres" \
+-e AZURE_STORAGE_ACCOUNT="secret" \
+-e AZURE_STORAGE_KEY="secret" \
+-e ADMIN_PASSWORD="secret" \
+-e SLACK_WEBHOOK_URL="secret" \
+hsldevcom/jore-graphql-import
 ```
