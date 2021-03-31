@@ -371,8 +371,8 @@ WayRole tram_filter(const readosm_way *way) {
 			oneway = way->tags[i].value;
 	};
 
-	if(!railway) return WayRoleIgnore;
-	if(string("tram").compare(railway) != 0 && string("construction").compare(railway) != 0) return WayRoleIgnore;
+	// if(!railway) return WayRoleIgnore;
+	// if(string("tram").compare(railway) != 0 && string("construction").compare(railway) != 0) return WayRoleIgnore;
 	if(oneway && string(oneway).compare("yes") == 0) return WayRoleOneWay;
 	return WayRoleTwoWay;
 }
