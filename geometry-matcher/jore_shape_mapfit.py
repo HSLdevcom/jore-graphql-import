@@ -35,6 +35,8 @@ def jore_shape_mapfit(
 		projection,
 		connection_string,
 		schema,
+		# This controls how far away to look for a network. Lower it if you want matching to be faster.
+		# If the value is too low, network could not be found and the script gives errors.
 		search_region=100.0
 	):
 
@@ -86,7 +88,11 @@ def jore_shape_mapfit(
 		if graph is None or len(shape_coords) <= 2:
 			return shape["properties"], shape_coords, [], [], None, None
 
-		state_model = omm.DrawnGaussianStateModel(30, 0.05, graph)
+		# The next two first parameters controls the accuracy.
+		# The first param controls the length of the graph edges (probably)
+		# and the second one controls the allowed error. To make matching more accurate,
+		# lower the lenght or give higher error value. TO make it more general, do vice versa.
+		state_model = omm.DrawnGaussianStateModel(10, 0.05, graph)
 		matcher = omm.MapMatcher2d(graph, state_model, search_region)
 
 		coords = [projection(*c) for c in shape_coords]
