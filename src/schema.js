@@ -753,6 +753,37 @@ const schema = {
     ],
     primary: ["route_id", "direction", "date_begin", "date_end"],
   },
+  restroom: {
+    filename: "taukotila.dat",
+    fields: [
+      {
+        length: 100,
+        name: "name_fi",
+        type: "string",
+        index: true,
+      },
+      {
+        length: 100,
+        name: "address_fi",
+        type: "string",
+      },
+      {
+        length: 21,
+        name: "type",
+        type: "string",
+      },
+      {
+        length: 9,
+        name: "lat",
+        type: "decimal",
+      },
+      {
+        length: 9,
+        name: "lon",
+        type: "decimal",
+      },
+    ],
+  },
   /*equipment: {
     filename: "kalusto.dat",
     fields: [
