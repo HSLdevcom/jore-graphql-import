@@ -259,6 +259,26 @@ $$ language sql stable;
 DO
 $$
     BEGIN
+        create type jore.restroom as (
+            name_fi character varying(100),
+            address_fi character varying(100),
+            type character varying(21),
+            lat numeric,
+            lon numeric
+            );
+    EXCEPTION
+        WHEN duplicate_object THEN null;
+    END
+$$;
+
+create or replace function jore.get_all_restroom() returns setof jore.restroom as
+$$
+select * from jore.restroom
+$$ language sql stable;
+
+DO
+$$
+    BEGIN
         create type jore.terminus as (
             line_id character varying(6),
             stop_id character varying(6),
