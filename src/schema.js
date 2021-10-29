@@ -146,8 +146,8 @@ const schema = {
         type: "string",
       },
       { length: 14 },
-      { length: 9, name: "lat", type: "decimal" },
-      { length: 9, name: "lon", type: "decimal" },
+      { length: 8, name: "lat", type: "decimal" },
+      { length: 8, name: "lon", type: "decimal" },
     ],
   },
   terminal_group: {
