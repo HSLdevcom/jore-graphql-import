@@ -1061,3 +1061,8 @@ select row_to_json(fc)
             ) as f
     ) as fc
 $$ language sql stable;
+
+create or replace function jore.get_lines_with_id_and_date(id text, line_date_begin date, line_date_end date) returns setof jore.line as
+$$
+select * from jore.line where line_id = id AND date_begin = line_date_begin AND date_end = line_date_end;
+$$ language sql stable;
