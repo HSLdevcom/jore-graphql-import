@@ -264,7 +264,8 @@ $$
             address_fi character varying(100),
             type character varying(21),
             lat numeric,
-            lon numeric
+            lon numeric,
+            mode character varying(20)
             );
     EXCEPTION
         WHEN duplicate_object THEN null;
