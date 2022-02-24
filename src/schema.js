@@ -782,6 +782,11 @@ const schema = {
         name: "lon",
         type: "decimal",
       },
+      {
+        length: 20,
+        name: "mode",
+        type: "string",
+      },
     ],
   },
   /*equipment: {
