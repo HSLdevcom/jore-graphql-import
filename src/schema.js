@@ -449,6 +449,12 @@ const schema = {
         type: "integer",
         notNullable: true,
       },
+      { length: 8 },
+      {
+        length: 6,
+        name: "route_id_parsed",
+        type: "string",
+      },
     ],
     primary: ["route_id", "direction", "date_begin", "date_end", "stop_index"],
   },
