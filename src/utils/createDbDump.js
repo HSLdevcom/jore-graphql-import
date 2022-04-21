@@ -47,7 +47,7 @@ export const createDbDump = async () => {
     const filePath = path.join(dumpsDir, currentDateFilename);
     const fileExists = await fs.pathExists(filePath);
 
-    deleteFiles({ filesDir: path.join(cwd, "dump"), minFileCount: MIN_FILE_COUNT });
+    deleteFiles({ filesDir: path.join(cwd, "dumps"), minFileCount: MIN_FILE_COUNT });
     deleteFiles({ filesDir: path.join(cwd, "downloads"), minFileCount: MIN_FILE_COUNT });
 
     if (fileExists) {
