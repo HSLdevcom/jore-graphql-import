@@ -389,6 +389,21 @@ WayRole subway_filter(const readosm_way *way) {
 	return WayRoleTwoWay;
 }
 
+WayRole trambus_filter(const readosm_way *way) {
+	WayRole bus_role = busway_filter(way);
+	WayRole tram_role = tram_filter(way);
+
+	if (bus_role == WayRoleTwoWay || tram_role == WayRoleTwoWay) {
+		return WayRoleTwoWay;
+	}
+
+	if (bus_role == WayRoleOneWay || tram_role == WayRoleOneWay) {
+		return WayRoleOneWay;
+	}
+
+	return WayRoleIgnore;
+}
+
 class OsmGraph {
 	private:
 	CoordinateProjector& coord_proj;
