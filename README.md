@@ -31,7 +31,7 @@ If in Swarm mode, Docker environment variables are by default read from [Docker 
 docker run --link jore-postgis -v downloads:/tmp/build \
 -e USERNAME="ftpusername" \
 -e PASSWORD="ftppassword" \
--e "PG_CONNECTION_STRING=postgres:postgres:mysecretpassword@jore-postgis:5432/postgres" \
+-e "PG_CONNECTION_STRING=postgres://postgres:mysecretpassword@jore-postgis:5432" \
 -e AZURE_STORAGE_ACCOUNT="secret" \
 -e AZURE_STORAGE_KEY="secret" \
 -e ADMIN_PASSWORD="secret" \
