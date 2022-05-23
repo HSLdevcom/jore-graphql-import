@@ -23,6 +23,7 @@ WayRole busway_filter(const readosm_way*);
 WayRole train_filter(const readosm_way*);
 WayRole tram_filter(const readosm_way*);
 WayRole subway_filter(const readosm_way*);
+WayRole trambus_filter(const readosm_way*);
 %nocallback;
 %apply real *OUTPUT { real *x, real *y };
 %apply double *OUTPUT { double *latitude, double *longitude };

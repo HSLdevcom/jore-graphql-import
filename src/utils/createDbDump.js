@@ -5,8 +5,34 @@ import fs from "fs-extra";
 import format from "date-fns/format";
 import { parse } from "pg-connection-string";
 
+const MAX_FILE_AGE = 3600000 * 24 * 14; // 14 days
+const MIN_FILE_COUNT = 3;
 const cwd = process.cwd();
 const dumpsDir = path.join(cwd, "dumps");
+
+const deleteFiles = ({ filesDir, minFileCount }) => {
+  fs.readdir(filesDir, (err, files) => {
+    if (files.length < minFileCount) return;
+    files.forEach((file) => {
+      const removableFile = path.join(filesDir, file);
+      fs.stat(removableFile, async (err, stat) => {
+        if (err) {
+          return console.error(err);
+        }
+        const now = new Date().getTime();
+        const endTime = new Date(stat.ctime).getTime() + MAX_FILE_AGE;
+        if (now > endTime) {
+          return await fs.remove(removableFile, async (err) => {
+            if (err) {
+              return console.error(err);
+            }
+            console.log(`Deleted ${removableFile}`);
+          });
+        }
+      });
+    });
+  });
+};
 
 export const createDbDump = async () => {
   return new Promise(async (resolve, reject) => {
@@ -20,6 +46,9 @@ export const createDbDump = async () => {
     const currentDateFilename = `jore_dump_${currentDate}`;
     const filePath = path.join(dumpsDir, currentDateFilename);
     const fileExists = await fs.pathExists(filePath);
+
+    deleteFiles({ filesDir: path.join(cwd, "dumps"), minFileCount: MIN_FILE_COUNT });
+    deleteFiles({ filesDir: path.join(cwd, "downloads"), minFileCount: MIN_FILE_COUNT });
 
     if (fileExists) {
       console.log("Dump exists, exiting.");

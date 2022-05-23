@@ -15,6 +15,7 @@ class ShapeError(Exception): pass
 ROUTE_TYPE_FILTERS = {
 	'TRAM': "TRAM_FILTER",
 	'BUS': "BUSWAY_FILTER",
+	'TRAMBUS': "TRAMBUS_FILTER",
 }
 
 from threading import Lock, RLock, Thread
@@ -81,7 +82,14 @@ def jore_shape_mapfit(
 	from multiprocessing.pool import ThreadPool
 	def do_fit(shape):
 		shape_coords = [(lat, lon) for [lon, lat] in shape["geometry"]["coordinates"]]
-		route_type = shape["properties"]["mode"]
+		route_id = shape["properties"]["route_id"]
+
+		# Trambus allows route fitting in both normal roads and tram ways. Used for X-lines.
+		if "X" in route_id:
+			route_type = "TRAMBUS"
+		else:
+			route_type = shape["properties"]["mode"]
+
 		type_filter = ROUTE_TYPE_FILTERS.get(route_type)
 		graph = graphs[type_filter]
 
