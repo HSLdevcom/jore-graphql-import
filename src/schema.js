@@ -269,6 +269,7 @@ const schema = {
   route: {
     filename: "linja3.dat",
     fields: [
+      // position 2
       {
         length: 6,
         name: "route_id",
@@ -276,18 +277,21 @@ const schema = {
         index: true,
         notNullable: true,
       },
+      // position 8
       {
         length: 8,
         name: "date_begin",
         type: "date",
         notNullable: true,
       },
+      // position 16
       {
         length: 8,
         name: "date_end",
         type: "date",
         notNullable: true,
       },
+      // position 24
       {
         length: 1,
         name: "direction",
@@ -296,17 +300,20 @@ const schema = {
         typeOptions: ["1", "2"],
         notNullable: true,
       },
+      // position 25
       {
         length: 60,
         name: "name_fi",
         type: "string",
         notNullable: true,
       },
+      // position 85
       {
         length: 60,
         name: "name_se",
         type: "string",
       },
+      // position 145
       {
         length: 2,
         name: "type",
@@ -314,17 +321,20 @@ const schema = {
         index: true,
         notNullable: true,
       },
+      // position 147
       {
         length: 20,
         name: "origin_fi",
         type: "string",
         notNullable: true,
       },
+      // position 167
       {
         length: 20,
         name: "origin_se",
         type: "string",
       },
+      // position 187
       {
         length: 7,
         name: "originstop_id",
@@ -332,23 +342,27 @@ const schema = {
         foreign: "stop.stop_id",
         notNullable: true,
       },
+      // position 194
       {
         length: 5,
         name: "route_length",
         type: "integer",
         notNullable: true,
       },
+      // position 199
       {
         length: 20,
         name: "destination_fi",
         type: "string",
         notNullable: true,
       },
+      // position 219
       {
         length: 20,
         name: "destination_se",
         type: "string",
       },
+      // position 239
       {
         length: 7,
         name: "destinationstop_id",
@@ -356,8 +370,11 @@ const schema = {
         foreign: "stop.stop_id",
         notNullable: true,
       },
+      // position 246
       { length: 20 },
+      // position 266
       { length: 20 },
+      // position 286
       {
         length: 6,
         name: "line_id",
@@ -365,7 +382,9 @@ const schema = {
         foreign: "line.line_id",
         notNullable: true,
       },
+      // position 292
       { length: 8 },
+      // position 300
       {
         length: 6,
         name: "route_id_parsed",
@@ -373,6 +392,33 @@ const schema = {
         index: true,
         notNullable: true,
       },
+      // position 306
+      {
+        length: 6,
+        name: "operator_id",
+        type: "string",
+
+      },
+      // position 312
+      {
+        length: 40,
+        name: "operator_name",
+        type: "string",
+      },
+      // position 352
+      {
+        length: 6,
+        name: "subcontractor_id",
+        type: "string",
+
+      },
+      // position 358
+      {
+        length: 40,
+        name: "subcontractor_name",
+        type: "string",
+      },
+      // position 398
     ],
     primary: ["route_id", "direction", "date_begin", "date_end"],
   },
