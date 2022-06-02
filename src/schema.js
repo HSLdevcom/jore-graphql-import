@@ -362,6 +362,7 @@ const schema = {
         length: 6,
         name: "line_id",
         type: "string",
+        foreign: "line.line_id",
         notNullable: true,
       },
       { length: 8 },
@@ -373,7 +374,7 @@ const schema = {
         notNullable: true,
       },
     ],
-    primary: ["route_id", "direction", "date_begin", "date_end", "route_id_parsed"],
+    primary: ["route_id", "direction", "date_begin", "date_end"],
   },
   route_segment: {
     filename: "reitti.dat",
