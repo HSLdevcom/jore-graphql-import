@@ -362,7 +362,6 @@ const schema = {
         length: 6,
         name: "line_id",
         type: "string",
-        foreign: "line.line_id",
         notNullable: true,
       },
       { length: 8 },
