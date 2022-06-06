@@ -1072,3 +1072,10 @@ create or replace function jore.get_stops_by_ids(stop_ids text[]) returns setof 
 $$
 select * from jore.stop stop where stop.stop_id = any(stop_ids)
 $$ language sql stable;
+
+create or replace function jore.route_is_uline(route jore.route) returns boolean as
+$$
+select exists(
+	select true from jore.route r where r = route and r."type" = '08'
+);
+$$ language sql stable;
