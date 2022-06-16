@@ -14,6 +14,8 @@ const cwd = process.cwd();
 const downloadDir = path.join(cwd, "downloads");
 const ONE_HOUR = 60 * 60 * 1000; /*/ ms */
 const PBF_UPDATE_INTERVAL = 24 * ONE_HOUR;
+const PBF_DOWNLOAD_MAX_RETRIES = 3;
+const PBF_MIN_SIZE = 30000000; // Minimum size of pbf file in bytes. Should usually be about 60-70 Mb
 
 export const runGeometryMatcher = async (schema = SCHEMA) => {
   return new Promise(async (resolve, reject) => {
@@ -37,9 +39,32 @@ export const runGeometryMatcher = async (schema = SCHEMA) => {
         `PBF data does not exist or is older than ${PBF_UPDATE_INTERVAL /
           3600000} hours. Downloading new PBF data...`,
       );
-      await download(PBF_DOWNLOAD_URL, filePath).catch((err) =>
-        console.log(`Downloading PBF data failed...${err}`),
-      );
+
+      let retries = 0
+      while (retries < PBF_DOWNLOAD_MAX_RETRIES) {
+        await download(PBF_DOWNLOAD_URL, filePath).catch((err) =>
+          console.log(`Downloading PBF data failed...${err}`),
+        );
+
+        if (fs.existsSync(filePath) && fs.statSync(filePath).size >= PBF_MIN_SIZE) {
+          console.log("PBF file successfully downloaded.")
+          break;
+        }
+        retries++;
+        try {
+          fs.unlinkSync(filePath);
+        } catch {
+          // Just removing bad file. Ignore possible errors...
+        }
+        console.log("Problem on PBF download! Retrying...")
+      }
+
+      // Last check for file
+      if (!fs.existsSync(filePath) || fs.statSync(filePath).size <= PBF_MIN_SIZE) {
+        reject(new Error("Couldn't download a valid PDF file..."));
+        return; // Break the execution, because the OSM data is invalid!
+      }
+
     } else {
       console.log("PBF file exists...");
     }
