@@ -3,6 +3,7 @@ FROM node:12-buster-slim
 ENV IMPORTER_DIR /opt/jore
 ENV MATCHER_DIR=${IMPORTER_DIR}/geometry-matcher
 ENV PG_CONNECTION_STRING="postgres://postgres:password@postgres:5432/joredata"
+ENV NODE_OPTIONS "--max-old-space-size=8196"
 
 RUN apt-get update && \
   apt-get -y install python git build-essential software-properties-common curl protobuf-compiler python-dev \
