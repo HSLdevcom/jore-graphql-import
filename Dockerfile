@@ -3,6 +3,7 @@ FROM nikolaik/python-nodejs:python2.7-nodejs12
 ENV IMPORTER_DIR /opt/jore
 ENV MATCHER_DIR=${IMPORTER_DIR}/geometry-matcher
 ENV PG_CONNECTION_STRING="postgres://postgres:mysecretpassword@jore-postgis:5432/postgres"
+ENV NODE_OPTIONS "--max-old-space-size=8196"
 
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
   apt-get update && \
