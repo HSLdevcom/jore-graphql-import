@@ -2,7 +2,8 @@ FROM node:12-buster-slim
 
 ENV IMPORTER_DIR /opt/jore
 ENV MATCHER_DIR=${IMPORTER_DIR}/geometry-matcher
-ENV PG_CONNECTION_STRING="postgres://postgres:password@postgres:5432/joredata"
+ENV PG_CONNECTION_STRING="postgres://postgres:password@postgres:5432/postgres"
+ENV NODE_ENV production
 ENV NODE_OPTIONS "--max-old-space-size=8196"
 
 RUN apt-get update && \
@@ -24,13 +25,12 @@ RUN cd $MATCHER_DIR && make -C pymapmatch
 WORKDIR ${IMPORTER_DIR}
 
 # Install app dependencies
-COPY package.json ${IMPORTER_DIR}
-COPY yarn.lock ${IMPORTER_DIR}
+COPY package.json yarn.lock ${IMPORTER_DIR}/
 
-ARG BUILD_ENV=test
+ARG BUILD_ENV=latest
 COPY .env.${BUILD_ENV} ${IMPORTER_DIR}/.env
 
-RUN yarn install
+RUN yarn install && yarn cache clean
 
 # Copy app source
 COPY . ${IMPORTER_DIR}
