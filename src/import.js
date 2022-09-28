@@ -120,12 +120,12 @@ export async function importFile(filePath) {
 
     await createForeignKeys(SCHEMA, schema, knex);
 
-    const createFunctionsSQL = await fs.readFile(
-      path.join(cwd, "src", "setup", "createFunctions.sql"),
+    const createIndexesSQL = await fs.readFile(
+      path.join(cwd, "src", "setup", "createIndexes.sql"),
       "utf8",
     );
 
-    await knex.raw(createFunctionsSQL);
+    await knex.raw(createIndexesSQL);
 
     // Disallow dump and upload by unsetting AZURE_STORAGE_ACCOUNT
     if (AZURE_STORAGE_ACCOUNT) {

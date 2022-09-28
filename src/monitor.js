@@ -1,6 +1,6 @@
 import { SLACK_WEBHOOK_URL, ENVIRONMENT, SLACK_MONITOR_MENTION } from "./constants";
 import fetch from "node-fetch";
-import _ from "lodash";
+
 export const messageTypes = {
   ERROR: "error",
   INFO: "info",
@@ -20,6 +20,11 @@ export async function onMonitorEvent(
   message = "Something happened.",
   type = messageTypes.ERROR,
 ) {
+  // Do not send monitor messages if no url specified.
+  if (!SLACK_WEBHOOK_URL) {
+    return () => {};
+  }
+
   if (!message) {
     return false;
   }
