@@ -152,6 +152,13 @@ UNION ALL
 )
 $$ language sql stable;
 
+CREATE OR REPLACE FUNCTION jore.get_routes_by_date(date date default now(),
+                                                  include_history_days integer default 0) RETURNS setof jore.route AS
+$$
+select r from jore.route r where date_begin < date and (date - make_interval(days => include_history_days)) < date_end;
+$$ language sql stable;
+
+
 CREATE OR REPLACE FUNCTION jore.get_route_angles_at_point(date date,
                                                           lat double precision,
                                                           lon double precision) RETURNS INTEGER[] AS
@@ -1071,4 +1078,11 @@ $$ language sql stable;
 create or replace function jore.get_stops_by_ids(stop_ids text[]) returns setof jore.stop as
 $$
 select * from jore.stop stop where stop.stop_id = any(stop_ids)
+$$ language sql stable;
+
+create or replace function jore.route_is_uline(route jore.route) returns boolean as
+$$
+select exists(
+	select true from jore.route r where r = route and r."type" = '08'
+);
 $$ language sql stable;
