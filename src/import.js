@@ -18,6 +18,7 @@ import { useIntermediateSchema } from "./utils/useIntermediateSchema";
 import { INTERMEDIATE_SCHEMA, SCHEMA, AZURE_STORAGE_ACCOUNT } from "./constants";
 import { createDbDump } from "./utils/createDbDump";
 import { uploadDbDump } from "./utils/uploadDbDump";
+import { importDbDump } from "./utils/importDbDump";
 import { reportInfo, reportError } from "./monitor";
 
 const { knex } = getKnex();
@@ -152,6 +153,9 @@ export async function importFile(filePath) {
     console.log(`${fileName} import failed. Duration: ${execDuration}s`);
     console.error(err);
     await reportError(`Import failed. Error ${err}`);
+
+    console.log("Import failed. Restoring DB with latest dump.");
+    await importDbDump();
 
     await importCompleted(fileName, false, execDuration);
   }

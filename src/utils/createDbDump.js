@@ -10,7 +10,7 @@ const MIN_FILE_COUNT = 3;
 const cwd = process.cwd();
 const dumpsDir = path.join(cwd, "dumps");
 
-const deleteFiles = ({ filesDir, minFileCount }) => {
+export const deleteFiles = ({ filesDir, minFileCount }) => {
   fs.readdir(filesDir, (err, files) => {
     if (files.length < minFileCount) return;
     files.forEach((file) => {
