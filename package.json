@@ -42,7 +42,7 @@
     "knex-postgis": "^0.14.3",
     "lodash": "^4.17.11",
     "lru-cache": "^5.1.1",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^3.2.10",
     "p-map": "^2.1.0",
     "p-queue": "^6.0.2",
     "pg": "^8.7.3",
