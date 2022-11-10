@@ -136,7 +136,7 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
     res.redirect(PATH_PREFIX);
   });
 
-  app.post("/create-functions", (req, res) => {
+  app.post("/create-functions", async (req, res) => {
     const { knex } = getKnex();
 
     const createFunctionsSQL = fs.readFileSync(
@@ -144,7 +144,7 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
       "utf8",
     );
 
-    knex.raw(createFunctionsSQL);
+    await knex.raw(createFunctionsSQL);
     res.redirect(PATH_PREFIX);
   });
 

@@ -120,6 +120,15 @@ export async function importFile(filePath) {
 
     await createForeignKeys(SCHEMA, schema, knex);
 
+    // Create functions again. They already exist, but re-run renames the temp schema.
+    const createFunctionsSQL = await fs.readFile(
+      path.join(cwd, "src", "setup", "createFunctions.sql"),
+      "utf8",
+    );
+
+    await knex.raw(createFunctionsSQL);
+
+    await knex.raw(createIndexesSQL);
     const createIndexesSQL = await fs.readFile(
       path.join(cwd, "src", "setup", "createIndexes.sql"),
       "utf8",
