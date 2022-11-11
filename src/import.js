@@ -128,7 +128,6 @@ export async function importFile(filePath) {
 
     await knex.raw(createFunctionsSQL);
 
-    await knex.raw(createIndexesSQL);
     const createIndexesSQL = await fs.readFile(
       path.join(cwd, "src", "setup", "createIndexes.sql"),
       "utf8",
