@@ -23,6 +23,11 @@ const uploadPath = path.join(cwd, "uploads");
 export const server = (isImporting, onBeforeImport, onAfterImport) => {
   const app = express();
 
+  // Define health endpoint here so it won't be under basic auth
+  app.get("/health", async (req, res) => {
+    res.send("OK");
+  });
+
   let manualDumpInProgress = false;
 
   app.use(
