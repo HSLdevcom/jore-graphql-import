@@ -31,7 +31,7 @@
     "dotenv": "^8.0.0",
     "esm": "^3.2.25",
     "etl": "^0.6.3",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "express-basic-auth": "^1.2.0",
     "express-fileupload": "^1.1.5",
     "express-react-views": "^0.11.0",
