@@ -1,6 +1,3 @@
-create index on jore.departure (route_id, direction) where stop_role = 1;
-create index on jore.departure (route_id, direction, stop_id);
-
 CREATE OR REPLACE FUNCTION array_sort(ANYARRAY)
     RETURNS ANYARRAY
     LANGUAGE SQL

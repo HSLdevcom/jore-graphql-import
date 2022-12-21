@@ -24,6 +24,25 @@ const createImportQuery = (insertOptions) =>
     }
   });
 
+const hasProhibitedNulls = (parsedLine, lineSchema) => {
+  let notAllowedNulls = false;
+  const notNullableKeys = [];
+  lineSchema.forEach((schema) => {
+    if (schema.notNullable) {
+      notNullableKeys.push(schema.name);
+    }
+  });
+
+  notNullableKeys.forEach((key) => {
+    const value = parsedLine[key];
+    if (value === null) {
+      notAllowedNulls = true;
+    }
+  });
+
+  return notAllowedNulls;
+};
+
 const createLineParser = (tableName) => {
   const { fields, lineSchema = fields } = schema[tableName] || {};
   let linesReceived = false;
@@ -46,8 +65,10 @@ const createLineParser = (tableName) => {
       try {
         // Parse the line and return it into the stream
         const parsedLine = parseLine(line, lineSchema);
-        // Write the line to the relevant import stream.
-        return cb(null, parsedLine);
+        const notAllowedNulls = hasProhibitedNulls(parsedLine, lineSchema);
+        if (!notAllowedNulls) {
+          return cb(null, parsedLine);
+        }
       } catch (err) {
         return cb(err);
       }

@@ -23,6 +23,11 @@ const uploadPath = path.join(cwd, "uploads");
 export const server = (isImporting, onBeforeImport, onAfterImport) => {
   const app = express();
 
+  // Define health endpoint here so it won't be under basic auth
+  app.get("/health", async (req, res) => {
+    res.send("OK");
+  });
+
   let manualDumpInProgress = false;
 
   app.use(
@@ -136,7 +141,7 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
     res.redirect(PATH_PREFIX);
   });
 
-  app.post("/create-functions", (req, res) => {
+  app.post("/create-functions", async (req, res) => {
     const { knex } = getKnex();
 
     const createFunctionsSQL = fs.readFileSync(
@@ -144,7 +149,7 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
       "utf8",
     );
 
-    knex.raw(createFunctionsSQL);
+    await knex.raw(createFunctionsSQL);
     res.redirect(PATH_PREFIX);
   });
 
