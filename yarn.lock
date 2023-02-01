@@ -1308,10 +1308,10 @@ basic-auth@^2.0.1:
   dependencies:
     safe-buffer "5.1.2"
 
-basic-ftp@^3.6.0:
-  version "3.8.7"
-  resolved "https://registry.yarnpkg.com/basic-ftp/-/basic-ftp-3.8.7.tgz#5a2dcfafcd269b1dccfc1b494ba03cca33bfaa3a"
-  integrity sha512-FAV3rRx5pD978tLe5roq+kERom2iVaGJesDLcFSaSr3Z3ELwtdXdFWEYIKiTIbX72vDu/wOWi0kz/LJQNueZHw==
+basic-ftp@^5.0.2:
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/basic-ftp/-/basic-ftp-5.0.2.tgz#3c732e26cca5cf569bd9c67d4d8bc441a6f38699"
+  integrity sha512-NgkBwqp7rkhIUBaxLwL601lvUuBUvShJocrLYdiyTsH1WeP/wofMdooZ4p6hz+4hqiU59PBOj0EkaqELwFJLuQ==
 
 big-integer@^1.6.17:
   version "1.6.51"
