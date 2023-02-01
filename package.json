@@ -41,7 +41,7 @@
     "lodash": "^4.17.11",
     "lru-cache": "^5.1.1",
     "node-fetch": "^2.6.0",
-    "p-map": "^2.1.0",
+    "p-map": "^5.5.0",
     "p-queue": "^6.0.2",
     "pg": "^8.7.3",
     "pg-connection-string": "^2.1.0",
