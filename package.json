@@ -4,7 +4,6 @@
   "description": "Data importer for jore-graphql",
   "scripts": {
     "start": "node -r esm -r dotenv/config src/index.js",
-    "start:production": "forever start -c \"node -r esm -r dotenv/config\" src/index.js && forever -f logs 0",
     "lint": "eslint src --fix",
     "prettier": "prettier */**.{js,json} --write",
     "ftpsource": "ftp-srv ftp://127.0.0.1:2121 --root ./source",
@@ -35,7 +34,6 @@
     "express-basic-auth": "^1.2.0",
     "express-fileupload": "^1.1.5",
     "express-react-views": "^0.11.0",
-    "forever": "^4.0.3",
     "fs-extra": "^8.0.1",
     "iconv-lite": "^0.4.13",
     "knex": "^2.2.0",

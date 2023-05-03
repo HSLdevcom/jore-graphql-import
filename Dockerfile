@@ -34,4 +34,4 @@ RUN yarn install && yarn cache clean
 
 # Copy app source
 COPY . ${IMPORTER_DIR}
-CMD yarn run start:production
+CMD yarn run start

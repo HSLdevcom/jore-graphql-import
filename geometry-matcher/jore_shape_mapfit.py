@@ -84,11 +84,10 @@ def jore_shape_mapfit(
 		shape_coords = [(lat, lon) for [lon, lat] in shape["geometry"]["coordinates"]]
 		route_id = shape["properties"]["route_id"]
 
+		route_type = shape["properties"]["mode"]
 		# Trambus allows route fitting in both normal roads and tram ways. Used for X-lines.
-		if "X" in route_id:
+		if "X" in route_id and route_type in ("BUS", "TRAM"):
 			route_type = "TRAMBUS"
-		else:
-			route_type = shape["properties"]["mode"]
 
 		type_filter = ROUTE_TYPE_FILTERS.get(route_type)
 		graph = graphs[type_filter]
