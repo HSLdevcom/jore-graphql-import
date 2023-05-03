@@ -78,14 +78,16 @@ export const runGeometryMatcher = async (schema = SCHEMA) => {
       },
     );
 
+    // Be aware that stderr and stdout of the subprocess have some latency!
+    // The exact error might not be there where the logs have been stopped, but a bit further.
     matcherProcess.stderr.on("data", (data) => {
       lastError = data.toString("utf8");
       console.log("Matcher error:", lastError);
     });
 
-    /*matcherProcess.stdout.on("data", (data) => {
+    matcherProcess.stdout.on("data", (data) => {
       console.log("Matcher output:", data.toString("utf8"));
-    });*/
+    });
 
     matcherProcess.on("close", (code) => {
       const [execDuration] = process.hrtime(startTime);
