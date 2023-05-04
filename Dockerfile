@@ -1,4 +1,4 @@
-FROM node:12-buster-slim
+FROM node:18-buster-slim
 
 ENV IMPORTER_DIR /opt/jore
 ENV MATCHER_DIR=${IMPORTER_DIR}/geometry-matcher
