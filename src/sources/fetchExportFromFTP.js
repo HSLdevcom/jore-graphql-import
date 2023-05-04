@@ -1,4 +1,4 @@
-import { Client } from "basic-ftp/dist/index";
+import { Client } from "basic-ftp";
 import { orderBy, get } from "lodash";
 import path from "path";
 import fs from "fs-extra";
@@ -69,7 +69,7 @@ export async function fetchExportFromFTP() {
     if (!fileExists) {
       console.log(`Downloading ${newestExportName}`);
       const writeStream = fs.createWriteStream(downloadPath);
-      await client.download(writeStream, newestExportName);
+      await client.downloadTo(writeStream, newestExportName);
       client.close();
     } else {
       console.log(`Export ${newestExportName} already downloaded.`);
