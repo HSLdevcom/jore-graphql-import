@@ -47,7 +47,7 @@ const createLineParser = (tableName) => {
   const { fields, lineSchema = fields } = schema[tableName] || {};
   let linesReceived = false;
 
-  return throughConcurrent.obj({ maxConcurrency: 50 }, (line, enc, cb) => {
+  return throughConcurrent.obj({ maxConcurrency: 100 }, (line, enc, cb) => {
     if (!line) {
       // line === null marks the end of the file. End the import stream
       // to flush any items left in the collect buffer.
