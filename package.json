@@ -45,7 +45,7 @@
     "pg-connection-string": "^2.1.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "split2": "^3.1.1",
+    "split2": "^4.2.0",
     "through2": "^3.0.1",
     "through2-concurrent": "^2.0.0",
     "unzipper": "^0.10.0"
