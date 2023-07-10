@@ -23,8 +23,8 @@
   },
   "homepage": "https://github.com/HSLdevcom/jore-graphql-import",
   "dependencies": {
-    "@azure/storage-blob": "12.0.0-preview.2",
-    "basic-ftp": "^3.6.0",
+    "@azure/storage-blob": "12.14.0",
+    "basic-ftp": "^5.0.3",
     "cron": "^1.7.1",
     "date-fns": "^1.30.1",
     "dotenv": "^8.0.0",
@@ -39,8 +39,6 @@
     "knex": "^2.2.0",
     "knex-postgis": "^0.14.3",
     "lodash": "^4.17.11",
-    "lru-cache": "^5.1.1",
-    "node-fetch": "^2.6.0",
     "p-map": "^2.1.0",
     "p-queue": "^6.0.2",
     "pg": "^8.7.3",
@@ -50,17 +48,15 @@
     "split2": "^3.1.1",
     "through2": "^3.0.1",
     "through2-concurrent": "^2.0.0",
-    "unique-stream": "^2.3.1",
     "unzipper": "^0.10.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^8.0.0",
-    "babel-eslint": "^10.0.1",
-    "eslint": "^4.8.0",
-    "eslint-config-airbnb-base": "^12.0.2",
-    "eslint-config-prettier": "^4.3.0",
+    "eslint": "^8.39.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.17.3",
-    "eslint-plugin-prettier": "^3.1.0",
-    "prettier": "^1.18.2"
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.8.8"
   }
 }

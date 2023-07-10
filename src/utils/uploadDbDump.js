@@ -3,7 +3,7 @@ import {
   AZURE_STORAGE_KEY,
   AZURE_UPLOAD_CONTAINER,
 } from "../constants";
-import { SharedKeyCredential, BlobServiceClient } from "@azure/storage-blob";
+import { StorageSharedKeyCredential, BlobServiceClient } from "@azure/storage-blob";
 import { reportInfo, reportError } from "../monitor";
 import path from "path";
 import fs from "fs-extra";
@@ -32,7 +32,7 @@ export const uploadDbDump = async (filePath) => {
 
   const getFileStream = () => fs.createReadStream(filePath);
 
-  const sharedKeyCredential = new SharedKeyCredential(account, accountKey);
+  const sharedKeyCredential = new StorageSharedKeyCredential(account, accountKey);
   const blobServiceClient = new BlobServiceClient(
     `https://${account}.blob.core.windows.net`,
     sharedKeyCredential,
