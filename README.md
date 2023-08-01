@@ -7,13 +7,13 @@ Read more about the [JORE import process](https://github.com/HSLdevcom/hsl-map-d
 
 ### Prerequisites
 
-Start a generic postgis docker (or use [hsl-jore-postgis](https://github.com/HSLdevcom/hsl-jore-postgis)) container using:
+Start a postgres server, e.g. with docker:
 ```
-docker run --name jore-postgis -e POSTGRES_PASSWORD=mysecretpassword -d mdillon/postgis
+docker run --name jore-postgis -e POSTGRES_PASSWORD=mysecretpassword -d postgis/postgis
 ```
 
-Add `-v ./postgres-data:/var/lib/postgresql/data` to the command above to make sure that the database is persisted.
-It is not needed for production as docker-compose handles volumes there.
+Add `-v ./postgres-data:/var/lib/postgresql/data` to the command above to make sure that the database is persisted if wanted.
+
 
 ### Install
 
@@ -24,7 +24,7 @@ docker build -t hsldevcom/jore-graphql-import .
 
 ### Run
 
-Start the import process and a simple web UI running in http://localhost/jore-import/
+Start the import process and a simple web UI running in http://localhost:8000/
 
 If in Swarm mode, Docker environment variables are by default read from [Docker secrets](https://docs.docker.com/engine/swarm/secrets/). If no Docker secret is found, the value is read from .env file defaults instead. The default values can be overridden by passing them as command line arguments like in example below:
 ```

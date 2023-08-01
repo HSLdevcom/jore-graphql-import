@@ -23,9 +23,15 @@ export async function initDb() {
       "utf8",
     );
 
+    const createJoreStaticTables = await fs.readFile(
+      path.join(__dirname, "createJoreStaticTables.sql"),
+      "utf8",
+    );
+
     await knex.raw(`
       ${useIntermediateSchema(createSchemaSQL)}
       ${createImportStatus}
+      ${createJoreStaticTables}
     `);
 
     const createdTables = await createTables(INTERMEDIATE_SCHEMA, tables, knex);
