@@ -14,6 +14,7 @@ class ShapeError(Exception): pass
 
 ROUTE_TYPE_FILTERS = {
 	'TRAM': "TRAM_FILTER",
+	'L_RAIL': "TRAM_FILTER",
 	'BUS': "BUSWAY_FILTER",
 	'TRAMBUS': "TRAMBUS_FILTER",
 }
