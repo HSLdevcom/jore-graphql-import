@@ -9,3 +9,6 @@ $$
         WHEN duplicate_object THEN NULL;
     END
 $$;
+
+CREATE SCHEMA IF NOT EXISTS jorestatic;
+GRANT ALL ON SCHEMA jorestatic TO CURRENT_USER;

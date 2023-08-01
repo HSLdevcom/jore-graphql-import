@@ -1,6 +1,6 @@
 CREATE OR REPLACE FUNCTION array_sort(ANYARRAY)
     RETURNS ANYARRAY
-    LANGUAGE SQL
+    LANGUAGE SQL IMMUTABLE
 AS
 $$
 SELECT ARRAY(SELECT unnest($1) ORDER BY 1)
@@ -1084,3 +1084,49 @@ select exists(
 	select true from jore.route r where r = route and r."type" = '08'
 );
 $$ language sql stable;
+
+
+-- jorestatic functions
+
+-- New procedu
+CREATE OR REPLACE PROCEDURE jorestatic.calculate_intermediate_points(date date) AS
+$$
+DELETE FROM jorestatic.intermediate_points;
+
+INSERT INTO jorestatic.intermediate_points(
+    SELECT
+        *,
+        false AS nearbuses,
+        date  AS tag
+    FROM jore.route_section_intermediates(date, false, 1000)
+) UNION ALL (
+    SELECT
+        *,
+        true AS nearbuses,
+        date AS tag
+    FROM jore.route_section_intermediates(date, true, 200)
+);
+$$ LANGUAGE sql;
+
+
+-- Old function doing the same thing as the previous procedure.
+-- Remove this after routemap-server is migrated to use procedure
+CREATE OR REPLACE FUNCTION jorestatic.create_intermediate_points(date date) RETURNS VOID AS
+$$
+DELETE FROM jorestatic.intermediate_points;
+
+INSERT INTO jorestatic.intermediate_points(
+    SELECT
+        *,
+        false AS nearbuses,
+        date  AS tag
+    FROM jore.route_section_intermediates(date, false, 1000)
+) UNION ALL (
+    SELECT
+        *,
+        true AS nearbuses,
+        date AS tag
+    FROM jore.route_section_intermediates(date, true, 200)
+);
+$$ LANGUAGE sql VOLATILE;
+
