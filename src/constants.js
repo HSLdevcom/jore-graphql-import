@@ -54,3 +54,4 @@ export const AZURE_STORAGE_KEY = secretsEnv.AZURE_STORAGE_KEY || "";
 export const SLACK_WEBHOOK_URL = secretsEnv.SLACK_WEBHOOK_URL || "";
 export const ENVIRONMENT = secretsEnv.ENVIRONMENT || "unknown";
 export const SLACK_MONITOR_MENTION = secretsEnv.SLACK_MONITOR_MENTION || "";
+export const MAP_MATCHER_URL = secretsEnv.MAP_MATCHER_URL || "http://localhost:3000/";

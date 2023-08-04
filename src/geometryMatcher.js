@@ -1,104 +1,93 @@
-import childProcess from "child_process";
-import {
-  PG_CONNECTION_STRING,
-  PYTHON_CMD,
-  PBF_DOWNLOAD_URL,
-  PBF_FILENAME,
-  SCHEMA,
-} from "./constants";
-import path from "path";
-import fs from "fs-extra";
-import { download } from "./utils/download";
+import { SCHEMA, MAP_MATCHER_URL } from "./constants";
+import { getKnex } from "./knex";
 
-const cwd = process.cwd();
-const downloadDir = path.join(cwd, "downloads");
-const ONE_HOUR = 60 * 60 * 1000; /*/ ms */
-const PBF_UPDATE_INTERVAL = 24 * ONE_HOUR;
-const PBF_DOWNLOAD_MAX_RETRIES = 3;
-const PBF_MIN_SIZE = 30000000; // Minimum size of pbf file in bytes. Should usually be about 60-70 Mb
+const { knex } = getKnex();
+
+const ROUTE_TYPE_PROFILES = {
+  TRAM: "tram",
+  L_RAIL: "tram",
+  BUS: "bus",
+  TRAMBUS: "trambus",
+};
 
 export const runGeometryMatcher = async (schema = SCHEMA) => {
-  return new Promise(async (resolve, reject) => {
+  const startTime = process.hrtime();
+
+  try {
     console.log("Starting geometry match process.");
-    const startTime = process.hrtime();
-    let lastError = null;
 
-    await fs.ensureDir(downloadDir);
-    const filePath = path.join(downloadDir, PBF_FILENAME);
-    const fileExists = await fs.pathExists(filePath);
+    const serviceOk = (await fetch(MAP_MATCHER_URL)).status === 200;
 
-    const modifiedLessThanDurationAgo = (durationMs) => {
-      const lastModified = fs.statSync(filePath, (err) => {
-        if (err) throw err;
-      }).mtimeMs;
-      return new Date().getTime() - durationMs > lastModified;
-    };
-
-    if (!fileExists || modifiedLessThanDurationAgo(PBF_UPDATE_INTERVAL)) {
-      console.log(
-        `PBF data does not exist or is older than ${PBF_UPDATE_INTERVAL /
-          3600000} hours. Downloading new PBF data...`,
-      );
-
-      let retries = 0
-      while (retries < PBF_DOWNLOAD_MAX_RETRIES) {
-        await download(PBF_DOWNLOAD_URL, filePath).catch((err) =>
-          console.log(`Downloading PBF data failed...${err}`),
-        );
-
-        if (fs.existsSync(filePath) && fs.statSync(filePath).size >= PBF_MIN_SIZE) {
-          console.log("PBF file successfully downloaded.")
-          break;
-        }
-        retries++;
-        try {
-          fs.unlinkSync(filePath);
-        } catch {
-          // Just removing bad file. Ignore possible errors...
-        }
-        console.log("Problem on PBF download! Retrying...")
-      }
-
-      // Last check for file
-      if (!fs.existsSync(filePath) || fs.statSync(filePath).size <= PBF_MIN_SIZE) {
-        reject(new Error("Couldn't download a valid PDF file..."));
-        return; // Break the execution, because the OSM data is invalid!
-      }
-
-    } else {
-      console.log("PBF file exists...");
+    if (!serviceOk) {
+      console.log("Map-matcher service is not ready. Exiting...");
+      return;
     }
 
-    console.log(`Spawning matcher process with file ${filePath}`);
-    const matcherProcess = childProcess.spawn(
-      PYTHON_CMD,
-      ["jore_shape_mapfit.py", filePath, "+init=epsg:3067", PG_CONNECTION_STRING, schema],
-      {
-        cwd: path.join(__dirname, "../", "geometry-matcher"),
-      },
-    );
+    const dataResult = await knex.raw("SELECT ??.point_network_as_geojson()", [schema]);
 
-    // Be aware that stderr and stdout of the subprocess have some latency!
-    // The exact error might not be there where the logs have been stopped, but a bit further.
-    matcherProcess.stderr.on("data", (data) => {
-      lastError = data.toString("utf8");
-      console.log("Matcher error:", lastError);
-    });
+    const shapes = dataResult.rows[0].point_network_as_geojson.features;
 
-    matcherProcess.stdout.on("data", (data) => {
-      console.log("Matcher output:", data.toString("utf8"));
-    });
+    await knex.raw("DELETE FROM ??.geometry", [schema]);
 
-    matcherProcess.on("close", (code) => {
-      const [execDuration] = process.hrtime(startTime);
+    await shapes.forEach(async (shape) => {
+      const routeId = shape.properties.route_id;
+      let routeType = shape.properties.mode;
+      // Trambus allows route fitting in both normal roads and tram ways. Used for X-lines.
+      if (routeId.includes("X") && ["BUS", "TRAM"].includes(routeType)) {
+        routeType = "TRAMBUS";
+      }
 
-      if (code !== 0) {
-        console.log(`Geometry matcher failed after running for ${execDuration} seconds.`);
-        reject(lastError);
-      } else {
-        console.log(`Geometry matcher finished successfully in ${execDuration} seconds.`);
-        resolve();
+      const profile = ROUTE_TYPE_PROFILES[routeType];
+
+      let geometry;
+      let confidence;
+
+      if (profile) {
+        const fittedDataResult = await fetch(`${MAP_MATCHER_URL}match/${profile}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ geometry: shape.geometry }),
+        });
+        if (fittedDataResult.ok) {
+          const result = await fittedDataResult.json();
+          geometry = result.geometry;
+          confidence = result.confidence;
+        } else {
+          // Use original geometry if there were errors.
+          console.error(
+            `Map matching was not successful. Got status ${
+              fittedDataResult.status
+            }. Body: ${JSON.stringify(await fittedDataResult.json())}`,
+          );
+          geometry = shape.geometry;
+          confidence = 0;
+        }
+
+        await knex
+          .withSchema(schema)
+          .insert({
+            route_id: shape.properties.route_id,
+            direction: shape.properties.direction,
+            date_begin: shape.properties.date_begin,
+            date_end: shape.properties.date_end,
+            mode: knex.raw("?::??.mode", [shape.properties.mode, schema]),
+            geom: knex.raw("ST_GeomFromGeoJSON(?)", [JSON.stringify(geometry)]),
+            outliers: 0, // TODO: remove
+            min_likelihood: 0, // TODO: remove
+            confidence,
+          })
+          .into("geometry");
       }
     });
-  });
+
+    const [execDuration] = process.hrtime(startTime);
+    console.log(`Geometry matcher finished successfully in ${execDuration} seconds.`);
+  } catch (e) {
+    const [execDuration] = process.hrtime(startTime);
+
+    console.error(`Geometry matcher failed after running for ${execDuration} seconds.`);
+    console.error(e);
+  }
 };
