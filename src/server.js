@@ -74,8 +74,8 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
     res.redirect(PATH_PREFIX);
   });
 
-  app.post("/run-geometry-matcher", (req, res) => {
-    runGeometryMatcher().catch((err) => console.error(err));
+  app.post("/run-geometry-matcher", async (req, res) => {
+    await runGeometryMatcher().catch((err) => console.error(err));
     res.redirect(PATH_PREFIX);
   });
 

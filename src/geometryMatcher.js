@@ -16,6 +16,7 @@ export const runGeometryMatcher = async (schema = SCHEMA) => {
   try {
     console.log("Starting geometry match process.");
 
+    // test that map matcher is up and running
     const serviceOk = (await fetch(MAP_MATCHER_URL)).status === 200;
 
     if (!serviceOk) {
@@ -23,13 +24,17 @@ export const runGeometryMatcher = async (schema = SCHEMA) => {
       return;
     }
 
+    // get original shapes
     const dataResult = await knex.raw("SELECT ??.point_network_as_geojson()", [schema]);
-
     const shapes = dataResult.rows[0].point_network_as_geojson.features;
 
+    // clear geometry data
     await knex.raw("DELETE FROM ??.geometry", [schema]);
 
-    await shapes.forEach(async (shape) => {
+    // Count routes that couldn't be fitted
+    let invalidCounter = 0;
+
+    for (const shape of shapes) {
       const routeId = shape.properties.route_id;
       let routeType = shape.properties.mode;
       // Trambus allows route fitting in both normal roads and tram ways. Used for X-lines.
@@ -43,6 +48,7 @@ export const runGeometryMatcher = async (schema = SCHEMA) => {
       let confidence;
 
       if (profile) {
+        // Request fitted geometry from map matcher for the profile
         const fittedDataResult = await fetch(`${MAP_MATCHER_URL}match/${profile}`, {
           method: "POST",
           headers: {
@@ -50,21 +56,26 @@ export const runGeometryMatcher = async (schema = SCHEMA) => {
           },
           body: JSON.stringify({ geometry: shape.geometry }),
         });
+
         if (fittedDataResult.ok) {
           const result = await fittedDataResult.json();
           geometry = result.geometry;
           confidence = result.confidence;
         } else {
           // Use original geometry if there were errors.
-          console.error(
-            `Map matching was not successful. Got status ${
+          invalidCounter++;
+          console.warn(
+            `Map matching was not successful for ${shape.properties.route_id}_${
+              shape.properties.direction
+            }. Got status ${
               fittedDataResult.status
-            }. Body: ${JSON.stringify(await fittedDataResult.json())}`,
+            }. Msg: ${await fittedDataResult.text()}`,
           );
           geometry = shape.geometry;
           confidence = 0;
         }
 
+        // save the result
         await knex
           .withSchema(schema)
           .insert({
@@ -80,10 +91,12 @@ export const runGeometryMatcher = async (schema = SCHEMA) => {
           })
           .into("geometry");
       }
-    });
+    }
 
     const [execDuration] = process.hrtime(startTime);
-    console.log(`Geometry matcher finished successfully in ${execDuration} seconds.`);
+    console.log(
+      `Geometry matcher finished successfully in ${execDuration} seconds. ${invalidCounter} routes could not be fitted.`,
+    );
   } catch (e) {
     const [execDuration] = process.hrtime(startTime);
 
