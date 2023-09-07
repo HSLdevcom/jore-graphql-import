@@ -3,7 +3,7 @@ export function createPrimaryKey(item, keys = []) {
   let key = "";
 
   for (let i = 0; i < keysLength; i++) {
-    key += item[keys[i]];
+    key += `${item[keys[i]]}_`;
   }
 
   return key;
