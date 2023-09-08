@@ -1,16 +1,18 @@
+import path from "path";
+
+import fs from "fs-extra";
+import iconv from "iconv-lite";
+import split from "split2";
+import Queue from "p-queue";
+import { Open } from "unzipper";
+
 import { getSelectedTables } from "./selectedTables";
 import { startImport, importCompleted } from "./importStatus";
 import { createImportStreamForTable } from "./database";
 import { processLine } from "./preprocess";
-import path from "path";
-import fs from "fs-extra";
-import { Open } from "unzipper";
 import schema from "./schema";
-import iconv from "iconv-lite";
-import split from "split2";
 import { initDb } from "./setup/initDb";
 import { getKnex } from "./knex";
-import Queue from "p-queue";
 import { runGeometryMatcher } from "./geometryMatcher";
 import { createForeignKeys } from "./setup/createDb";
 import { clearDb } from "./setup/clearDb";
@@ -24,10 +26,6 @@ import { reportInfo, reportError } from "./monitor";
 const { knex } = getKnex();
 const cwd = process.cwd();
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 const getTableNameFromFileName = (filename) =>
   Object.entries(schema).find(
     ([, { filename: schemaFilename }]) => filename === schemaFilename,
@@ -40,7 +38,7 @@ export async function importFile(filePath) {
 
   try {
     await startImport(fileName);
-    const queue = new Queue({ concurrency: 50 });
+    const queue = new Queue({ concurrency: 50 }); // Promise queue for postgres insertions
 
     console.log("Unpacking and processing the archive...");
     const directory = await Open.file(filePath);
@@ -71,7 +69,15 @@ export async function importFile(filePath) {
       (file) =>
         new Promise(async (resolve, reject) => {
           const tableName = getTableNameFromFileName(file.path);
-          const importStream = await createImportStreamForTable(tableName, queue);
+          const resolveFileImport = () => {
+            resolve(tableName);
+          };
+
+          const importStream = await createImportStreamForTable(
+            tableName,
+            resolveFileImport,
+            queue,
+          );
 
           file
             .stream()
@@ -80,9 +86,6 @@ export async function importFile(filePath) {
             .pipe(split())
             .pipe(processLine(tableName))
             .pipe(importStream)
-            .on("finish", () => {
-              resolve(tableName);
-            })
             .on("error", reject);
         }),
     );
@@ -90,9 +93,9 @@ export async function importFile(filePath) {
     console.log("Importing the data...");
     await Promise.all(filePromises);
 
-    console.log("Finishing up the DB queries...");
-    await delay(1000);
-    await queue.onEmpty();
+    await queue.onEmpty(); // Make sure there are no pending insertions.
+
+    console.log("DB insert queries finished.");
 
     if (selectedTables.includes("geometry")) {
       console.log("Creating the geometry table...");
