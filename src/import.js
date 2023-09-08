@@ -3,25 +3,25 @@ import path from "path";
 import fs from "fs-extra";
 import iconv from "iconv-lite";
 import split from "split2";
-import Queue from "p-queue";
+import PQueue from "p-queue";
 import { Open } from "unzipper";
 
-import { getSelectedTables } from "./selectedTables";
-import { startImport, importCompleted } from "./importStatus";
-import { createImportStreamForTable } from "./database";
-import { processLine } from "./preprocess";
-import schema from "./schema";
-import { initDb } from "./setup/initDb";
-import { getKnex } from "./knex";
-import { runGeometryMatcher } from "./geometryMatcher";
-import { createForeignKeys } from "./setup/createDb";
-import { clearDb } from "./setup/clearDb";
-import { useIntermediateSchema } from "./utils/useIntermediateSchema";
-import { INTERMEDIATE_SCHEMA, SCHEMA, AZURE_STORAGE_ACCOUNT } from "./constants";
-import { createDbDump } from "./utils/createDbDump";
-import { uploadDbDump } from "./utils/uploadDbDump";
-import { importDbDump } from "./utils/importDbDump";
-import { reportInfo, reportError } from "./monitor";
+import { getSelectedTables } from "./selectedTables.js";
+import { startImport, importCompleted } from "./importStatus.js";
+import { createImportStreamForTable } from "./database.js";
+import { processLine } from "./preprocess.js";
+import schema from "./schema.js";
+import { initDb } from "./setup/initDb.js";
+import { getKnex } from "./knex.js";
+import { runGeometryMatcher } from "./geometryMatcher.js";
+import { createForeignKeys } from "./setup/createDb.js";
+import { clearDb } from "./setup/clearDb.js";
+import { useIntermediateSchema } from "./utils/useIntermediateSchema.js";
+import { INTERMEDIATE_SCHEMA, SCHEMA, AZURE_STORAGE_ACCOUNT } from "./constants.js";
+import { createDbDump } from "./utils/createDbDump.js";
+import { uploadDbDump } from "./utils/uploadDbDump.js";
+import { importDbDump } from "./utils/importDbDump.js";
+import { reportInfo, reportError } from "./monitor.js";
 
 const { knex } = getKnex();
 const cwd = process.cwd();
@@ -38,7 +38,7 @@ export async function importFile(filePath) {
 
   try {
     await startImport(fileName);
-    const queue = new Queue({ concurrency: 50 }); // Promise queue for postgres insertions
+    const queue = new PQueue({ concurrency: 50 }); // Promise queue for postgres insertions
 
     console.log("Unpacking and processing the archive...");
     const directory = await Open.file(filePath);

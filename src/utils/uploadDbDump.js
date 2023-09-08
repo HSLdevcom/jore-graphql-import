@@ -1,12 +1,13 @@
+import { StorageSharedKeyCredential, BlobServiceClient } from "@azure/storage-blob";
+import path from "path";
+import fs from "fs-extra";
+
 import {
   AZURE_STORAGE_ACCOUNT,
   AZURE_STORAGE_KEY,
   AZURE_UPLOAD_CONTAINER,
-} from "../constants";
-import { StorageSharedKeyCredential, BlobServiceClient } from "@azure/storage-blob";
-import { reportInfo, reportError } from "../monitor";
-import path from "path";
-import fs from "fs-extra";
+} from "../constants.js";
+import { reportInfo, reportError } from "../monitor.js";
 
 export const uploadDbDump = async (filePath) => {
   const account = AZURE_STORAGE_ACCOUNT;

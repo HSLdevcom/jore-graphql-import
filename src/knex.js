@@ -1,6 +1,6 @@
 import Knex from "knex";
 import KnexPostgis from "knex-postgis";
-import { PG_CONNECTION_STRING } from "./constants";
+import { PG_CONNECTION_STRING } from "./constants.js";
 
 let knex = null;
 let st = null;

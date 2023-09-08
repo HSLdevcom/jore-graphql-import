@@ -1,14 +1,14 @@
 import { Transform } from "stream";
 
-import { uniqBy } from "lodash";
+import { uniqBy } from "lodash-es";
 
-import schema from "./schema";
-import { parseLine } from "./parseLine";
-import { upsert } from "./utils/upsert";
-import { getIndexForTable } from "./utils/getIndexForTable";
-import { createPrimaryKey } from "./utils/createPrimaryKey";
-import { getPrimaryConstraint } from "./utils/getPrimaryConstraint";
-import { getKnex } from "./knex";
+import schema from "./schema.js";
+import { parseLine } from "./parseLine.js";
+import { upsert } from "./utils/upsert.js";
+import { getIndexForTable } from "./utils/getIndexForTable.js";
+import { createPrimaryKey } from "./utils/createPrimaryKey.js";
+import { getPrimaryConstraint } from "./utils/getPrimaryConstraint.js";
+import { getKnex } from "./knex.js";
 
 const { knex } = getKnex();
 const NS_PER_SEC = 1e9;

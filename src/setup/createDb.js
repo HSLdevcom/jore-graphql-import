@@ -1,6 +1,5 @@
-import { find, compact } from "lodash";
+import { find, compact } from "lodash-es";
 import pMap from "p-map";
-import { INTERMEDIATE_SCHEMA } from "../constants";
 
 export async function createTables(schema, config, knex) {
   const createdTables = await pMap(

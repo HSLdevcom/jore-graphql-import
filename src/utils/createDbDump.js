@@ -1,9 +1,12 @@
 import childProcess from "child_process";
-import { PG_CONNECTION_STRING } from "../constants";
 import path from "path";
 import fs from "fs-extra";
-import format from "date-fns/format";
-import { parse } from "pg-connection-string";
+import { format } from "date-fns";
+import pgConnectionString from "pg-connection-string";
+
+import { PG_CONNECTION_STRING } from "../constants.js";
+
+const { parse } = pgConnectionString;
 
 const MAX_FILE_AGE = 3600000 * 24 * 14; // 14 days
 const MIN_FILE_COUNT = 3;
@@ -22,7 +25,7 @@ export const deleteFiles = ({ filesDir, minFileCount }) => {
         const now = new Date().getTime();
         const endTime = new Date(stat.ctime).getTime() + MAX_FILE_AGE;
         if (now > endTime) {
-          return await fs.remove(removableFile, async (err) => {
+          return fs.remove(removableFile, async (err) => {
             if (err) {
               return console.error(err);
             }
@@ -42,7 +45,7 @@ export const createDbDump = async () => {
     let lastError = null;
 
     await fs.ensureDir(dumpsDir);
-    const currentDate = format(new Date(), "YYYY-MM-DD");
+    const currentDate = format(new Date(), "yyyy-MM-dd");
     const currentDateFilename = `jore_dump_${currentDate}`;
     const filePath = path.join(dumpsDir, currentDateFilename);
     const fileExists = await fs.pathExists(filePath);

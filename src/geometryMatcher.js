@@ -1,5 +1,5 @@
-import { SCHEMA, MAP_MATCHER_URL } from "./constants";
-import { getKnex } from "./knex";
+import { SCHEMA, MAP_MATCHER_URL } from "./constants.js";
+import { getKnex } from "./knex.js";
 
 const { knex } = getKnex();
 

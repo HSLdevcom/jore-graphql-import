@@ -1,7 +1,6 @@
 import React from "react";
-import { PATH_PREFIX } from "../../constants";
 
-const UploadExport = ({ disabled }) => {
+const UploadExport = ({ disabled, PATH_PREFIX }) => {
   return (
     <>
       <h3>Upload an export archive</h3>

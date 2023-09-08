@@ -1,16 +1,18 @@
 import childProcess from "child_process";
 import { StorageSharedKeyCredential, BlobServiceClient } from "@azure/storage-blob";
+import path from "path";
+import fs from "fs-extra";
+import pgConnectionString from "pg-connection-string";
 import {
   PG_CONNECTION_STRING,
   AZURE_STORAGE_KEY,
   AZURE_STORAGE_ACCOUNT,
   AZURE_UPLOAD_CONTAINER,
-} from "../constants";
-import path from "path";
-import fs from "fs-extra";
-import { parse } from "pg-connection-string";
-import { clearDb } from "../setup/clearDb";
-import { deleteFiles } from "./createDbDump";
+} from "../constants.js";
+import { clearDb } from "../setup/clearDb.js";
+import { deleteFiles } from "./createDbDump.js";
+
+const { parse } = pgConnectionString;
 
 const cwd = process.cwd();
 
@@ -40,7 +42,7 @@ export const downloadDump = async () => {
 
   if (!latestDump) {
     console.log("No dump file found.");
-    throw "No dump file found";
+    throw new Error("No dump file found");
   }
 
   try {

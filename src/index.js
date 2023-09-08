@@ -1,13 +1,13 @@
 /* eslint-disable consistent-return */
-import { createScheduledImport, startScheduledImport } from "./schedule";
-import { importFile } from "./import";
-import { DEFAULT_EXPORT_SOURCE, DAILY_TASK_SCHEDULE } from "./constants";
-import { fetchExportFromFTP } from "./sources/fetchExportFromFTP";
-import { server } from "./server";
-import fs from "fs-extra";
-import path from "path";
-import { getKnex } from "./knex";
-import { reportInfo, reportError } from "./monitor";
+import fs from "fs";
+
+import { createScheduledImport, startScheduledImport } from "./schedule.js";
+import { importFile } from "./import.js";
+import { DEFAULT_EXPORT_SOURCE, DAILY_TASK_SCHEDULE } from "./constants.js";
+import { fetchExportFromFTP } from "./sources/fetchExportFromFTP.js";
+import { server } from "./server.js";
+import { getKnex } from "./knex.js";
+import { reportInfo, reportError } from "./monitor.js";
 
 // The global state that informs the app if an import task is running.
 // Always check this state before starting an import.
@@ -72,8 +72,8 @@ createScheduledImport("daily", DAILY_TASK_SCHEDULE, async (onComplete = () => {}
 });
 
 (async () => {
-  const createImportStatus = await fs.readFile(
-    path.join(__dirname, "setup", "createImportStatus.sql"),
+  const createImportStatus = fs.readFileSync(
+    new URL("setup/createImportStatus.sql", import.meta.url),
     "utf8",
   );
 
