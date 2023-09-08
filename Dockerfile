@@ -3,7 +3,10 @@ FROM node:18-buster-slim
 ENV IMPORTER_DIR /opt/jore
 ENV PG_CONNECTION_STRING="postgres://postgres:password@postgres:5432/postgres"
 ENV NODE_ENV production
-ENV NODE_OPTIONS "--max-old-space-size=8196"
+
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -yq postgresql-client --no-install-recommends \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR ${IMPORTER_DIR}
 
