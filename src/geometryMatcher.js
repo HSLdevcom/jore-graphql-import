@@ -84,7 +84,9 @@ export const runGeometryMatcher = async (schema = SCHEMA) => {
             date_begin: shape.properties.date_begin,
             date_end: shape.properties.date_end,
             mode: knex.raw("?::??.mode", [shape.properties.mode, schema]),
-            geom: knex.raw("ST_GeomFromGeoJSON(?)", [JSON.stringify(geometry)]),
+            geom: knex.raw("ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)", [
+              JSON.stringify(geometry),
+            ]),
             outliers: 0, // TODO: remove
             min_likelihood: 0, // TODO: remove
             confidence,
