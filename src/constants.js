@@ -1,4 +1,4 @@
-import { mapValues, orderBy } from "lodash";
+import { mapValues, orderBy } from "lodash-es";
 import fs from "fs-extra";
 
 const SECRETS_PATH = "/run/secrets/";

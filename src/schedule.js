@@ -1,5 +1,5 @@
 import { CronJob } from "cron";
-import { invoke } from "lodash";
+import { invoke } from "lodash-es";
 
 export const MIDNIGHT = "0 0 0 * * *";
 

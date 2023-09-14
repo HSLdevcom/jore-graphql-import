@@ -1,15 +1,15 @@
 import React from "react";
-import StatusIndicator from "./components/StatusIndicator";
-import DailyImport from "./components/DailyImport";
-import SelectTables from "./components/SelectTables";
-import UploadExport from "./components/UploadExport";
-import { PATH_PREFIX } from "../constants";
+import StatusIndicator from "./components/StatusIndicator.jsx";
+import DailyImport from "./components/DailyImport.jsx";
+import SelectTables from "./components/SelectTables.jsx";
+import UploadExport from "./components/UploadExport.jsx";
 
 const AdminView = ({
   isImporting,
   latestImportedFile,
   selectedTables,
   manualDumpInProgress,
+  PATH_PREFIX,
 }) => {
   return (
     <>
@@ -19,9 +19,19 @@ const AdminView = ({
         latestImportedFile={latestImportedFile}
       />
       <hr />
-      <DailyImport disabled={isImporting || manualDumpInProgress} />
-      <UploadExport disabled={isImporting || manualDumpInProgress} />
-      <SelectTables disabled={isImporting} selectedTables={selectedTables} />
+      <DailyImport
+        disabled={isImporting || manualDumpInProgress}
+        PATH_PREFIX={PATH_PREFIX}
+      />
+      <UploadExport
+        disabled={isImporting || manualDumpInProgress}
+        PATH_PREFIX={PATH_PREFIX}
+      />
+      <SelectTables
+        disabled={isImporting}
+        selectedTables={selectedTables}
+        PATH_PREFIX={PATH_PREFIX}
+      />
 
       <h3>Run geometry matcher</h3>
       <form action={`${PATH_PREFIX}run-geometry-matcher`} method="post">

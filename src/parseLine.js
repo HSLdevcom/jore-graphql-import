@@ -1,5 +1,5 @@
-import { get } from "lodash";
-import { getKnex } from "./knex";
+import { get } from "lodash-es";
+import { getKnex } from "./knex.js";
 
 const { knex, st } = getKnex();
 

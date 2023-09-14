@@ -1,5 +1,5 @@
-import { getKnex } from "../knex";
-import { INTERMEDIATE_SCHEMA } from "../constants";
+import { getKnex } from "../knex.js";
+import { INTERMEDIATE_SCHEMA } from "../constants.js";
 
 const { knex } = getKnex();
 const schema = INTERMEDIATE_SCHEMA;

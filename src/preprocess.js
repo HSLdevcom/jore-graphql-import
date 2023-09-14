@@ -1,4 +1,4 @@
-import throughConcurrent from "through2-concurrent";
+import { Transform } from "stream";
 
 const isWhitespaceOnly = /^\s*$/;
 
@@ -50,32 +50,30 @@ export function processLine(tableName) {
   const lineBreaksReplacer = createLinebreaksReplacer();
 
   let maxLength = 0;
+  return new Transform({
+    objectMode: true,
+    transform(chunk, enc, cb) {
+      const str = enc === "buffer" ? chunk.toString("utf8") : chunk;
 
-  return throughConcurrent.obj({ maxConcurrency: 100 }, function createLine(
-    chunk,
-    enc,
-    cb,
-  ) {
-    const str = enc === "buffer" ? chunk.toString("utf8") : chunk;
-
-    if (str && !isWhitespaceOnly.test(str)) {
-      if (str.length > maxLength) {
-        maxLength = str.length;
-      }
-
-      const linebreaksReplacedStr = lineBreaksReplacer(str, maxLength);
-
-      if (linebreaksReplacedStr) {
-        let resultLine = linebreaksReplacedStr;
-
-        if (tableName === "point_geometry") {
-          resultLine = geometryReplacer(linebreaksReplacedStr);
+      if (str && !isWhitespaceOnly.test(str)) {
+        if (str.length > maxLength) {
+          maxLength = str.length;
         }
 
-        this.push(resultLine);
-      }
-    }
+        const linebreaksReplacedStr = lineBreaksReplacer(str, maxLength);
 
-    cb();
+        if (linebreaksReplacedStr) {
+          let resultLine = linebreaksReplacedStr;
+
+          if (tableName === "point_geometry") {
+            resultLine = geometryReplacer(linebreaksReplacedStr);
+          }
+
+          this.push(resultLine);
+        }
+      }
+
+      cb();
+    },
   });
 }

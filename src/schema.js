@@ -1,4 +1,4 @@
-import { INTERMEDIATE_SCHEMA } from "./constants";
+import { INTERMEDIATE_SCHEMA } from "./constants.js";
 
 const schema = {
   stop: {
