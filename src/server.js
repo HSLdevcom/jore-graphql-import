@@ -2,20 +2,21 @@
 import express from "express";
 import fileUpload from "express-fileupload";
 import basicAuth from "express-basic-auth";
-import { ADMIN_PASSWORD, PATH_PREFIX, SERVER_PORT, SCHEMA } from "./constants";
 import { createEngine } from "express-react-views";
 import path from "path";
-import { getLatestImportedFile } from "./importStatus";
-import { getSelectedTableStatus, setTableOption } from "./selectedTables";
-import { runScheduledImportNow } from "./schedule";
 import fs from "fs-extra";
-import { importFile } from "./import";
-import { runGeometryMatcher } from "./geometryMatcher";
-import { createForeignKeys } from "./setup/createDb";
-import schema from "./schema";
-import { getKnex } from "./knex";
-import { createDbDump } from "./utils/createDbDump";
-import { uploadDbDump } from "./utils/uploadDbDump";
+
+import { ADMIN_PASSWORD, PATH_PREFIX, SERVER_PORT, SCHEMA } from "./constants.js";
+import { getLatestImportedFile } from "./importStatus.js";
+import { getSelectedTableStatus, setTableOption } from "./selectedTables.js";
+import { runScheduledImportNow } from "./schedule.js";
+import { importFile } from "./import.js";
+import { runGeometryMatcher } from "./geometryMatcher.js";
+import { createForeignKeys } from "./setup/createDb.js";
+import schema from "./schema.js";
+import { getKnex } from "./knex.js";
+import { createDbDump } from "./utils/createDbDump.js";
+import { uploadDbDump } from "./utils/uploadDbDump.js";
 
 const cwd = process.cwd();
 const uploadPath = path.join(cwd, "uploads");
@@ -49,7 +50,7 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
 
   app.engine("jsx", createEngine());
   app.set("view engine", "jsx");
-  app.set("views", path.join(__dirname, "views"));
+  app.set("views", new URL("views", import.meta.url).pathname);
 
   app.get("/", async (req, res) => {
     const latestImportedFile = await getLatestImportedFile();
@@ -59,6 +60,7 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
       isImporting: isImporting(),
       latestImportedFile,
       selectedTables: getSelectedTableStatus(),
+      PATH_PREFIX,
     });
   });
 
@@ -74,8 +76,8 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
     res.redirect(PATH_PREFIX);
   });
 
-  app.post("/run-geometry-matcher", (req, res) => {
-    runGeometryMatcher().catch((err) => console.error(err));
+  app.post("/run-geometry-matcher", async (req, res) => {
+    await runGeometryMatcher().catch((err) => console.error(err));
     res.redirect(PATH_PREFIX);
   });
 
@@ -145,7 +147,7 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
     const { knex } = getKnex();
 
     const createFunctionsSQL = fs.readFileSync(
-      path.join(__dirname, "setup", "createFunctions.sql"),
+      new URL("setup/createFunctions.sql", import.meta.url),
       "utf8",
     );
 

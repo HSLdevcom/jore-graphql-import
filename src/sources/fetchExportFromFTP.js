@@ -1,8 +1,8 @@
 import { Client } from "basic-ftp";
-import { orderBy, get } from "lodash";
+import { orderBy, get } from "lodash-es";
 import path from "path";
 import fs from "fs-extra";
-import { getLatestImportedFile } from "../importStatus";
+import { getLatestImportedFile } from "../importStatus.js";
 import {
   FTP_USERNAME,
   FTP_PASSWORD,
@@ -10,7 +10,7 @@ import {
   FTP_PORT,
   FTP_PATH,
   DEBUG,
-} from "../constants";
+} from "../constants.js";
 
 const cwd = process.cwd();
 

@@ -1,5 +1,5 @@
-import schema from "./schema";
-import { pick, compact, difference } from "lodash";
+import { pick, compact, difference } from "lodash-es";
+import schema from "./schema.js";
 
 const tableNames = Object.keys(schema);
 const [...argSelections] = process.argv.slice(2);

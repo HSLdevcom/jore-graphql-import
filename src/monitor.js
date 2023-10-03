@@ -1,4 +1,4 @@
-import { SLACK_WEBHOOK_URL, ENVIRONMENT, SLACK_MONITOR_MENTION } from "./constants";
+import { SLACK_WEBHOOK_URL, ENVIRONMENT, SLACK_MONITOR_MENTION } from "./constants.js";
 
 export const messageTypes = {
   ERROR: "error",

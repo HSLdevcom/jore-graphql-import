@@ -1,7 +1,6 @@
 import React from "react";
-import { PATH_PREFIX } from "../../constants";
 
-const DailyImport = ({ disabled }) => {
+const DailyImport = ({ disabled, PATH_PREFIX }) => {
   return (
     <>
       <h3>Run daily import now</h3>

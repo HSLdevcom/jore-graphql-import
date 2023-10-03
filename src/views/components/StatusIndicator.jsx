@@ -2,11 +2,15 @@
 import React from "react";
 import { format } from "date-fns";
 
-const DATE_FORMAT = "HH:mm:ss YYYY-MM-DD";
+const DATE_FORMAT = "HH:mm:ss yyyy-MM-dd";
 
 const StatusIndicator = ({ isImporting, latestImportedFile = {} }) => {
-  const { filename = "", import_start, import_end, success = false } =
-    latestImportedFile || {};
+  const {
+    filename = "",
+    import_start,
+    import_end,
+    success = false,
+  } = latestImportedFile || {};
 
   return (
     <>

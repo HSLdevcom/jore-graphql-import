@@ -1,11 +1,11 @@
-import { createTables, createPrimaryKeys } from "./createDb";
 import fs from "fs-extra";
-import path from "path";
-import tables from "../schema";
-import { pick } from "lodash";
-import { getKnex } from "../knex";
-import { INTERMEDIATE_SCHEMA } from "../constants";
-import { useIntermediateSchema } from "../utils/useIntermediateSchema";
+import { pick } from "lodash-es";
+
+import { createTables, createPrimaryKeys } from "./createDb.js";
+import tables from "../schema.js";
+import { getKnex } from "../knex.js";
+import { INTERMEDIATE_SCHEMA } from "../constants.js";
+import { useIntermediateSchema } from "../utils/useIntermediateSchema.js";
 
 const { knex } = getKnex();
 
@@ -14,17 +14,17 @@ const { knex } = getKnex();
 export async function initDb() {
   try {
     const createSchemaSQL = await fs.readFile(
-      path.join(__dirname, "createSchema.sql"),
+      new URL("createSchema.sql", import.meta.url),
       "utf8",
     );
 
     const createImportStatus = await fs.readFile(
-      path.join(__dirname, "createImportStatus.sql"),
+      new URL("createImportStatus.sql", import.meta.url),
       "utf8",
     );
 
     const createJoreStaticTables = await fs.readFile(
-      path.join(__dirname, "createJoreStaticTables.sql"),
+      new URL("createJoreStaticTables.sql", import.meta.url),
       "utf8",
     );
 
@@ -41,7 +41,7 @@ export async function initDb() {
     }
 
     const createFunctionsSQL = await fs.readFile(
-      path.join(__dirname, "createFunctions.sql"),
+      new URL("createFunctions.sql", import.meta.url),
       "utf8",
     );
 

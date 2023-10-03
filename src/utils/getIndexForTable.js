@@ -1,5 +1,5 @@
-import { get, uniq } from "lodash";
-import schema from "../schema";
+import { get, uniq } from "lodash-es";
+import schema from "../schema.js";
 
 export function getIndexForTable(tableName) {
   const tableSchema = get(schema, tableName, false);

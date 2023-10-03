@@ -1,4 +1,4 @@
-import { mapValues, orderBy } from "lodash";
+import { mapValues, orderBy } from "lodash-es";
 import fs from "fs-extra";
 
 const SECRETS_PATH = "/run/secrets/";
@@ -42,10 +42,6 @@ export const DEBUG = secretsEnv.DEBUG || "false";
 export const SERVER_PORT = secretsEnv.SERVER_PORT || 3000;
 export const ADMIN_PASSWORD = secretsEnv.ADMIN_PASSWORD || "password";
 export const PATH_PREFIX = secretsEnv.PATH_PREFIX || "/";
-export const PYTHON_CMD = process.env.PYTHON_CMD || "python";
-export const PBF_DOWNLOAD_URL =
-  "https://karttapalvelu.storage.hsldev.com/hsl.osm/hsl.osm.pbf";
-export const PBF_FILENAME = "hsl.osm.pbf";
 export const SCHEMA = "jore";
 export const INTERMEDIATE_SCHEMA = "jore_new";
 export const AZURE_UPLOAD_CONTAINER = secretsEnv.AZURE_UPLOAD_CONTAINER || "joredumps";
@@ -54,3 +50,4 @@ export const AZURE_STORAGE_KEY = secretsEnv.AZURE_STORAGE_KEY || "";
 export const SLACK_WEBHOOK_URL = secretsEnv.SLACK_WEBHOOK_URL || "";
 export const ENVIRONMENT = secretsEnv.ENVIRONMENT || "unknown";
 export const SLACK_MONITOR_MENTION = secretsEnv.SLACK_MONITOR_MENTION || "";
+export const MAP_MATCHER_URL = secretsEnv.MAP_MATCHER_URL || "http://localhost:3000/";

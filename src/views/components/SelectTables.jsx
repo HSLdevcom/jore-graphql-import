@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
-import { PATH_PREFIX } from "../../constants";
 
-const SelectTables = ({ disabled = true, selectedTables }) => {
+const SelectTables = ({ disabled = true, selectedTables, PATH_PREFIX }) => {
   const onChange = useCallback(() => {}, []);
 
   return (

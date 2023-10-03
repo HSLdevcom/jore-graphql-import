@@ -1,7 +1,12 @@
 {
   "parserOptions": {
-    "ecmaVersion": 8,
-    "sourceType": "module"
+    "requireConfigFile": false,
+    "sourceType": "module",
+    "ecmaVersion": "latest",
+    "ecmaFeatures": {"jsx": true},
+    "babelOptions": {
+      "presets": ["@babel/preset-react"]
+    }
   },
   "extends": ["airbnb-base", "plugin:prettier/recommended"],
   "rules": {
@@ -17,11 +22,16 @@
     "no-param-reassign": "off",
     "no-restricted-globals": "off",
     "import/prefer-default-export": "off",
-    "import/first": "off",
-    "prettier/prettier": "error"
+    "import/first": "warn",
+    "import/extensions": ["error", {"js": "always"}],
+    "prettier/prettier": "error",
+    "react/jsx-uses-vars": "error",
+    "react/jsx-uses-react": "error"
   },
   "env": {
     "node": true,
     "es6": true
-  }
+  },
+  "parser": "@babel/eslint-parser",
+  "plugins": ["react"]
 }

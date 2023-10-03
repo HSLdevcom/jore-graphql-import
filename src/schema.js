@@ -1,4 +1,4 @@
-import { INTERMEDIATE_SCHEMA } from "./constants";
+import { INTERMEDIATE_SCHEMA } from "./constants.js";
 
 const schema = {
   stop: {
@@ -813,8 +813,9 @@ const schema = {
         typeOptions: "geometry(LineString,4326)",
         notNullable: true,
       },
-      { name: "outliers", type: "integer" },
-      { name: "min_likelihood", type: "float" },
+      { name: "outliers", type: "integer" }, // TODO: remove
+      { name: "min_likelihood", type: "float" }, // TODO: remove
+      { name: "confidence", type: "float" },
     ],
     primary: ["route_id", "direction", "date_begin", "date_end"],
   },
