@@ -10,6 +10,8 @@ const ROUTE_TYPE_PROFILES = {
   TRAMBUS: "trambus",
 };
 
+const CONSTRUCTION_PROFILE_SUFFIX = "-with-construction";
+
 export const runGeometryMatcher = async (schema = SCHEMA) => {
   const startTime = process.hrtime();
 
