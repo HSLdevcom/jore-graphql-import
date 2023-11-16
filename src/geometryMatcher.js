@@ -42,7 +42,9 @@ export const runGeometryMatcher = async (schema = SCHEMA) => {
         routeType = "TRAMBUS";
       }
 
-      const profile = ROUTE_TYPE_PROFILES[routeType];
+      // Use construction profile if route is not yet in use (dateBegin is in the future)
+      const useConstruction = new Date(shape.properties.date_begin) > new Date();
+      const profile = ROUTE_TYPE_PROFILES[routeType] + (useConstruction ? CONSTRUCTION_PROFILE_SUFFIX : "");
 
       let geometry;
       let confidence;
