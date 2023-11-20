@@ -44,15 +44,18 @@ export const runGeometryMatcher = async (schema = SCHEMA) => {
         routeType = "TRAMBUS";
       }
 
-      // Use construction profile if route is not yet in use (dateBegin is in the future)
-      const useConstruction = new Date(shape.properties.date_begin) > new Date();
-      const profile = ROUTE_TYPE_PROFILES[routeType] + (useConstruction ? CONSTRUCTION_PROFILE_SUFFIX : "");
+      let profile = ROUTE_TYPE_PROFILES[routeType]
 
       let geometry;
       let confidence;
       let fittedDataResult;
 
       if (profile) {
+
+        // Use construction profile if route is not yet in use (dateBegin is in the future)
+        if (new Date(shape.properties.date_begin) > new Date()) {
+          profile += CONSTRUCTION_PROFILE_SUFFIX;
+        }
         // Request fitted geometry from map matcher for the profile
         fittedDataResult = await fetch(`${MAP_MATCHER_URL}match/${profile}`, {
           method: "POST",
