@@ -10,6 +10,8 @@ const ROUTE_TYPE_PROFILES = {
   TRAMBUS: "trambus",
 };
 
+const CONSTRUCTION_PROFILE_SUFFIX = "-with-construction";
+
 export const runGeometryMatcher = async (schema = SCHEMA) => {
   const startTime = process.hrtime();
 
@@ -42,13 +44,18 @@ export const runGeometryMatcher = async (schema = SCHEMA) => {
         routeType = "TRAMBUS";
       }
 
-      const profile = ROUTE_TYPE_PROFILES[routeType];
+      let profile = ROUTE_TYPE_PROFILES[routeType]
 
       let geometry;
       let confidence;
       let fittedDataResult;
 
       if (profile) {
+
+        // Use construction profile if route is not yet in use (dateBegin is in the future)
+        if (new Date(shape.properties.date_begin) > new Date()) {
+          profile += CONSTRUCTION_PROFILE_SUFFIX;
+        }
         // Request fitted geometry from map matcher for the profile
         fittedDataResult = await fetch(`${MAP_MATCHER_URL}match/${profile}`, {
           method: "POST",
