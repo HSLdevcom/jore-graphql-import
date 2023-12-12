@@ -25,7 +25,7 @@
   "homepage": "https://github.com/HSLdevcom/jore-graphql-import",
   "dependencies": {
     "@azure/storage-blob": "12.14.0",
-    "@babel/core": "^7.22.15",
+    "@babel/core": "^7.23.6",
     "@babel/plugin-transform-flow-strip-types": "^7.22.5",
     "@babel/preset-env": "^7.22.15",
     "@babel/preset-react": "^7.22.15",
