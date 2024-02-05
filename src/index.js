@@ -81,7 +81,7 @@ createScheduledImport("daily", DAILY_TASK_SCHEDULE, async (onComplete = () => {}
 
   // Start the task for the daily import as soon as the server starts.
   // This will start the timer.
-  await reportInfo("Import started.");
+  await reportInfo("Service online");
   startScheduledImport("daily");
   server(() => isImporting, onBeforeImport, onAfterImport);
 })();

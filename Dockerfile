@@ -1,11 +1,14 @@
 FROM node:18-buster-slim
 
 ENV IMPORTER_DIR /opt/jore
-ENV PG_CONNECTION_STRING="postgres://postgres:password@postgres:5432/postgres"
 ENV NODE_ENV production
 
 RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -yq postgresql-client --no-install-recommends \
+  && apt-get install -yq curl gnupg lsb-release \
+  && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc|gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg \
+  && echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" |tee  /etc/apt/sources.list.d/pgdg.list \
+  && apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -yq postgresql-client-14 --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR ${IMPORTER_DIR}
