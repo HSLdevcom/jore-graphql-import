@@ -15,7 +15,7 @@ const dumpsDir = path.join(cwd, "dumps");
 
 export const deleteFiles = ({ filesDir, minFileCount }) => {
   fs.readdir(filesDir, (err, files) => {
-    if (files.length < minFileCount) return;
+    if (!files || files.length < minFileCount) return;
     files.forEach((file) => {
       const removableFile = path.join(filesDir, file);
       fs.stat(removableFile, async (err, stat) => {
