@@ -43,6 +43,7 @@ export const SERVER_PORT = secretsEnv.SERVER_PORT || 3000;
 export const ADMIN_PASSWORD = secretsEnv.ADMIN_PASSWORD || "password";
 export const PATH_PREFIX = secretsEnv.PATH_PREFIX || "/";
 export const SCHEMA = "jore";
+export const DEFAULT_DATABASE = "postgres";
 export const INTERMEDIATE_SCHEMA = "jore_new";
 export const AZURE_UPLOAD_CONTAINER = secretsEnv.AZURE_UPLOAD_CONTAINER || "joredumps";
 export const AZURE_STORAGE_ACCOUNT = secretsEnv.AZURE_STORAGE_ACCOUNT || "";
