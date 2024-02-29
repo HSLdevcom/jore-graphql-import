@@ -1085,6 +1085,17 @@ select exists(
 );
 $$ language sql stable;
 
+CREATE OR REPLACE FUNCTION jore.get_route_departures_for_timed_stops(route_id text, route_direction integer default 1, route_date date) returns setof jore.departure_group
+$$
+SELECT *
+    FROM jore.departure departure
+        JOIN jore.route_segment segment
+            ON segment.stop_id = departure.stop_id AND segment.route_id = departure.route_id AND segment.direction = departure.direction AND route_date between segment.date_begin and segment.date_end
+    WHERE departure.route_id = route_id
+        AND departure.direction = route_direction
+        AND route_date between departure.date_begin and departure.date_end
+        AND ((segment.timing_stop_type = 2) OR (segment.stop_index = 1));
+$$ language sql stable;
 
 -- jorestatic functions
 
