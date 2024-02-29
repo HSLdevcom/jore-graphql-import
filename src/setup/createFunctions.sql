@@ -1085,13 +1085,48 @@ select exists(
 );
 $$ language sql stable;
 
-CREATE OR REPLACE FUNCTION jore.get_route_departures_for_timed_stops(route_id text, route_direction integer default 1, route_date date) returns setof jore.departure_group
+DO
 $$
-SELECT *
+    BEGIN
+        create type jore.route_timed_stop_departures as (
+            stop_id character varying(7),
+            route_id character varying(6),
+            direction text,
+            day_type character varying(2),
+            departure_id integer,
+            hours integer,
+            minutes integer,
+            arrival_is_next_day boolean,
+            arrival_hours integer,
+            arrival_minutes integer,
+            timing_stop_type integer,
+            destination_fi text,
+            destination_sv text
+            );
+    EXCEPTION
+        WHEN duplicate_object THEN null;
+    END
+$$;
+
+create or replace function jore.get_route_departures_for_timed_stops(route_identifier text, route_direction text, route_date date) returns setof jore.route_timed_stop_departures as
+$$
+SELECT departure.stop_id,
+	departure.route_id,
+	departure.direction,
+	departure.day_type,
+	departure.departure_id,
+	departure.hours,
+	departure.minutes,
+	departure.arrival_is_next_day,
+	departure.arrival_hours,
+	departure.arrival_minutes,
+	segment.timing_stop_type,
+	segment.destination_fi,
+	segment.destination_se
     FROM jore.departure departure
         JOIN jore.route_segment segment
             ON segment.stop_id = departure.stop_id AND segment.route_id = departure.route_id AND segment.direction = departure.direction AND route_date between segment.date_begin and segment.date_end
-    WHERE departure.route_id = route_id
+    WHERE departure.route_id = route_identifier
         AND departure.direction = route_direction
         AND route_date between departure.date_begin and departure.date_end
         AND ((segment.timing_stop_type = 2) OR (segment.stop_index = 1));
