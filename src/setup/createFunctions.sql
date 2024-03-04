@@ -1092,16 +1092,14 @@ $$
             stop_id character varying(7),
             route_id character varying(6),
             direction text,
-            day_type character varying(2),
+            day_type character varying(2)[],
             departure_id integer,
             hours integer,
             minutes integer,
-            arrival_is_next_day boolean,
-            arrival_hours integer,
-            arrival_minutes integer,
+            is_next_day boolean,
             timing_stop_type integer,
-            destination_fi text,
-            destination_sv text
+            destination_fi character varying(20),
+            destination_sv character varying(20)
             );
     EXCEPTION
         WHEN duplicate_object THEN null;
@@ -1113,13 +1111,11 @@ $$
 SELECT departure.stop_id,
 	departure.route_id,
 	departure.direction,
-	departure.day_type,
+	array_agg(departure.day_type),
 	departure.departure_id,
 	departure.hours,
 	departure.minutes,
-	departure.arrival_is_next_day,
-	departure.arrival_hours,
-	departure.arrival_minutes,
+	departure.is_next_day,
 	segment.timing_stop_type,
 	segment.destination_fi,
 	segment.destination_se
@@ -1129,7 +1125,10 @@ SELECT departure.stop_id,
     WHERE departure.route_id = route_identifier
         AND departure.direction = route_direction
         AND route_date between departure.date_begin and departure.date_end
-        AND ((segment.timing_stop_type = 2) OR (segment.stop_index = 1));
+        AND ((segment.timing_stop_type = 2) OR (segment.stop_index = 1))
+    GROUP BY departure.stop_id, departure.departure_id, departure.day_type,
+    		departure.route_id, departure.direction, departure.hours,  departure.minutes, departure.is_next_day,
+    		segment.timing_stop_type, segment.destination_fi, segment.destination_se;
 $$ language sql stable;
 
 -- jorestatic functions
