@@ -1121,7 +1121,7 @@ SELECT departure.stop_id,
     WHERE departure.route_id = route_identifier
         AND departure.direction = route_direction
         AND date between departure.date_begin and departure.date_end
-        AND ((segment.timing_stop_type = 2) OR (segment.stop_index = 1))
+        AND ((segment.timing_stop_type = 1) OR (segment.timing_stop_type = 2) OR (segment.stop_index = 1))
     GROUP BY departure.stop_id, departure.departure_id, departure.day_type,
     		departure.route_id, departure.direction, departure.hours,  departure.minutes, departure.is_next_day,
     		segment.timing_stop_type;
