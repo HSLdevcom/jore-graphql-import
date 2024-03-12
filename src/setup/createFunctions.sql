@@ -1085,6 +1085,47 @@ select exists(
 );
 $$ language sql stable;
 
+DO
+$$
+    BEGIN
+        create type jore.route_timed_stop_departure as (
+            stop_id character varying(7),
+            route_id character varying(6),
+            direction text,
+            day_type character varying(2)[],
+            departure_id integer,
+            hours integer,
+            minutes integer,
+            is_next_day boolean,
+            timing_stop_type integer
+            );
+    EXCEPTION
+        WHEN duplicate_object THEN null;
+    END
+$$;
+
+create or replace function jore.get_route_departures_for_timed_stops(route_identifier text, route_direction text, date date) returns setof jore.route_timed_stop_departure as
+$$
+SELECT departure.stop_id,
+	departure.route_id,
+	departure.direction,
+	array_agg(departure.day_type),
+	departure.departure_id,
+	departure.hours,
+	departure.minutes,
+	departure.is_next_day,
+	segment.timing_stop_type
+    FROM jore.departure departure
+        JOIN jore.route_segment segment
+            ON segment.stop_id = departure.stop_id AND segment.route_id = departure.route_id AND segment.direction = departure.direction AND date between segment.date_begin and segment.date_end
+    WHERE departure.route_id = route_identifier
+        AND departure.direction = route_direction
+        AND date between departure.date_begin and departure.date_end
+        AND ((segment.timing_stop_type = 1) OR (segment.timing_stop_type = 2) OR (segment.stop_index = 1))
+    GROUP BY departure.stop_id, departure.departure_id, departure.day_type,
+    		departure.route_id, departure.direction, departure.hours,  departure.minutes, departure.is_next_day,
+    		segment.timing_stop_type;
+$$ language sql stable;
 
 -- jorestatic functions
 
