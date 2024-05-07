@@ -1075,7 +1075,7 @@ $$ language sql stable;
 
 create or replace function jore.get_lines_with_id_and_user_date_range(id text, line_date_begin date, line_date_end date) returns setof jore.line as
 $$
-select * from jore.line where line_id = id AND (line_date_begin BETWEEN date_begin AND date_end) AND (line_date_end BETWEEN date_begin AND date_end);
+select * from jore.line where line_id = id AND NOT (date_begin < line_date_begin AND date_end < line_date_begin) AND NOT (date_begin > line_date_end AND date_end > line_date_end);
 $$ language sql stable;
 
 create or replace function jore.get_stops_by_ids(stop_ids text[]) returns setof jore.stop as
@@ -1088,6 +1088,11 @@ $$
 select exists(
 	select true from jore.route r where r = route and r."type" = '08'
 );
+$$ language sql stable;
+
+create or replace function jore.get_routes_for_date_range(id text, line_date_begin date, line_date_end date) returns setof jore.route as
+$$
+select * from jore.route where line_id = id AND NOT (date_begin < line_date_begin AND date_end < line_date_begin) AND NOT (date_begin > line_date_end AND date_end > line_date_end);
 $$ language sql stable;
 
 DO
