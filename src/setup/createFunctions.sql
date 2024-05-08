@@ -1090,9 +1090,9 @@ select exists(
 );
 $$ language sql stable;
 
-create or replace function jore.get_routes_for_date_range(id text, line_date_begin date, line_date_end date) returns setof jore.route as
+create or replace function jore.get_routes_for_date_range(id text, route_date_begin date, route_date_end date) returns setof jore.route as
 $$
-select * from jore.route where line_id = id AND NOT (date_begin < line_date_begin AND date_end < line_date_begin) AND NOT (date_begin > line_date_end AND date_end > line_date_end);
+select * from jore.route where line_id = id AND NOT (date_begin < route_date_begin AND date_end < route_date_begin) AND NOT (date_begin > route_date_end AND date_end > route_date_end);
 $$ language sql stable;
 
 DO
