@@ -1093,7 +1093,7 @@ $$ language sql stable;
 create or replace function jore.line_routes_for_date_range(line jore.line, route_date_begin date, route_date_end date) returns setof jore.route as
 $$
 select * from jore.route route
-    where route.line_id = line.line_id
+    WHERE route.line_id = line.line_id
     AND NOT (route.date_begin < route_date_begin AND route.date_end < route_date_begin)
     AND NOT (route.date_begin > route_date_end AND route.date_end > route_date_end);
 $$ language sql stable;
@@ -1117,7 +1117,7 @@ $$
     END
 $$;
 
-create or replace function jore.get_route_departures_for_timed_stops(route_identifier text, date date) returns setof jore.route_timed_stop_departure as
+create or replace function jore.get_departures_for_timed_stops(route jore.route) returns setof jore.route_timed_stop_departure as
 $$
 SELECT departure.stop_id,
 	departure.route_id,
@@ -1130,13 +1130,36 @@ SELECT departure.stop_id,
 	segment.timing_stop_type
     FROM jore.departure departure
         JOIN jore.route_segment segment
-            ON segment.stop_id = departure.stop_id AND segment.route_id = departure.route_id AND segment.direction = departure.direction AND date between segment.date_begin and segment.date_end
-    WHERE departure.route_id = route_identifier
-        AND date between departure.date_begin and departure.date_end
-        AND ((segment.timing_stop_type = 1) OR (segment.timing_stop_type = 2) OR (segment.stop_index = 1))
+            ON segment.stop_id = departure.stop_id AND segment.route_id = departure.route_id AND segment.direction = departure.direction
+            AND NOT (segment.date_begin < route.date_begin AND segment.date_end < route.date_begin)
+            AND NOT (segment.date_begin > route.date_end AND segment.date_end > route.date_end)
+            AND ((segment.timing_stop_type = 1) OR (segment.timing_stop_type = 2) OR (segment.stop_index = 1))
+    WHERE departure.route_id = route.route_id
+        AND NOT (departure.date_begin < route.date_begin AND departure.date_end < route.date_begin)
+        AND NOT (departure.date_begin > route.date_end AND departure.date_end > route.date_end)
     GROUP BY departure.stop_id, departure.departure_id, departure.day_type,
     		departure.route_id, departure.direction, departure.hours,  departure.minutes, departure.is_next_day,
     		segment.timing_stop_type;
+$$ language sql stable;
+
+create or replace function jore.route_timed_stop_segments(route jore.route) returns setof jore.route_segment as
+$$
+SELECT * FROM jore.route_segment segment WHERE segment.route_id = route.route_id
+    AND segment.direction = route.direction
+    AND ((segment.timing_stop_type = 1) OR (segment.timing_stop_type = 2) OR (segment.stop_index = 1))
+    AND NOT (segment.date_begin < route.date_begin AND segment.date_end < route.date_begin)
+    AND NOT (segment.date_begin > route.date_end AND segment.date_end > route.date_end);
+$$ language sql stable;
+
+create or replace function jore.route_segment_timed_stop_departures(segment jore.route_segment) returns setof jore.departure as
+$$
+SELECT *
+    FROM jore.departure departure
+    WHERE departure.route_id = segment.route_id
+        AND departure.stop_id = segment.stop_id
+        AND departure.direction = segment.direction
+        AND departure.date_begin = segment.date_begin
+        AND departure.date_end = segment.date_end;
 $$ language sql stable;
 
 -- jorestatic functions
