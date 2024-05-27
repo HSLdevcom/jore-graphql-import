@@ -4,6 +4,19 @@ Data importer for [jore-graphql](https://github.com/HSLdevcom/jore-graphql)
 
 Read more about the [JORE import process](https://github.com/HSLdevcom/hsl-map-documentation/blob/master/Process%20schema/README.md#jore-import-process).
 
+## Development
+
+### Creating custom functions with PostGraphile
+When creating a custom function (called "computed column") the naming scheme must adhere to following rules:
+[PostGraphile documentation](https://www.graphile.org/postgraphile/computed-columns/)
+
+In short:
+- Must adhere to common PostGraphile function restrictions
+- Name must begin with the name of the table it applies to, followed by an underscore (_)
+- First parameter must be the table type
+- Must NOT return VOID
+- Must be marked as STABLE (or IMMUTABLE, though that tends to be less common)
+- Must be defined in the same PostgreSQL schema as the table
 
 ## Prerequisites
 
