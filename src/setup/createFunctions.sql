@@ -1148,6 +1148,15 @@ SELECT departure.stop_id,
     		segment.timing_stop_type;
 $$ language sql stable;
 
+create or replace function jore.route_all_timed_stops(route jore.route) returns setof jore.route_segment as
+$$
+SELECT * FROM jore.route_segment segment WHERE segment.route_id = route.route_id
+    AND segment.direction = route.direction
+    AND NOT (segment.date_begin < route.date_begin AND segment.date_end < route.date_begin)
+    AND NOT (segment.date_begin > route.date_end AND segment.date_end > route.date_end)
+    AND ((segment.timing_stop_type = 1) OR (segment.timing_stop_type = 2) OR (segment.stop_index = 1));
+$$ language sql stable;
+
 -- jorestatic functions
 
 -- New procedu
