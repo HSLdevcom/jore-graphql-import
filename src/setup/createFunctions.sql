@@ -1110,9 +1110,7 @@ $$
             hours integer,
             minutes integer,
             is_next_day boolean,
-            timing_stop_type integer,
-            date_begin date,
-            date_end date
+            timing_stop_type integer
             );
     EXCEPTION
         WHEN duplicate_object THEN null;
