@@ -1131,16 +1131,14 @@ SELECT departure.stop_id,
     FROM jore.departure departure
         JOIN jore.route_segment segment
             ON segment.stop_id = departure.stop_id AND segment.route_id = departure.route_id AND segment.direction = departure.direction
-            AND NOT (segment.date_begin < user_date_begin AND segment.date_end < user_date_begin)
-            AND NOT (segment.date_begin > user_date_end AND segment.date_end > user_date_end)
-            AND NOT (segment.date_begin < route.date_begin AND segment.date_end < route.date_begin)
-            AND NOT (segment.date_begin > route.date_end AND segment.date_end > route.date_end)
-            AND ((segment.timing_stop_type = 1) OR (segment.timing_stop_type = 2) OR (segment.stop_index = 1))
-    WHERE departure.route_id = route.route_id
+            AND NOT (segment.date_begin < departure.date_begin AND segment.date_end < departure.date_begin)
+            AND NOT (segment.date_begin > departure.date_end AND segment.date_end > departure.date_end)
+    WHERE departure.route_id = route.route_id AND departure.direction = route.direction
         AND NOT (departure.date_begin < route.date_begin AND departure.date_end < route.date_begin)
         AND NOT (departure.date_begin > route.date_end AND departure.date_end > route.date_end)
-        AND NOT (segment.date_begin < user_date_begin AND segment.date_end < user_date_begin)
-        AND NOT (segment.date_begin > user_date_end AND segment.date_end > user_date_end)
+        AND NOT (departure.date_begin < user_date_begin AND departure.date_end < user_date_begin)
+        AND NOT (departure.date_begin > user_date_end AND departure.date_end > user_date_end)
+        AND ((segment.timing_stop_type = 1) OR (segment.timing_stop_type = 2) OR (segment.stop_index = 1))
     GROUP BY departure.stop_id, departure.departure_id, departure.day_type,
     		departure.route_id, departure.direction, departure.hours,  departure.minutes, departure.is_next_day,
     		segment.timing_stop_type;
