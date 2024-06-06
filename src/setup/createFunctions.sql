@@ -285,14 +285,14 @@ DO
 $$
     BEGIN
         create type jore.terminus as (
-            line_id character varying(6),
-            stop_id character varying(6),
-            type character varying(6),
+            line_id text,
+            stop_id text,
+            type text,
             lat numeric(9, 6),
             lon numeric(9, 6),
-            stop_short_id character varying(6),
-            stop_area_id character varying(6),
-            terminal_id character varying(6),
+            stop_short_id text,
+            stop_area_id text,
+            terminal_id text,
             point geometry
             );
     EXCEPTION
@@ -460,14 +460,14 @@ DO
 $$
     BEGIN
         create type jore.terminus_grouped as (
-            lines character varying(6)[],
+            lines text[],
             lat numeric(9, 6),
             lon numeric(9, 6),
-            stop_area_id character varying(6),
-            terminal_id character varying(6),
-            type character varying(6),
-            name_fi character varying(40),
-            name_se character varying(40)
+            stop_area_id text,
+            terminal_id text,
+            type text,
+            name_fi text,
+            name_se text
             );
     EXCEPTION
         WHEN duplicate_object THEN null;
