@@ -460,7 +460,7 @@ DO
 $$
     BEGIN
         create type jore.terminus_grouped as (
-            lines text,
+            lines text[],
             lat numeric(9, 6),
             lon numeric(9, 6),
             stop_area_id text,
