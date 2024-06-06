@@ -8,6 +8,7 @@ import {
   AZURE_STORAGE_KEY,
   AZURE_STORAGE_ACCOUNT,
   AZURE_UPLOAD_CONTAINER,
+  DEFAULT_DATABASE
 } from "../constants.js";
 import { clearDb } from "../setup/clearDb.js";
 import { deleteFiles } from "./createDbDump.js";
@@ -75,6 +76,7 @@ export const importDbDump = async () => {
 
     if (fileExists) {
       const pgConnection = parse(PG_CONNECTION_STRING);
+      const database = pgConnection.database ? pgConnection.database : DEFAULT_DATABASE;
       console.log(`Restoring db with ${filePath}`);
 
       const dumpProcess = childProcess.spawn(
@@ -82,9 +84,10 @@ export const importDbDump = async () => {
         [
           "-c",
           "--if-exists",
+          "--drop-cascade",
           "--no-owner",
           `-U ${pgConnection.user}`,
-          `-d ${pgConnection.database}`,
+          `-d ${database}`,
           "--single-transaction",
           `${filePath}`,
         ],
@@ -96,7 +99,7 @@ export const importDbDump = async () => {
             PGPASSWORD: pgConnection.password,
             PGHOST: pgConnection.host,
             PGPORT: pgConnection.port,
-            PGDATABASE: pgConnection.database,
+            PGDATABASE: database,
           },
         },
       );

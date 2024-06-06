@@ -38,7 +38,7 @@ export async function fetchExportFromFTP() {
 
   await client.cd(FTP_PATH);
   const files = await client.list();
-
+  
   const zips = files.filter(({ name }) => name.endsWith(".zip"));
   const newestFile = orderBy(zips, "name", "desc")[0];
   const newestExportName = get(newestFile, "name", "");

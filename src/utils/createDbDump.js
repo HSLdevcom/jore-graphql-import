@@ -4,7 +4,7 @@ import fs from "fs-extra";
 import { format } from "date-fns";
 import pgConnectionString from "pg-connection-string";
 
-import { PG_CONNECTION_STRING } from "../constants.js";
+import { PG_CONNECTION_STRING, DEFAULT_DATABASE } from "../constants.js";
 
 const { parse } = pgConnectionString;
 
@@ -15,7 +15,7 @@ const dumpsDir = path.join(cwd, "dumps");
 
 export const deleteFiles = ({ filesDir, minFileCount }) => {
   fs.readdir(filesDir, (err, files) => {
-    if (files.length < minFileCount) return;
+    if (!files || files.length < minFileCount) return;
     files.forEach((file) => {
       const removableFile = path.join(filesDir, file);
       fs.stat(removableFile, async (err, stat) => {
@@ -58,8 +58,8 @@ export const createDbDump = async () => {
       resolve(filePath);
     } else {
       const pgConnection = parse(PG_CONNECTION_STRING);
-      console.log(`Dumping the ${pgConnection.database} database into ${filePath}`);
-
+      const database = pgConnection.database ? pgConnection.database : DEFAULT_DATABASE;
+      console.log(`Dumping the ${database} database into ${filePath}`);
       const dumpProcess = childProcess.spawn(
         "pg_dump",
         [`-f ${filePath}`, "-Fc", "-N '*old'", "-N '*new'"],
@@ -71,7 +71,7 @@ export const createDbDump = async () => {
             PGPASSWORD: pgConnection.password,
             PGHOST: pgConnection.host,
             PGPORT: pgConnection.port,
-            PGDATABASE: pgConnection.database,
+            PGDATABASE: database,
           },
         },
       );
