@@ -1145,7 +1145,7 @@ $$
             AND NOT (departure.date_begin < route.date_begin AND departure.date_end < route.date_begin)
             AND NOT (departure.date_begin > route.date_end AND departure.date_end > route.date_end)
             AND NOT (departure.date_begin < user_date_begin AND departure.date_end < user_date_begin)
-            AND NOT (departure.date_begin > user_date_end AND departure.date_end > user_date_end))
+            AND NOT (departure.date_begin > user_date_end AND departure.date_end > user_date_end)) departures
     WHERE ((timing_stop_type = 1) OR (timing_stop_type = 2) OR (stop_index = 1))
     GROUP BY route_id, stop_id, direction, day_type, departure_id, hours, minutes, is_next_day, date_begin, date_end, timing_stop_type, stop_index;
 $$ language sql stable;
