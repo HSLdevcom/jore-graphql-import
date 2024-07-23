@@ -5,7 +5,7 @@ SELECT
   date_begin,
   date_end,
   jore.route_mode((
-    select route
+    select distinct on (route.route_id) route
     from jore.route route
     where geometry.route_id = route.route_id
       and geometry.direction = route.direction
