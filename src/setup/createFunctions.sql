@@ -1113,7 +1113,8 @@ $$
             date_begin date,
             date_end date,
             timing_stop_type integer,
-            stop_index integer
+            stop_index integer,
+            note text
             );
     EXCEPTION
         WHEN duplicate_object THEN null;
@@ -1134,7 +1135,8 @@ $$
         date_begin,
         date_end,
         timing_stop_type,
-        stop_index
+        stop_index,
+        note
     FROM (
         SELECT
             departure.*,
@@ -1147,7 +1149,7 @@ $$
             AND NOT (departure.date_begin < user_date_begin AND departure.date_end < user_date_begin)
             AND NOT (departure.date_begin > user_date_end AND departure.date_end > user_date_end)) departures
     WHERE ((timing_stop_type = 1) OR (timing_stop_type = 2) OR (stop_index = 1))
-    GROUP BY route_id, stop_id, direction, day_type, departure_id, hours, minutes, is_next_day, date_begin, date_end, timing_stop_type, stop_index;
+    GROUP BY route_id, stop_id, direction, day_type, departure_id, hours, minutes, is_next_day, date_begin, date_end, timing_stop_type, stop_index, note;
 $$ language sql stable;
 
 create or replace function jore.route_all_timed_stops(route jore.route) returns setof jore.route_segment as
