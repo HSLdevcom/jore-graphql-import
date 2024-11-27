@@ -1,4 +1,4 @@
-FROM node:18-buster-slim
+FROM node:18-bookworm-slim
 
 ENV IMPORTER_DIR /opt/jore
 ENV NODE_ENV production
