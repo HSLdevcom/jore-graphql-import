@@ -396,7 +396,6 @@ const schema = {
         length: 6,
         name: "operator_id",
         type: "string",
-
       },
       // position 312
       {
@@ -409,7 +408,6 @@ const schema = {
         length: 6,
         name: "subcontractor_id",
         type: "string",
-
       },
       // position 358
       {

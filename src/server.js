@@ -72,7 +72,11 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
   app.post("/create-foreign-keys", async (req, res) => {
     const { knex } = getKnex();
 
-    await createForeignKeys(SCHEMA, schema, knex);
+    try {
+      await createForeignKeys(SCHEMA, schema, knex);
+    } catch (e) {
+      console.log(`Error creating foreign keys: ${e}`);
+    }
     res.redirect(PATH_PREFIX);
   });
 
