@@ -40,6 +40,7 @@ export const DEFAULT_EXPORT_SOURCE = secretsEnv.DEFAULT_EXPORT_SOURCE || "daily"
 export const DAILY_TASK_SCHEDULE = secretsEnv.DAILY_TASK_SCHEDULE || "0 30 0 * * *";
 export const DEBUG = secretsEnv.DEBUG || "false";
 export const SERVER_PORT = secretsEnv.SERVER_PORT || 3000;
+export const ADMIN_USER = secretsEnv.ADMIN_USER || "admin";
 export const ADMIN_PASSWORD = secretsEnv.ADMIN_PASSWORD || "password";
 export const PATH_PREFIX = secretsEnv.PATH_PREFIX || "/";
 export const SCHEMA = "jore";

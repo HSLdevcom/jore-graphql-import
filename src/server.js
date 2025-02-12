@@ -5,8 +5,9 @@ import basicAuth from "express-basic-auth";
 import { createEngine } from "express-react-views";
 import path from "path";
 import fs from "fs-extra";
+import { rateLimit } from "express-rate-limit";
 
-import { ADMIN_PASSWORD, PATH_PREFIX, SERVER_PORT, SCHEMA } from "./constants.js";
+import { ADMIN_USER, ADMIN_PASSWORD, PATH_PREFIX, SERVER_PORT, SCHEMA } from "./constants.js";
 import { getLatestImportedFile } from "./importStatus.js";
 import { getSelectedTableStatus, setTableOption } from "./selectedTables.js";
 import { runScheduledImportNow } from "./schedule.js";
@@ -23,6 +24,13 @@ const uploadPath = path.join(cwd, "uploads");
 
 export const server = (isImporting, onBeforeImport, onAfterImport) => {
   const app = express();
+
+  const limiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    limit: 100,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+  });
 
   // Define health endpoint here so it won't be under basic auth
   app.get("/health", async (req, res) => {
@@ -41,10 +49,18 @@ export const server = (isImporting, onBeforeImport, onAfterImport) => {
 
   app.use(express.urlencoded({ extended: true }));
 
+  app.use(limiter);
+
+  const loginAuthorizer = (user, passwd) => {
+    const userMatches = basicAuth.safeCompare(user, ADMIN_USER);
+    const passwordMatches = basicAuth.safeCompare(passwd, ADMIN_PASSWORD);
+    return userMatches & passwordMatches;
+  };
+
   app.use(
     basicAuth({
       challenge: true,
-      users: { admin: ADMIN_PASSWORD },
+      authorizer: loginAuthorizer,
     }),
   );
 
