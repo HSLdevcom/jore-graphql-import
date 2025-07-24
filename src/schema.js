@@ -420,7 +420,7 @@ const schema = {
     primary: ["route_id", "direction", "date_begin", "date_end"],
   },
   route_segment: {
-    filename: "reitti.dat",
+    filename: "reitti2.dat",
     fields: [
       {
         length: 7,
@@ -502,6 +502,8 @@ const schema = {
         notNullable: true,
       },
       { length: 8 },
+      { length: 30, name: "plate_via_fi", type: "string" },
+      { length: 30, name: "plate_via_se", type: "string" },
     ],
     primary: ["route_id", "direction", "date_begin", "date_end", "stop_index"],
   },

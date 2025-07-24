@@ -20,13 +20,19 @@ In short:
 
 ## Prerequisites
 
+### Starting with a new database
 Start a postgres server, e.g. with docker:
 ```
-docker run --name jore-postgis -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword -d postgis/postgis
+docker run --name jore-postgis -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgis/postgis
 ```
-
 Add `-v ./postgres-data:/var/lib/postgresql/data` to the command above to make sure that the database is persisted if wanted.
 
+### Initializing the local database
+Ensure the `.env` file has the `PG_CONNECTION_STRING` variable defined and _*it is pointing to your local database*_.
+Next we need to initialize the db before importing any JORE extracts:
+```bash
+yarn initdb
+```
 
 To use geometry matching feature, you also need to start [hsl-map-matcher](https://github.com/HSLdevcom/hsl-map-matcher).
 
