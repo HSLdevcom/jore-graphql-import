@@ -30,7 +30,7 @@
     "@babel/preset-env": "^7.22.15",
     "@babel/preset-react": "^7.22.15",
     "basic-ftp": "^5.0.3",
-    "cron": "^2.4.3",
+    "cron": "^4.3.3",
     "date-fns": "^2.30.0",
     "dotenv": "^8.0.0",
     "express": "^4.17.1",
