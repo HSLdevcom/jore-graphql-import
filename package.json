@@ -27,7 +27,7 @@
     "@azure/storage-blob": "12.14.0",
     "@babel/core": "^7.22.15",
     "@babel/plugin-transform-flow-strip-types": "^7.22.5",
-    "@babel/preset-env": "^7.22.15",
+    "@babel/preset-env": "^7.28.0",
     "@babel/preset-react": "^7.22.15",
     "basic-ftp": "^5.0.3",
     "cron": "^4.3.3",
