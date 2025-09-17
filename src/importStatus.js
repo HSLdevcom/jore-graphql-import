@@ -31,10 +31,7 @@ export const upsert = async (data) => {
       .update(omit(data, "filename"));
   }
 
-  return knex
-    .withSchema(schema)
-    .insert(data)
-    .into(statusTable);
+  return knex.withSchema(schema).insert(data).into(statusTable);
 };
 
 export const startImport = async (filename) =>

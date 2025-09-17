@@ -1,7 +1,7 @@
-FROM node:18-bookworm-slim
+FROM node:20-bullseye-slim
 
-ENV IMPORTER_DIR /opt/jore
-ENV NODE_ENV production
+ENV IMPORTER_DIR=/opt/jore
+ENV NODE_ENV=production
 
 RUN apt-get update \
   && apt-get install -yq curl gnupg lsb-release \
@@ -23,4 +23,4 @@ RUN yarn install && yarn cache clean
 
 # Copy app source
 COPY . ${IMPORTER_DIR}
-CMD yarn run start
+CMD ["yarn", "run", "start"]
