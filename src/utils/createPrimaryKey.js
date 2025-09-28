@@ -1,10 +1,10 @@
 export function createPrimaryKey(item, keys = []) {
-  const keysLength = keys.length;
-  let key = "";
+  const keysLength = keys.length
+  let key = ''
 
   for (let i = 0; i < keysLength; i++) {
-    key += `${item[keys[i]]}_`;
+    key += `${item[keys[i]]}_`
   }
 
-  return key;
+  return key
 }

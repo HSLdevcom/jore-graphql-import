@@ -40,3 +40,4 @@ uploads
 .env
 db.dump
 dumps
+.idea/

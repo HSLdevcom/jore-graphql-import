@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react'
 
 const UploadExport = ({ disabled, PATH_PREFIX }) => {
   return (
@@ -17,7 +17,7 @@ const UploadExport = ({ disabled, PATH_PREFIX }) => {
         </fieldset>
       </form>
     </>
-  );
-};
+  )
+}
 
-export default UploadExport;
+export default UploadExport
