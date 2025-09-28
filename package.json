@@ -1,6 +1,6 @@
 {
   "name": "jore-postgres-import",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Data importer for jore-graphql",
   "type": "module",
   "scripts": {
