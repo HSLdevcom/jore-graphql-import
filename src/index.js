@@ -70,7 +70,6 @@ createScheduledImport('daily', DAILY_TASK_SCHEDULE, async (onComplete = () => {}
   onAfterImport(importId)
   onComplete()
 })
-
 ;(async () => {
   const createImportStatus = fs.readFileSync(
     new URL('setup/createImportStatus.sql', import.meta.url),
