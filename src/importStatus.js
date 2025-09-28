@@ -1,50 +1,46 @@
-import { omit } from "lodash-es";
-import { getKnex } from "./knex.js";
+import { omit } from 'lodash-es'
+import { getKnex } from './knex.js'
 
-const { knex } = getKnex();
+const { knex } = getKnex()
 
-const statusTable = "import_status";
-const schema = "public";
+const statusTable = 'import_status'
+const schema = 'public'
 
 export async function getLatestImportedFile() {
-  return knex
-    .withSchema(schema)
-    .first()
-    .from(statusTable)
-    .orderBy("import_start", "desc");
+  return knex.withSchema(schema).first().from(statusTable).orderBy('import_start', 'desc')
 }
 
 export const upsert = async (data) => {
-  const { filename } = data;
+  const { filename } = data
 
   const hasRecord = await knex
     .withSchema(schema)
-    .first("filename")
+    .first('filename')
     .from(statusTable)
-    .where({ filename });
+    .where({ filename })
 
   if (hasRecord) {
     return knex
       .withSchema(schema)
       .from(statusTable)
       .where({ filename })
-      .update(omit(data, "filename"));
+      .update(omit(data, 'filename'))
   }
 
-  return knex.withSchema(schema).insert(data).into(statusTable);
-};
+  return knex.withSchema(schema).insert(data).into(statusTable)
+}
 
 export const startImport = async (filename) =>
   upsert({
     filename,
     import_end: null,
     success: false,
-  });
+  })
 
 export const importCompleted = async (filename, isSuccess = true, duration = 0) =>
   upsert({
     filename,
-    import_end: knex.raw("NOW()"),
+    import_end: knex.raw('NOW()'),
     success: isSuccess,
     duration,
-  });
+  })

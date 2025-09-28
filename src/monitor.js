@@ -1,46 +1,45 @@
-import { SLACK_WEBHOOK_URL, ENVIRONMENT, SLACK_MONITOR_MENTION } from "./constants.js";
+import { SLACK_WEBHOOK_URL, ENVIRONMENT, SLACK_MONITOR_MENTION } from './constants.js'
 
 export const messageTypes = {
-  ERROR: "error",
-  INFO: "info",
-};
+  ERROR: 'error',
+  INFO: 'info',
+}
 export async function reportError(err = null) {
   const message =
-    typeof err === "string" ? err : typeof err.message === "string" ? err.message : "";
+    typeof err === 'string' ? err : typeof err.message === 'string' ? err.message : ''
 
-  return onMonitorEvent(message, messageTypes.ERROR);
+  return onMonitorEvent(message, messageTypes.ERROR)
 }
 
-export async function reportInfo(message = "") {
-  return onMonitorEvent(message, messageTypes.INFO);
+export async function reportInfo(message = '') {
+  return onMonitorEvent(message, messageTypes.INFO)
 }
 
 export async function onMonitorEvent(
-  message = "Something happened.",
-  type = messageTypes.ERROR,
+  message = 'Something happened.',
+  type = messageTypes.ERROR
 ) {
   // Do not send monitor messages if no url specified.
   if (!SLACK_WEBHOOK_URL) {
-    return () => {};
+    return () => {}
   }
 
   if (!message) {
-    return false;
+    return false
   }
 
-  const userIds = SLACK_MONITOR_MENTION.split(",");
+  const userIds = SLACK_MONITOR_MENTION.split(',')
 
-  const mentionUsers =
-    type === messageTypes.ERROR ? userIds.map((id) => `<@${id}> `) : "";
+  const mentionUsers = type === messageTypes.ERROR ? userIds.map((id) => `<@${id}> `) : ''
 
   const fullMessage = `${
-    mentionUsers ? `${mentionUsers} ` : ""
+    mentionUsers ? `${mentionUsers} ` : ''
   }${type} message from JORE importer [${ENVIRONMENT.toUpperCase()}]:\n
-\`\`\`${message}\`\`\``;
+\`\`\`${message}\`\`\``
 
   const body = {
-    type: "mrkdwn",
+    type: 'mrkdwn',
     text: fullMessage,
-  };
-  return fetch(SLACK_WEBHOOK_URL, { method: "POST", body: JSON.stringify(body) });
+  }
+  return fetch(SLACK_WEBHOOK_URL, { method: 'POST', body: JSON.stringify(body) })
 }

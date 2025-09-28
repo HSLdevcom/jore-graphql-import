@@ -1,20 +1,20 @@
-import React, { useCallback } from "react";
+import React, { useCallback } from 'react'
 
 const SelectTables = ({ disabled = true, selectedTables, PATH_PREFIX }) => {
-  const onChange = useCallback(() => {}, []);
+  const onChange = useCallback(() => {}, [])
 
   return (
     <>
       <h3>Select tables to import</h3>
       <p>
-        Select which tables should be imported when running import tasks. This will affect
-        all import tasks, both scheduled and manual. The setting is kept in memory and
-        will be reset when the server app restarts.
+        Select which tables should be imported when running import tasks. This will affect all
+        import tasks, both scheduled and manual. The setting is kept in memory and will be
+        reset when the server app restarts.
       </p>
       <form action={`${PATH_PREFIX}select-tables`} method="post">
         <fieldset disabled={disabled}>
           <legend>Tables to import</legend>
-          <ul style={{ listStyleType: "none", padding: 0 }}>
+          <ul style={{ listStyleType: 'none', padding: 0 }}>
             {Object.entries(selectedTables).map(([tableName, isSelected]) => (
               <li key={tableName}>
                 <label>
@@ -34,7 +34,7 @@ const SelectTables = ({ disabled = true, selectedTables, PATH_PREFIX }) => {
         </fieldset>
       </form>
     </>
-  );
-};
+  )
+}
 
-export default SelectTables;
+export default SelectTables

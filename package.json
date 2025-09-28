@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node -r dotenv/config src/index.js",
     "lint": "eslint src --fix",
-    "prettier": "prettier */**.{js,json} --write",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "ftpsource": "ftp-srv ftp://127.0.0.1:2121 --root ./source",
     "knex": "knex",
     "knex:local": "PG_CONNECTION_STRING=postgres://postgres:mysecretpassword@localhost:5678/postgres knex",
