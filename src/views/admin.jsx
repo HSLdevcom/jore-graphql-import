@@ -1,8 +1,8 @@
-import React from "react";
-import StatusIndicator from "./components/StatusIndicator.jsx";
-import DailyImport from "./components/DailyImport.jsx";
-import SelectTables from "./components/SelectTables.jsx";
-import UploadExport from "./components/UploadExport.jsx";
+import React from 'react'
+import StatusIndicator from './components/StatusIndicator.jsx'
+import DailyImport from './components/DailyImport.jsx'
+import SelectTables from './components/SelectTables.jsx'
+import UploadExport from './components/UploadExport.jsx'
 
 const AdminView = ({
   isImporting,
@@ -14,19 +14,10 @@ const AdminView = ({
   return (
     <>
       <h1>JORE import admin</h1>
-      <StatusIndicator
-        isImporting={isImporting}
-        latestImportedFile={latestImportedFile}
-      />
+      <StatusIndicator isImporting={isImporting} latestImportedFile={latestImportedFile} />
       <hr />
-      <DailyImport
-        disabled={isImporting || manualDumpInProgress}
-        PATH_PREFIX={PATH_PREFIX}
-      />
-      <UploadExport
-        disabled={isImporting || manualDumpInProgress}
-        PATH_PREFIX={PATH_PREFIX}
-      />
+      <DailyImport disabled={isImporting || manualDumpInProgress} PATH_PREFIX={PATH_PREFIX} />
+      <UploadExport disabled={isImporting || manualDumpInProgress} PATH_PREFIX={PATH_PREFIX} />
       <SelectTables
         disabled={isImporting}
         selectedTables={selectedTables}
@@ -61,7 +52,7 @@ const AdminView = ({
         />
       </form>
     </>
-  );
-};
+  )
+}
 
-export default AdminView;
+export default AdminView
