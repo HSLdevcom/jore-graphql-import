@@ -30,7 +30,7 @@
     "@babel/plugin-transform-flow-strip-types": "^7.22.5",
     "@babel/preset-env": "^7.22.15",
     "@babel/preset-react": "^7.22.15",
-    "basic-ftp": "^5.0.3",
+    "basic-ftp": "^5.2.0",
     "cron": "^4.3.3",
     "date-fns": "^2.30.0",
     "dotenv": "^8.0.0",
@@ -43,7 +43,7 @@
     "iconv-lite": "^0.6.3",
     "knex": "^2.5.1",
     "knex-postgis": "^0.14.3",
-    "lodash-es": "^4.17.21",
+    "lodash-es": "^4.17.23",
     "p-map": "^7.0.3",
     "p-queue": "^7.4.1",
     "pg": "^8.11.3",
@@ -64,6 +64,7 @@
     "eslint-plugin-react": "^7.37.5",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.3",
+    "glob": "^10.5.0",
     "prettier": "^3.0.3"
   },
   "lint-staged": {
@@ -76,5 +77,12 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
+  },
+  "resolutions": {
+    "ajv": "6.14.0",
+    "editorconfig": "1.0.7",
+    "js-yaml": "4.1.1",
+    "lodash": "4.17.23",
+    "qs": "6.14.2"
   }
 }
