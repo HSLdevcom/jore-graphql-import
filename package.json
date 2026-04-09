@@ -30,7 +30,7 @@
     "@babel/plugin-transform-flow-strip-types": "^7.22.5",
     "@babel/preset-env": "^7.22.15",
     "@babel/preset-react": "^7.22.15",
-    "basic-ftp": "^5.2.0",
+    "basic-ftp": "^5.2.1",
     "cron": "^4.3.3",
     "date-fns": "^2.30.0",
     "dotenv": "^8.0.0",
@@ -43,7 +43,7 @@
     "iconv-lite": "^0.6.3",
     "knex": "^2.5.1",
     "knex-postgis": "^0.14.3",
-    "lodash-es": "^4.17.23",
+    "lodash-es": "^4.18.1",
     "p-map": "^7.0.3",
     "p-queue": "^7.4.1",
     "pg": "^8.11.3",
@@ -82,7 +82,11 @@
     "ajv": "6.14.0",
     "editorconfig": "1.0.7",
     "js-yaml": "4.1.1",
-    "lodash": "4.17.23",
-    "qs": "6.14.2"
+    "lodash": "4.18.1",
+    "qs": "6.14.2",
+    "lodash-es": "4.17.23",
+    "flatted": "3.4.2",
+    "path-to-regexp": "0.1.13",
+    "picomatch": "2.3.2"
   }
 }
