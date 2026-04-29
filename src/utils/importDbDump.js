@@ -12,6 +12,7 @@ import {
 } from '../constants.js'
 import { clearDb } from '../setup/clearDb.js'
 import { deleteFiles } from './createDbDump.js'
+import { getKnex } from '../knex.js'
 
 const { parse } = pgConnectionString
 
@@ -67,6 +68,11 @@ export const importDbDump = async () => {
     console.log('Clearing DB')
     await clearDb(true)
 
+    // Drop PostGIS dependent extensions so pg_restore can drop postgis without cascade errors
+    const { knex } = getKnex()
+    await knex.raw('DROP EXTENSION IF EXISTS postgis_tiger_geocoder CASCADE')
+    await knex.raw('DROP EXTENSION IF EXISTS postgis_topology CASCADE')
+
     const startTime = process.hrtime()
     let lastError = null
     const dumpsDir = path.join(cwd, 'restore')
@@ -84,7 +90,6 @@ export const importDbDump = async () => {
         [
           '-c',
           '--if-exists',
-          '--drop-cascade',
           '--no-owner',
           `-U ${pgConnection.user}`,
           `-d ${database}`,

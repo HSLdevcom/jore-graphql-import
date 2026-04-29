@@ -38,6 +38,7 @@ export async function importFile(filePath) {
 
   try {
     await startImport(fileName)
+    throw new Error('Simulated import failure — testing restore path')
     const queue = new PQueue({ concurrency: 20 }) // Promise queue for postgres insertions
 
     console.log('Unpacking and processing the archive...')
