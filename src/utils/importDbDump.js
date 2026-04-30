@@ -68,10 +68,15 @@ export const importDbDump = async () => {
     console.log('Clearing DB')
     await clearDb(true)
 
-    // Drop PostGIS dependent extensions so pg_restore can drop postgis without cascade errors
+    // Drop PostGIS dependent extensions so pg_restore can drop postgis without cascade errors.
+    // These may not exist or may not be droppable (e.g. Azure restricts this), so ignore errors.
     const { knex } = getKnex()
-    await knex.raw('DROP EXTENSION IF EXISTS postgis_tiger_geocoder CASCADE')
-    await knex.raw('DROP EXTENSION IF EXISTS postgis_topology CASCADE')
+    try {
+      await knex.raw('DROP EXTENSION IF EXISTS postgis_tiger_geocoder CASCADE')
+      await knex.raw('DROP EXTENSION IF EXISTS postgis_topology CASCADE')
+    } catch (e) {
+      console.log('Could not drop PostGIS dependent extensions (skipping):', e.message)
+    }
 
     const startTime = process.hrtime()
     let lastError = null
@@ -91,6 +96,7 @@ export const importDbDump = async () => {
           '-c',
           '--if-exists',
           '--no-owner',
+          '--no-acl',
           `-U ${pgConnection.user}`,
           `-d ${database}`,
           '--single-transaction',
