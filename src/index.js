@@ -1,7 +1,11 @@
 /* eslint-disable consistent-return */
 import fs from 'fs'
 
-import { createScheduledImport, startScheduledImport } from './schedule.js'
+import {
+  createScheduledImport,
+  startScheduledImport,
+  runScheduledImportNow,
+} from './schedule.js'
 import { importFile } from './import.js'
 import { DEFAULT_EXPORT_SOURCE, DAILY_TASK_SCHEDULE } from './constants.js'
 import { fetchExportFromFTP } from './sources/fetchExportFromFTP.js'
@@ -82,6 +86,7 @@ createScheduledImport('daily', DAILY_TASK_SCHEDULE, async (onComplete = () => {}
   // This will start the timer.
   await reportInfo('Service online')
   startScheduledImport('daily')
+  runScheduledImportNow('daily')
   server(() => isImporting, onBeforeImport, onAfterImport)
 })()
 
