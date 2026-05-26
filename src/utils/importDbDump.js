@@ -84,8 +84,8 @@ export const importDbDump = async () => {
         [
           '-c',
           '--if-exists',
-          '--drop-cascade',
           '--no-owner',
+          '--no-acl',
           `-U ${pgConnection.user}`,
           `-d ${database}`,
           '--single-transaction',
