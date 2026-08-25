@@ -1,6 +1,6 @@
 {
   "name": "jore-postgres-import",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Data importer for jore-graphql",
   "type": "module",
   "scripts": {
@@ -30,7 +30,7 @@
     "@babel/plugin-transform-flow-strip-types": "^7.22.5",
     "@babel/preset-env": "^7.22.15",
     "@babel/preset-react": "^7.22.15",
-    "basic-ftp": "^5.2.1",
+    "basic-ftp": "^5.3.1",
     "cron": "^4.3.3",
     "date-fns": "^2.30.0",
     "dotenv": "^8.0.0",
@@ -81,12 +81,24 @@
   "resolutions": {
     "ajv": "6.14.0",
     "editorconfig": "1.0.7",
-    "js-yaml": "4.1.1",
+    "js-yaml": "4.3.1",
     "lodash": "4.18.1",
     "qs": "6.14.2",
     "lodash-es": "4.17.23",
     "flatted": "3.4.2",
     "path-to-regexp": "0.1.13",
-    "picomatch": "2.3.2"
+    "picomatch": "2.3.2",
+    "basic-ftp": "5.3.1",
+    "@babel/plugin-transform-modules-systemjs": "7.29.4",
+    "form-data": "4.0.6",
+    "brace-expansion": "1.1.18",
+    "ws": "8.21.2",
+    "postcss": "8.5.26",
+    "fast-uri": "3.1.5",
+    "systeminformation": "5.31.7",
+    "shell-quote": "1.9.0",
+    "websocket-driver": "0.7.5",
+    "ip-address": "10.3.1",
+    "js-cookie": "3.0.7"
   }
 }
