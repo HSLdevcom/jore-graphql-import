@@ -1,4 +1,4 @@
-FROM node:20-bullseye-slim
+FROM node:22-bookworm-slim
 
 ENV IMPORTER_DIR=/opt/jore
 ENV NODE_ENV=production

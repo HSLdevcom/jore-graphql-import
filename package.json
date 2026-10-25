@@ -1,8 +1,11 @@
 {
   "name": "jore-postgres-import",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Data importer for jore-graphql",
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "start": "node -r dotenv/config src/index.js",
     "lint": "eslint src --fix",
