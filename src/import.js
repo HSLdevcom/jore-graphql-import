@@ -91,7 +91,7 @@ export async function importFile(filePath) {
     console.log('Importing the data...')
     await Promise.all(filePromises)
 
-    await queue.onEmpty() // Make sure there are no pending insertions.
+    await queue.onIdle() // Make sure there are no pending or running insertions.
 
     console.log('DB insert queries finished.')
 
