@@ -1,4 +1,4 @@
-import { Transform } from 'stream'
+import { Writable } from 'stream'
 
 import { uniqBy } from 'lodash-es'
 
@@ -43,53 +43,22 @@ const hasProhibitedNulls = (parsedLine, lineSchema) => {
   return notAllowedNulls
 }
 
-const createLineParser = (tableName) => {
-  const { fields, lineSchema = fields } = schema[tableName] || {}
-  let linesReceived = false
-
-  return new Transform({
-    objectMode: true,
-    transform(chunk, encoding, callback) {
-      if (!chunk) {
-        // line === null marks the end of the file. End the import stream
-        // to flush any items left in the collect buffer.
-        return callback(null, null)
-      }
-
-      if (lineSchema) {
-        // This function runs on each line which would be too much to log.
-        // When receiving the first line of a table, log it and mark it as logged.
-        if (!linesReceived) {
-          console.log(`Importing ${tableName}...`)
-          linesReceived = true
-        }
-
-        try {
-          // Parse the line and return it into the stream
-          const parsedLine = parseLine(chunk, lineSchema)
-          const notAllowedNulls = hasProhibitedNulls(parsedLine, lineSchema)
-          if (!notAllowedNulls) {
-            return callback(null, parsedLine)
-          }
-        } catch (err) {
-          return callback(err)
-        }
-      }
-
-      return callback()
-    },
-  })
-}
+const BATCH_SIZE = 1000
+// Max insert batches waiting in the shared queue. When reached, the import
+// streams stop reading their files until the DB catches up, which keeps
+// memory bounded no matter how slow the inserts are.
+const MAX_QUEUED_BATCHES = 40
 
 export const createImportStreamForTable = async (tableName, resolveFileImport, queue) => {
-  const lineParser = createLineParser(tableName)
+  const { fields, lineSchema = fields } = schema[tableName] || {}
   const primaryKeys = getIndexForTable(tableName)
   const constraint = await getPrimaryConstraint(tableName)
 
   let rowsCache = []
-  const batchSize = 1000
+  let linesReceived = false
+  const pendingInserts = new Set()
 
-  const insertRows = async (rows) => {
+  const insertRows = (rows) => {
     let insertItems = rows
 
     // Remove duplicates, there might be some
@@ -97,43 +66,77 @@ export const createImportStreamForTable = async (tableName, resolveFileImport, q
       insertItems = uniqBy(insertItems, (item) => createPrimaryKey(item, primaryKeys))
     }
 
-    // Add insert task to queue
-    return queue.add(() =>
-      createImportQuery({
-        tableName,
-        data: insertItems,
-        indices: primaryKeys,
-        constraint,
-      }).then((time) => {
-        const [execS, execNs] = process.hrtime(time)
-        const ms = (execS * NS_PER_SEC + execNs) / 1000000
-        console.log(`Records of ${tableName} imported in ${ms} ms`)
-      })
-    )
+    const insertPromise = queue
+      .add(() =>
+        createImportQuery({
+          tableName,
+          data: insertItems,
+          indices: primaryKeys,
+          constraint,
+        }).then((time) => {
+          const [execS, execNs] = process.hrtime(time)
+          const ms = (execS * NS_PER_SEC + execNs) / 1000000
+          console.log(`Records of ${tableName} imported in ${ms} ms`)
+        })
+      )
+      .finally(() => pendingInserts.delete(insertPromise))
+
+    pendingInserts.add(insertPromise)
+    return insertPromise
   }
 
-  lineParser
-    .on('data', (data) => {
-      // Add to cache
-      rowsCache.push(data)
+  const importStream = new Writable({
+    objectMode: true,
+    write(chunk, encoding, callback) {
+      if (!chunk || !lineSchema) {
+        return callback()
+      }
 
-      if (rowsCache.length === batchSize) {
-        // Cache is full, insert
-        insertRows(rowsCache)
-        // Clear the cache for new rows
+      if (!linesReceived) {
+        console.log(`Importing ${tableName}...`)
+        linesReceived = true
+      }
+
+      let parsedLine
+      try {
+        parsedLine = parseLine(chunk, lineSchema)
+      } catch (err) {
+        return callback(err)
+      }
+
+      if (hasProhibitedNulls(parsedLine, lineSchema)) {
+        return callback()
+      }
+
+      rowsCache.push(parsedLine)
+
+      if (rowsCache.length < BATCH_SIZE) {
+        return callback()
+      }
+
+      insertRows(rowsCache).catch((err) => importStream.destroy(err))
+      rowsCache = []
+
+      // Backpressure: holding the callback until the queue has room pauses
+      // the upstream pipe, and with it the file read.
+      return queue.onSizeLessThan(MAX_QUEUED_BATCHES).then(() => callback(), callback)
+    },
+    final(callback) {
+      if (rowsCache.length !== 0) {
+        // Errors are surfaced through Promise.all below
+        insertRows(rowsCache).catch(() => {})
         rowsCache = []
       }
-    })
-    .on('end', async () => {
-      // Insert last rows, wait for
-      insertRows(rowsCache).then(() => {
-        console.log(`${tableName} imported!`)
-        // The file is completed. Note that there still could be pending transactions
-        // if the last insert was faster than previous ones.
-        // Remember to check it with await queue.onEmpty() at some point.
-        resolveFileImport()
-      })
-    })
 
-  return lineParser
+      Promise.all([...pendingInserts])
+        .then(() => {
+          console.log(`${tableName} imported!`)
+          resolveFileImport()
+          callback()
+        })
+        .catch((err) => callback(err))
+    },
+  })
+
+  return importStream
 }
