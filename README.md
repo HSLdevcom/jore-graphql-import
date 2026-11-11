@@ -31,7 +31,7 @@ Add `-v ./postgres-data:/var/lib/postgresql/data` to the command above to make s
 Ensure the `.env` file has the `PG_CONNECTION_STRING` variable defined and _*it is pointing to your local database*_.
 Next we need to initialize the db before importing any JORE extracts:
 ```bash
-yarn initdb
+npm run initdb
 ```
 
 To use geometry matching feature, you also need to start [hsl-map-matcher](https://github.com/HSLdevcom/hsl-map-matcher).
@@ -42,10 +42,15 @@ docker run --name hsl-map-matcher -p 3000:3000 -d hsldevcom/hsl-map-matcher
 
 ## Running locally
 
-Install dependencies and start the app:
+Requires Node 24. Install dependencies and start the app:
 ```
-yarn
-yarn start
+npm install
+npm start
+```
+
+Run the same checks as CI (format check and unit tests):
+```
+npm run check-and-build
 ```
 
 A web ui should be running in http://localhost:8000/

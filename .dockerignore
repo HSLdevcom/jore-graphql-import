@@ -5,3 +5,9 @@ postgres-data/
 .env
 downloads
 dumps
+.github
+test
+lcov.info
+junit.xml
+AGENTS.md
+CLAUDE.md

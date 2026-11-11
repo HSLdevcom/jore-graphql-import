@@ -4,13 +4,19 @@
   "description": "Data importer for jore-graphql",
   "type": "module",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=24"
   },
   "scripts": {
     "start": "node -r dotenv/config src/index.js",
     "lint": "eslint src --fix",
-    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format": "prettier --write \"{src,test}/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"{src,test}/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "lint:check": "npm run format:check",
+    "lint:mega": "npx --yes mega-linter-runner@9 --flavor javascript --release v9.6.0",
+    "lint:mega:fix": "npx --yes mega-linter-runner@9 --flavor javascript --release v9.6.0 --fix",
+    "lint:mega:changed": "npx --yes mega-linter-runner@9 --flavor javascript --release v9.6.0 -e VALIDATE_ALL_CODEBASE=false",
+    "test:unit": "node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info --test-reporter=junit --test-reporter-destination=junit.xml \"test/**/*.test.js\"",
+    "check-and-build": "npm run lint:check && npm run test:unit",
     "ftpsource": "ftp-srv ftp://127.0.0.1:2121 --root ./source",
     "knex": "knex",
     "knex:local": "PG_CONNECTION_STRING=postgres://postgres:mysecretpassword@localhost:5678/postgres knex",
@@ -80,29 +86,5 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
-  },
-  "resolutions": {
-    "ajv": "6.14.0",
-    "editorconfig": "1.0.7",
-    "js-yaml": "4.3.2",
-    "browserslist": "4.28.7",
-    "lodash": "4.18.1",
-    "qs": "6.14.2",
-    "lodash-es": "4.17.23",
-    "flatted": "3.4.2",
-    "path-to-regexp": "0.1.13",
-    "picomatch": "2.3.2",
-    "basic-ftp": "5.3.1",
-    "@babel/plugin-transform-modules-systemjs": "7.29.4",
-    "form-data": "4.0.6",
-    "brace-expansion": "1.1.18",
-    "ws": "8.21.2",
-    "postcss": "8.5.26",
-    "fast-uri": "3.1.5",
-    "systeminformation": "5.31.7",
-    "shell-quote": "1.9.0",
-    "websocket-driver": "0.7.5",
-    "ip-address": "10.3.1",
-    "js-cookie": "3.0.7"
   }
 }

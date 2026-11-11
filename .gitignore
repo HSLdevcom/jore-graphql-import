@@ -41,3 +41,6 @@ uploads
 db.dump
 dumps
 .idea/
+lcov.info
+junit.xml
+megalinter-reports
