@@ -1,0 +1,2 @@
+# False positive: AZURE_STORAGE_KEY is empty in .env.prod; the generic rule matches across the newline into the next line.
+.env.prod:generic-api-key:16

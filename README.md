@@ -22,7 +22,7 @@ In short:
 
 ### Starting with a new database
 Start a postgres server, e.g. with docker:
-```
+```bash
 docker run --name jore-postgis -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgis/postgis
 ```
 Add `-v ./postgres-data:/var/lib/postgresql/data` to the command above to make sure that the database is persisted if wanted.
@@ -36,36 +36,36 @@ npm run initdb
 
 To use geometry matching feature, you also need to start [hsl-map-matcher](https://github.com/HSLdevcom/hsl-map-matcher).
 
-```
+```bash
 docker run --name hsl-map-matcher -p 3000:3000 -d hsldevcom/hsl-map-matcher
 ```
 
 ## Running locally
 
 Requires Node 24. Install dependencies and start the app:
-```
+```bash
 npm install
 npm start
 ```
 
 Run the same checks as CI (format check and unit tests):
-```
+```bash
 npm run check-and-build
 ```
 
-A web ui should be running in http://localhost:8000/
+A web ui should be running in <http://localhost:8000/>
 
 
 ## Running on Docker
 
 Build the container:
-```
+```bash
 docker build -t hsldevcom/jore-graphql-import .
 ```
 
 
 If in Swarm mode, Docker environment variables are by default read from [Docker secrets](https://docs.docker.com/engine/swarm/secrets/). If no Docker secret is found, the value is read from .env file defaults instead. The default values can be overridden by passing them as command line arguments like in example below:
-```
+```bash
 docker run --link jore-postgis --link hsl-map-matcher -v downloads:/tmp/build \
 -e USERNAME="ftpusername" \
 -e PASSWORD="ftppassword" \
@@ -77,4 +77,4 @@ docker run --link jore-postgis --link hsl-map-matcher -v downloads:/tmp/build \
 hsldevcom/jore-graphql-import
 ```
 
-A web UI should be running in http://localhost:8000/
+A web UI should be running in <http://localhost:8000/>

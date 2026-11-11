@@ -5,7 +5,9 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV IMPORTER_DIR=/opt/jore
 ENV NODE_ENV=production
 
-# pg_dump / pg_restore for the DB dump backup and restore
+# pg_dump / pg_restore for the DB dump backup and restore.
+# DL3008: apt packages are intentionally unpinned (pgdg only keeps the latest postgresql-client-14).
+# hadolint ignore=DL3008
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -yq curl gnupg lsb-release --no-install-recommends \
   && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg \
