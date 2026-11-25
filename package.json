@@ -36,7 +36,7 @@
   "dependencies": {
     "@azure/storage-blob": "12.34.0",
     "@babel/core": "^7.28.0",
-    "@babel/plugin-transform-flow-strip-types": "^7.22.5",
+    "@babel/plugin-transform-flow-strip-types": "^8.0.1",
     "@babel/preset-env": "^7.22.15",
     "@babel/preset-react": "^7.22.15",
     "basic-ftp": "^5.3.1",
