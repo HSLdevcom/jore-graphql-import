@@ -39,7 +39,7 @@
     "@babel/plugin-transform-flow-strip-types": "^7.22.5",
     "@babel/preset-env": "^7.22.15",
     "@babel/preset-react": "^7.22.15",
-    "basic-ftp": "^5.3.1",
+    "basic-ftp": "^6.2.1",
     "cron": "^4.3.3",
     "date-fns": "^2.30.0",
     "dotenv": "^8.0.0",
